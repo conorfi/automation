@@ -10,6 +10,19 @@ Folder structure
 /automation/env_config -- enviroment configuration values
 /automation/lib -- third party libraries 
 
+----------------
+third party libs
+----------------
+
+-- nose 1.3.0 (unit test framework)
+
+--test-config 0.6 (nose plugin, provides a faculty for passing test-specific (or test-run specific) configuration data to the tests)
+Note: Issues with later version of config with this version of nose and python
+
+-- requests 1.2.3 (Requests allow you to send HTTP/1.1 requests)
+Note: Issues with requests 2.0.0 on python 2.6
+
+-- SQLAlchemy-0.8.2
 
 -----
 SETUP 
@@ -26,14 +39,9 @@ Easy INSTALL
 o	http://peak.telecommunity.com/dist/ez_setup.py
 o	python.exe setup.py bdist_wininst
 
--- nose (unit test framework)
-easy_install nose
 
---test-config (nose plugin, provides a faculty for passing test-specific (or test-run specific) configuration data to the tests)
-easy_install nose-testconfig
 
--- requests (Requests allow you to send HTTP/1.1 requests)
-easy_install requests
+
 
 -------------
 SETUP - linux
@@ -49,12 +57,13 @@ or  http://pypi.python.org/pypi/setuptools
 -- nose (unit test framework)
 sudo easy_install nose
 
---test-config (nose plugin, provides a faculty for passing test-specific (or test-run specific) configuration data to the tests)
+--test-config  (nose plugin, provides a faculty for passing test-specific (or test-run specific) configuration data to the tests)
 sudo easy_install nose-testconfig
 
--- requests (Requests allow you to send HTTP/1.1 requests)
+-- requests(Requests allow you to send HTTP/1.1 requests)
 sudo easy_install requests
 
+-- SQLAlchemy
 -------
 eclipse
 -------
