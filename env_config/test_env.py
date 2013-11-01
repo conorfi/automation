@@ -13,7 +13,7 @@ config['tms']['db_type'] = 'sqlite:///'
 config['gatekeeper'] ={}
 config['gatekeeper']['ip']   = '10.20.254.142'
 config['gatekeeper']['port'] = '8070'
-                                     
+config['gatekeeper']['credentials'] = {'username': 'admin','password': 'admin'}                                    
     
 config['api'] = {}
 config['api']['core'] = {}
