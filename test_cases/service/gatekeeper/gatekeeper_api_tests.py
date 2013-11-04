@@ -6,7 +6,8 @@
 @author: Conor Fitzgerald
 
 '''
-
+import sys
+print sys.path
 import json
 import requests
 from testconfig import config
