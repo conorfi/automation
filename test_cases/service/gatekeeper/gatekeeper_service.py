@@ -14,7 +14,28 @@ from testconfig import config
 class GateKeeperService(object):
        
                         
-    def create_session(self,url=None,payload=None):
+    def create_session_urlencoded(self,url=None,payload=None):
+        '''    
+        creates a session through the login API
+    
+        @param url: Optional. request url of API
+    
+        @param payload: Optional. The credentials of the user
+    
+        @return: a request object
+        
+        '''    
+        if(url==None):
+            url = 'http://{0}:{1}/{2}'.format(config['gatekeeper']['ip'],config['gatekeeper']['port']
+                                           ,config['api']['user']['session']['create_v1'])
+        #requests is url-encoded by default
+        if(payload==None):
+            payload = config['gatekeeper']['credentials']  
+        #url encoded
+        r = requests.post(url, data=payload)        
+        return r
+    
+    def create_session_json(self,url=None,payload=None):
         '''    
         creates a session through the login API
     
@@ -32,10 +53,9 @@ class GateKeeperService(object):
         if(payload==None):
             payload = config['gatekeeper']['credentials']  
         #json encoded     
-        #r = requests.post(url, data=json.dumps(payload))
-        #url encoded until josn issue is resolved
-        r = requests.post(url, data=payload)        
+        r = requests.post(url, data=json.dumps(payload))                
         return r
+    
     
     def validate_session(self,session_id,url=None):
         
@@ -88,5 +108,6 @@ class GateKeeperService(object):
          
         if(url==None): 
             url = 'http://{0}:{1}/home'.format(config['gatekeeper']['ip'],config['gatekeeper']['port'])      
-        response = session.get(url)  
+        print 'The url from the function is' + url
+        response = session.get(url)         
         return response 

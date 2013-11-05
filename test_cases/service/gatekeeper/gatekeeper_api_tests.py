@@ -6,8 +6,6 @@
 @author: Conor Fitzgerald
 
 '''
-import sys
-print sys.path
 import json
 import requests
 from testconfig import config
@@ -30,13 +28,21 @@ class TestGateKeeperAPI:
         self.gk_service = GateKeeperService()  
        
     @attr(env=['test'],priority =1)
-    def test_can_create_session(self):        
+    def test_can_create_session_json(self):        
         '''   
-        creates a session through a POST to the login API   
+        creates a session through a POST to the login API using json body  
         '''       
-        response=self.gk_service.create_session()
+        response=self.gk_service.create_session_json()
         assert response.status_code == requests.codes.ok
-     
+    
+    @attr(env=['test'],priority =1)
+    def test_can_create_session_urlencoded(self):        
+        '''   
+        creates a session through a POST to the login API using urlencoded body   
+        '''       
+        response=self.gk_service.create_session_urlencoded()
+        assert response.status_code == requests.codes.ok
+         
     @attr(env=['test'],priority =1)    
     def test_can_validate_session(self):
         '''   
@@ -44,7 +50,7 @@ class TestGateKeeperAPI:
         user_id and session_id(cookie value)   
         '''
         
-        response=self.gk_service.create_session()
+        response=self.gk_service.create_session_json()
         assert response.status_code == requests.codes.ok 
         json_response = json.loads(response.text)
         
@@ -60,7 +66,7 @@ class TestGateKeeperAPI:
         creates a session through a POST to the login API and then verifies that a user
         can access an url using a session with a valid cookie
         '''        
-        response=self.gk_service.create_session()
+        response=self.gk_service.create_session_json()
         assert response.status_code == requests.codes.ok 
         json_response = json.loads(response.text)
         cookie_value = json_response['session_id']               
@@ -72,19 +78,106 @@ class TestGateKeeperAPI:
         assert 'Super awesome test' in response.text        
        
     @attr(env=['test'],priority =1)
-    def test_expired_client_cookie(self):
+    def test_expired_client_cookie_json(self):
         '''   
         creates a session through a POST to the login API and then verifies that a user
         cannot access an url using an expired cookie
         '''
-        response=self.gk_service.create_session()
+                
+        response=self.gk_service.create_session_json()
+        
         assert response.status_code == requests.codes.ok 
+        
         json_response = json.loads(response.text)
+        
         cookie_value = json_response['session_id']
+        
+        print cookie_value
          
         my_cookie = dict(name='sso_cookie',value=cookie_value,expires = -1)   
-        response = self.gk_service.validate_url_with_cookie(self.gk_service.create_requests_session_with_cookie(my_cookie)) 
+        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
+        response = self.gk_service.validate_url_with_cookie(session) 
                 
-        assert response.status_code == requests.codes.ok   
-        assert '<title>Gatekeeper / Arts Alliance Media</title>' in response.text       
-       
+        assert response.status_code == requests.codes.ok           
+        assert '<title>Gatekeeper / Arts Alliance Media</title>' in response.text  
+    
+    @attr(env=['test'],priority =1)
+    def test_expired_client_cookie_urlencoded(self):
+        '''   
+        creates a session through a POST to the login API and then verifies that a user
+        cannot access an url using an expired cookie
+        '''
+                
+        response=self.gk_service.create_session_urlencoded()
+        
+        assert response.status_code == requests.codes.ok 
+        
+        json_response = json.loads(response.text)
+        
+        cookie_value = json_response['session_id']
+        
+        print cookie_value
+         
+        my_cookie = dict(name='sso_cookie',value=cookie_value,expires = -1)   
+        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
+        response = self.gk_service.validate_url_with_cookie(session) 
+                
+        assert response.status_code == requests.codes.ok           
+        assert '<title>Gatekeeper / Arts Alliance Media</title>' in response.text  
+    
+    @attr(env=['test'],priority =1)
+    def test_data_both(self):   
+        
+        jresponse=self.gk_service.create_session_json()        
+        uresponse=self.gk_service.create_session_urlencoded()
+                     
+        print jresponse.text
+        print uresponse.text
+        
+        json_jresponse = json.loads(jresponse.text)
+        json_uresponse = json.loads(uresponse.text)
+        
+        print  json_jresponse
+        print  json_uresponse
+        
+        cookie_valuej = json_jresponse['session_id']
+        cookie_valueu = json_uresponse['session_id']
+        
+        print cookie_valuej  
+        print cookie_valueu  
+        
+        histroryj = jresponse.history
+        histroryu = uresponse.history
+        
+        print histroryj  
+        print histroryu
+        
+        
+        my_cookiej = dict(name='sso_cookie',value=cookie_valuej,expires = -1)   
+        my_cookieu = dict(name='sso_cookie',value=cookie_valueu,expires = -1)   
+        
+        print my_cookiej 
+        print my_cookieu
+        
+        sessionj = self.gk_service.create_requests_session_with_cookie(my_cookiej)
+        sessionu = self.gk_service.create_requests_session_with_cookie(my_cookieu)
+        
+        print sessionj
+        print sessionu
+        
+        responsej = self.gk_service.validate_url_with_cookie(sessionj)
+        responseu = self.gk_service.validate_url_with_cookie(sessionu) 
+               
+        
+        print responsej 
+        print responseu
+        print responsej.history 
+        print responseu.history 
+        print responseu.status_code 
+        print responsej.status_code 
+        
+        assert responseu.status_code == requests.codes.ok           
+        assert '<title>Gatekeeper / Arts Alliance Media</title>' in responseu.text  
+        
+        assert responsej.status_code == requests.codes.ok           
+        assert '<title>Gatekeeper / Arts Alliance Media</title>' in responsej.text          
