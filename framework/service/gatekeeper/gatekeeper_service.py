@@ -107,7 +107,6 @@ class GateKeeperService(object):
         '''      
          
         if(url==None): 
-            url = 'http://{0}:{1}/home'.format(config['gatekeeper']['ip'],config['gatekeeper']['port'])      
-        print 'The url from the function is' + url
+            url = 'http://{0}:{1}/home'.format(config['gatekeeper']['ip'],config['gatekeeper']['port'])     
         response = session.get(url)         
         return response 

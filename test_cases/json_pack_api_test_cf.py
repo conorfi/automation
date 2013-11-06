@@ -115,7 +115,7 @@ def test_pack():
 	
     #last modified (401?)
 	
-	url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'],config['tms']['port']
+	'''url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'],config['tms']['port']
 	                                       ,config['api']['core']['pack']['last_modified'])
 	
 	payload = {
@@ -128,7 +128,7 @@ def test_pack():
 	status = r_last.status_code
 	r_last = json.loads(r_last.text)
 	assert uuid in r_last['data']
-	
+	'''
 	
 	
     #pack name exists
@@ -252,7 +252,7 @@ def test_pack():
 	assert 'Deleted' in response_delete['messages'][0]['message']
 
 
-@attr(env=['test'],priority = 1)	
+@attr(env=['test'],priority = 2)	
 def test_pack_xml():
 	
 		#create Pack

@@ -5,7 +5,7 @@ config['google-server'] = {}
 config['google-server']['host'] = "https://google.ca"
 
 config['tms'] = {}
-config['tms']['ip'] = '172.28.150.133'
+config['tms']['ip'] = '172.28.29.11'
 config['tms']['port'] = 8080
 config['tms']['db'] = 'C:\\aam-lms\\db\\cinema_services.db'
 config['tms']['db_type'] = 'sqlite:///'
@@ -14,7 +14,13 @@ config['gatekeeper'] ={}
 config['gatekeeper']['ip']   = '10.20.254.142'
 config['gatekeeper']['port'] = '8070'
 config['gatekeeper']['credentials'] = {'username': 'admin','password': 'admin'}                                    
-    
+config['gatekeeper']['db'] ={}
+config['gatekeeper']['db']['type'] = 'postgresql'
+config['gatekeeper']['db']['credentials'] = 'postgres:postgres'
+config['gatekeeper']['db']['host'] = '10.20.254.142'
+config['gatekeeper']['db']['port'] = '5432'
+config['gatekeeper']['db']['db_name'] = 'gatekeeper'
+config['gatekeeper']['db']['connection'] ='postgresql://postgres:postgres@10.20.254.142:5432/gatekeeper'   
 config['api'] = {}
 config['api']['core'] = {}
 config['api']['core']['pack'] = {}
