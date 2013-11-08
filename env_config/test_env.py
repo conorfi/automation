@@ -11,6 +11,7 @@ config['tms']['db'] = 'C:\\aam-lms\\db\\cinema_services.db'
 config['tms']['db_type'] = 'sqlite:///'
 
 config['gatekeeper'] ={}
+config['gatekeeper']['host']  = 'app-t01'
 config['gatekeeper']['ip']   = '10.20.254.142'
 config['gatekeeper']['port'] = '8070'
 config['gatekeeper']['credentials'] = {'username': 'admin','password': 'admin'}                                    
@@ -21,6 +22,7 @@ config['gatekeeper']['db']['host'] = '10.20.254.142'
 config['gatekeeper']['db']['port'] = '5432'
 config['gatekeeper']['db']['db_name'] = 'gatekeeper'
 config['gatekeeper']['db']['connection'] ='postgresql://postgres:postgres@10.20.254.142:5432/gatekeeper'   
+
 config['api'] = {}
 config['api']['core'] = {}
 config['api']['core']['pack'] = {}
@@ -37,3 +39,4 @@ config['api']['user'] = {}
 config['api']['user']['session'] = {}
 config['api']['user']['session']['create_v1'] = 'api/v1/user/login'
 config['api']['user']['session']['validate_v1'] = 'api/v1/user/session'
+config['api']['user']['session']['delete_v1'] = 'api/v1/user/logout'

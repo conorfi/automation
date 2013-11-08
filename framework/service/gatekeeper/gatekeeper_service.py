@@ -26,13 +26,13 @@ class GateKeeperService(object):
         
         '''    
         if(url==None):
-            url = 'http://{0}:{1}/{2}'.format(config['gatekeeper']['ip'],config['gatekeeper']['port']
+            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port']
                                            ,config['api']['user']['session']['create_v1'])
         #requests is url-encoded by default
         if(payload==None):
             payload = config['gatekeeper']['credentials']  
         #url encoded
-        r = requests.post(url, data=payload)        
+        r = requests.post(url, data=payload,verify=False)        
         return r
     
     def create_session_json(self,url=None,payload=None):
@@ -47,13 +47,13 @@ class GateKeeperService(object):
         
         '''    
         if(url==None):
-            url = 'http://{0}:{1}/{2}'.format(config['gatekeeper']['ip'],config['gatekeeper']['port']
+            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port']
                                            ,config['api']['user']['session']['create_v1'])
         #requests is url-encoded by default
         if(payload==None):
             payload = config['gatekeeper']['credentials']  
         #json encoded     
-        r = requests.post(url, data=json.dumps(payload))                
+        r = requests.post(url, data=json.dumps(payload),verify=False)                
         return r
     
     
@@ -70,12 +70,12 @@ class GateKeeperService(object):
         
         '''                      
             
-        url = 'http://{0}:{1}/{2}'.format(config['gatekeeper']['ip'],config['gatekeeper']['port']
+        url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port']
                                                ,config['api']['user']['session']['validate_v1'])
         
         request_url = url + '/%s'               
         request_url = request_url % (session_id)
-        r = requests.get(request_url)
+        r = requests.get(request_url,verify=False)
         return r      
 
     def create_requests_session_with_cookie(self,cookie): 
@@ -107,6 +107,24 @@ class GateKeeperService(object):
         '''      
          
         if(url==None): 
-            url = 'http://{0}:{1}/home'.format(config['gatekeeper']['ip'],config['gatekeeper']['port'])     
-        response = session.get(url)         
+            url = 'https://{0}:{1}/home'.format(config['gatekeeper']['host'],config['gatekeeper']['port'])     
+        response = session.get(url,verify=False)         
+        return response 
+    
+    def delete_user_session(self,session,url=None):
+        
+        '''    
+        single sign out, deletes user session
+    
+        @param session:  session object and associated cookie
+         
+        @param url: Optional. request url of API
+       
+        @return: a request session object
+        
+        '''      
+         
+        if(url==None): 
+            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['delete_v1'])     
+        response = session.post(url,verify=False)         
         return response 

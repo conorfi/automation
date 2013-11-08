@@ -27,7 +27,10 @@ class GateKeeperDAO(object):
                         from session
                          where session_id='%s'"""  % session_id
             result = db.query(query)
-            return result[0]
+            if (not result):
+                return None                
+            else:
+                return result[0]
         
     def set_session_to_expire_by_session_id(self,db,session_id):
             '''    
