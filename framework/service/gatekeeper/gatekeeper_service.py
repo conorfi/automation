@@ -14,7 +14,7 @@ from testconfig import config
 class GateKeeperService(object):
        
                         
-    def create_session_urlencoded(self,url=None,payload=None):
+    def create_session_urlencoded(self,url=None,payload=None,verify=None,allow_redirects=None,redirect_url=None):
         '''    
         creates a session through the login API
     
@@ -26,36 +26,29 @@ class GateKeeperService(object):
         
         '''    
         if(url==None):
-            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port']
-                                           ,config['api']['user']['session']['create_v1'])
+            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['create_v1'])
+                    
         #requests is url-encoded by default
         if(payload==None):
             payload = config['gatekeeper']['credentials']  
+            
+        if(redirect_url == None):
+            url = url + '?redirect=http%3A%2F%2Fwww.example.com' 
+            
+        #if(redirect_url == None):
+        #    payload = payload.update(config['gatekeeper']['redirect'])
+            
+        #requests is url-encoded by default
+        if(verify==None):
+            verify=False
+            
+        if(allow_redirects==None):
+            allow_redirects=True   
         #url encoded
-        r = requests.post(url, data=payload,verify=False)        
+        r = requests.post(url=url,data=payload,verify=verify,allow_redirects=allow_redirects)        
         return r
     
-    def create_session_json(self,url=None,payload=None):
-        '''    
-        creates a session through the login API
-    
-        @param url: Optional. request url of API
-    
-        @param payload: Optional. The credentials of the user
-    
-        @return: a request object
-        
-        '''    
-        if(url==None):
-            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port']
-                                           ,config['api']['user']['session']['create_v1'])
-        #requests is url-encoded by default
-        if(payload==None):
-            payload = config['gatekeeper']['credentials']  
-        #json encoded     
-        r = requests.post(url, data=json.dumps(payload),verify=False)                
-        return r
-    
+   
     
     def validate_session(self,session_id,url=None):
         
@@ -92,7 +85,7 @@ class GateKeeperService(object):
         session.cookies.set(**cookie)
         return session
     
-    def validate_url_with_cookie(self,session,url=None):
+    def validate_url_with_cookie(self,session,url=None,redirect_url=None,verify=None,allow_redirects=None):
         
         '''    
         Validates whether a particular with session and associated cookie
@@ -101,14 +94,21 @@ class GateKeeperService(object):
         @param session:  session object and associated cookie
          
         @param url: Optional. request url of API
-       
+        @param url: Verify.  boolean to determine if SSL cert will be verified 
+        @param url: allow_redirects.  boolean to determine if SSL cert will be verified 
         @return: a request session object
         
         '''      
          
         if(url==None): 
-            url = 'https://{0}:{1}/home'.format(config['gatekeeper']['host'],config['gatekeeper']['port'])     
-        response = session.get(url,verify=False)         
+            url = 'https://{0}:{1}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'])
+        if(redirect_url == None):
+            url = url + '?redirect=http%3A%2F%2Fwww.example.com'
+        if(verify==None):
+            verify=False   
+        if(allow_redirects==None):
+            allow_redirects=True   
+        response = session.get(url=url, verify=verify,allow_redirects=allow_redirects)         
         return response 
     
     def delete_user_session(self,session,url=None):
@@ -127,4 +127,4 @@ class GateKeeperService(object):
         if(url==None): 
             url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['delete_v1'])     
         response = session.post(url,verify=False)         
-        return response 
+        return response

@@ -22,6 +22,7 @@ config['gatekeeper']['db']['host'] = '10.20.254.142'
 config['gatekeeper']['db']['port'] = '5432'
 config['gatekeeper']['db']['db_name'] = 'gatekeeper'
 config['gatekeeper']['db']['connection'] ='postgresql://postgres:postgres@10.20.254.142:5432/gatekeeper'   
+config['gatekeeper']['redirect'] = {'redirect': 'http%3A%2F%2Fwww.example.com'}   
 
 config['api'] = {}
 config['api']['core'] = {}
@@ -37,6 +38,7 @@ config['api']['core']['pack']['pack_name_exists'] = 'core/pack/pack_name_exists'
 config['api']['core']['pack']['add_pack_xml'] = 'core/pack/add_pack_xml'
 config['api']['user'] = {}
 config['api']['user']['session'] = {}
-config['api']['user']['session']['create_v1'] = 'api/v1/user/login'
+config['api']['user']['session']['create_v1'] = 'login/'
 config['api']['user']['session']['validate_v1'] = 'api/v1/user/session'
-config['api']['user']['session']['delete_v1'] = 'api/v1/user/logout'
+#trailing / required for logout
+config['api']['user']['session']['delete_v1'] = 'logout/'
