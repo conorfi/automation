@@ -40,9 +40,32 @@ class TestGateKeeperAPI:
     
        
     @attr(env=['test'],priority =1)
-    def test_can_create_session(self):        
+    def test_can_create_session_with_redirect(self):        
         '''   
-        GATEKEEPER-API001 creates a session through a POST to the login API using urlencoded body   
+        GATEKEEPER-API001 creates a session through a POST to the login API using urlencoded body. Specified redirect   
+        '''
+        #create a session - do not allow redirects       
+        response=self.gk_service.create_session_urlencoded(allow_redirects=False,redirect_url=config['gatekeeper']['redirect'])
+        #303 response
+        assert response.status_code == requests.codes.other        
+        #covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        session_id   = cookie['sso_cookie'].value        
+        #assert against database
+        db_response =self.gk_dao.get_session_by_session_id(self.db,session_id)       
+        assert db_response['session_id'] == session_id  
+        
+        #create a session - allow redirects   
+        response=self.gk_service.create_session_urlencoded(allow_redirects=True,redirect_url=config['gatekeeper']['redirect'])
+        #200 response
+        assert response.status_code == requests.codes.ok
+        assert 'Example Domain' in response.text  
+    
+    @attr(env=['test'],priority =1)
+    def test_can_create_session_default_redirect(self):        
+        '''   
+        GATEKEEPER-API002 creates a session through a POST to the login API using urlencoded body. Default redirect   
         '''
         #create a session - do not allow redirects       
         response=self.gk_service.create_session_urlencoded(allow_redirects=False)
@@ -60,12 +83,11 @@ class TestGateKeeperAPI:
         response=self.gk_service.create_session_urlencoded(allow_redirects=True)
         #200 response
         assert response.status_code == requests.codes.ok
-        assert 'Example Domain' in response.text  
-       
+            
     @attr(env=['test'],priority =1)    
-    def test_can_validate_urlencoded(self):
+    def test_can_validate(self):
         '''   
-        GATEKEEPER-API002 creates a session through a POST to the login API and then validates the 
+        GATEKEEPER-API003 creates a session through a POST to the login API and then validates the 
         user_id and session_id(cookie value)   
         '''
         
@@ -91,11 +113,32 @@ class TestGateKeeperAPI:
         assert json_val_response['session_id'] == db_response['session_id']             
     
    
-    @attr(env=['test'],priority =2)
-    def test_can_validate_cookie(self):
+    @attr(env=['test'],priority =1)
+    def test_can_validate_cookie_with_redirect(self):
         '''   
-        GATEKEEPER-API003 creates a session through a POST to the login API and then verifies that a user
-        can access an url using a session with a valid cookie
+        GATEKEEPER-API004 creates a session through a POST to the login API and then verifies that a user
+        can access an url using a session with a valid cookie. Specified redirect
+        '''   
+        #urlencoded post
+        #create a session - do not allow redirects       
+        response=self.gk_service.create_session_urlencoded(allow_redirects=False,redirect_url=config['gatekeeper']['redirect'])
+        #303 response
+        assert response.status_code == requests.codes.other        
+        #covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value  = cookie['sso_cookie'].value   
+            
+        my_cookie = dict(name='sso_cookie',value=cookie_value)   
+        response = self.gk_service.validate_url_with_cookie(self.gk_service.create_requests_session_with_cookie(my_cookie),redirect_url=config['gatekeeper']['redirect'])        
+        assert response.status_code == requests.codes.ok   
+        assert 'Example Domain' in response.text  
+        
+    @attr(env=['test'],priority =1)
+    def test_can_validate_cookie_default_redirect(self):
+        '''   
+        GATEKEEPER-API005 creates a session through a POST to the login API and then verifies that a user
+        can access an url using a session with a valid cookie. Default redirect
         '''   
         #urlencoded post
         #create a session - do not allow redirects       
@@ -109,14 +152,12 @@ class TestGateKeeperAPI:
             
         my_cookie = dict(name='sso_cookie',value=cookie_value)   
         response = self.gk_service.validate_url_with_cookie(self.gk_service.create_requests_session_with_cookie(my_cookie))        
-        assert response.status_code == requests.codes.ok   
-        assert 'Example Domain' in response.text  
-           
-   
+        assert response.status_code == requests.codes.ok  
+                  
     @attr(env=['test'],priority =1)
     def test_expired_client_cookie(self):
         '''   
-        GATEKEEPER-API004 creates a session through a POST to the login API and then verifies that a user
+        GATEKEEPER-API006 creates a session through a POST to the login API and then verifies that a user
         cannot access an url using an expired cookie on the client side
         '''              
         #urlencoded post
@@ -138,7 +179,7 @@ class TestGateKeeperAPI:
     @attr(env=['test'],priority =1)
     def test_expired_server_cookie(self):
         '''   
-        GATEKEEPER-API005 creates a session through a POST to the login API and then verifies that a user
+        GATEKEEPER-API007 creates a session through a POST to the login API and then verifies that a user
         cannot access an url using an expired cookie on the server side
         '''
         #urlencoded post
@@ -161,18 +202,17 @@ class TestGateKeeperAPI:
         
         #reopen another db connection - :TODO investigate a cleaner solution than this
         self.db = BaseDAO(config['gatekeeper']['db']['connection'])        
-        #USER LOGINS CAUSED EXPIRED COOKIE TO BE DELETED
+        #User login causes expired coookie to be deleted
         response=self.gk_service.create_session_urlencoded(allow_redirects=False)
         
         #assert againist the database - ensure it no longer exists
-        db_response = self.gk_dao.get_session_by_session_id(self.db,cookie_value)  
-        #Code GOT OVERWRIITEN WHEN LOGIN api WAS REMOVED
+        db_response = self.gk_dao.get_session_by_session_id(self.db,cookie_value)
         assert db_response== None
         
     @attr(env=['test'],priority =1)    
     def test_header_verification_urlencoded_session(self):
         '''   
-        GATEKEEPER-API006 creates a session through a POST to the login API and then validates the 
+        GATEKEEPER-API008 creates a session through a POST to the login API and then validates the 
         user_id and session_id(cookie value). Ensure httponly header is present   
         '''
         #urlencoded post
@@ -188,9 +228,44 @@ class TestGateKeeperAPI:
         
     
     @attr(env=['test'],priority =1)
-    def test_can_delete_session_urlencoded(self):
+    def test_can_delete_session_with_redirect(self):
         '''   
-        GATEKEEPER-API007 Ensures a user session can be deleted using single logout(for a json created session)
+        GATEKEEPER-API009 Ensures a user session can be deleted using single logout(for a json created session)
+        Specified redirect on logout
+        '''        
+        #urlencoded post
+        #create a session - do not allow redirects       
+        response=self.gk_service.create_session_urlencoded(allow_redirects=False,redirect_url=config['gatekeeper']['redirect'])
+        #303 response
+        assert response.status_code == requests.codes.other        
+        #covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value  = cookie['sso_cookie'].value                      
+                 
+        my_cookie = dict(name='sso_cookie',value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
+        
+        response = self.gk_service.validate_url_with_cookie(session,redirect_url=config['gatekeeper']['redirect'])        
+        assert response.status_code == requests.codes.ok   
+        assert 'Example Domain' in response.text    
+        
+        response = self.gk_service.delete_user_session(session)
+        assert response.status_code == requests.codes.ok  
+               
+        response = self.gk_service.validate_url_with_cookie(session)    
+        assert response.status_code == requests.codes.ok           
+        assert '<title>Gatekeeper / Arts Alliance Media</title>' in response.text
+        
+        #assert againist the database - ensure it no longer exists
+        db_response =self.gk_dao.get_session_by_session_id(self.db,cookie_value)  
+        assert db_response== None
+        
+    @attr(env=['test'],priority =1)
+    def test_can_delete_session_default_redirect(self):
+        '''   
+        GATEKEEPER-API010 Ensures a user session can be deleted using single logout(for a json created session)
+        Default redirect on loout
         '''        
         #urlencoded post
         #create a session - do not allow redirects       
@@ -206,8 +281,8 @@ class TestGateKeeperAPI:
         session = self.gk_service.create_requests_session_with_cookie(my_cookie)
         
         response = self.gk_service.validate_url_with_cookie(session)        
-        assert response.status_code == requests.codes.ok   
-        assert 'Example Domain' in response.text    
+        assert response.status_code == requests.codes.ok  
+        
         
         response = self.gk_service.delete_user_session(session)
         assert response.status_code == requests.codes.ok  

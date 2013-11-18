@@ -32,8 +32,8 @@ class GateKeeperService(object):
         if(payload==None):
             payload = config['gatekeeper']['credentials']  
             
-        if(redirect_url == None):
-            url = url + '?redirect=http%3A%2F%2Fwww.example.com' 
+        if(redirect_url != None):
+            url = url + redirect_url
             
         #if(redirect_url == None):
         #    payload = payload.update(config['gatekeeper']['redirect'])
@@ -88,7 +88,7 @@ class GateKeeperService(object):
     def validate_url_with_cookie(self,session,url=None,redirect_url=None,verify=None,allow_redirects=None):
         
         '''    
-        Validates whether a particular with session and associated cookie
+        Validates whether a particular user with session and associated cookie
         can access a resource/url
     
         @param session:  session object and associated cookie
@@ -101,9 +101,9 @@ class GateKeeperService(object):
         '''      
          
         if(url==None): 
-            url = 'https://{0}:{1}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'])
-        if(redirect_url == None):
-            url = url + '?redirect=http%3A%2F%2Fwww.example.com'
+            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['create_v1'] )
+        if(redirect_url != None):
+            url = url + redirect_url
         if(verify==None):
             verify=False   
         if(allow_redirects==None):
