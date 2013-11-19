@@ -16,6 +16,11 @@ from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 import Cookie
 
+#adfuser is the defaut test application
+DEFAULT_TEST_APP = "adfuser"
+#adefaul test user is 1 
+# TODO: write db function to return the user
+DEFAULT_TEST_USER = 1
 class TestGateKeeperAPI:
 
     @classmethod
@@ -85,7 +90,7 @@ class TestGateKeeperAPI:
         assert response.status_code == requests.codes.ok
             
     @attr(env=['test'],priority =1)    
-    def test_can_validate(self):
+    def test_can_validate_with_valid_session_cookie(self):
         '''   
         GATEKEEPER-API003 creates a session through a POST to the login API and then validates the 
         user_id and session_id(cookie value)   
@@ -112,7 +117,6 @@ class TestGateKeeperAPI:
         assert json_val_response['user_id']    == db_response['user_id']
         assert json_val_response['session_id'] == db_response['session_id']             
     
-   
     @attr(env=['test'],priority =1)
     def test_can_validate_cookie_with_redirect(self):
         '''   
@@ -265,7 +269,7 @@ class TestGateKeeperAPI:
     def test_can_delete_session_default_redirect(self):
         '''   
         GATEKEEPER-API010 Ensures a user session can be deleted using single logout(for a json created session)
-        Default redirect on loout
+        Default redirect on logout
         '''        
         #urlencoded post
         #create a session - do not allow redirects       
@@ -294,3 +298,75 @@ class TestGateKeeperAPI:
         #assert againist the database - ensure it no longer exists
         db_response =self.gk_dao.get_session_by_session_id(self.db,cookie_value)  
         assert db_response== None
+    
+    @attr(env=['test'],priority =1)
+    def test_can_return_user_info_with_valid_cookie_session(self):
+        '''   
+        GATEKEEPER-API011 Ensures a user session can be deleted using single logout(for a json created session)
+        Specified redirect on logout
+        '''        
+        #urlencoded post
+        #create a session - do not allow redirects       
+        response=self.gk_service.create_session_urlencoded(allow_redirects=False,redirect_url=config['gatekeeper']['redirect'])
+        #303 response
+        assert response.status_code == requests.codes.other        
+        #covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value  = cookie['sso_cookie'].value                    
+        my_cookie = dict(name='sso_cookie',value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
+        response = self.gk_service.user_info(session,DEFAULT_TEST_USER,DEFAULT_TEST_APP) 
+        assert response.status_code == requests.codes.ok 
+        
+        json_response = json.loads(response.text)
+            
+    @attr(env=['test'],priority =1)
+    def test_user_info_with_invalid_cookie_session(self):
+        '''   
+        GATEKEEPER-API012 Ensures a user session can be deleted using single logout(for a json created session)
+        Specified redirect on logout
+        '''        
+        #urlencoded post
+        #create a session - do not allow redirects       
+        response=self.gk_service.create_session_urlencoded(allow_redirects=False,redirect_url=config['gatekeeper']['redirect'])
+        #303 response
+        assert response.status_code == requests.codes.other        
+        #covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        fake_cookie_value = "fakecookie"
+        cookie_value  =  fake_cookie_value                   
+                 
+        my_cookie = dict(name='sso_cookie',value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
+        response = self.gk_service.user_info(session,DEFAULT_TEST_USER,DEFAULT_TEST_APP)
+        #ensure that the request is forbidden(403) without a valid session cookie 
+        assert response.status_code == requests.codes.forbidden  
+        
+    @attr(env=['test'],priority =1)
+    def test_return_user_info_with_invalid_application(self):
+        '''   
+        GATEKEEPER-API013 Ensures a user session can be deleted using single logout(for a json created session)
+        Specified redirect on logout
+        '''        
+        #urlencoded post
+        #create a session - do not allow redirects       
+        response=self.gk_service.create_session_urlencoded(allow_redirects=False,redirect_url=config['gatekeeper']['redirect'])
+        #303 response
+        assert response.status_code == requests.codes.other        
+        #covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value  = cookie['sso_cookie'].value                     
+        my_cookie = dict(name='sso_cookie',value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
+        fake_application ="fake"
+        response = self.gk_service.user_info(session,DEFAULT_TEST_USER,fake_application) 
+        #ensure it returns a 404 not found
+        assert response.status_code == requests.codes.not_found 
+        
+        json_response = json.loads(response.text)        
+        assert "No user with id" in json_response['error']
+        assert "found for application" in json_response['error']
+    

@@ -94,8 +94,9 @@ class GateKeeperService(object):
         @param session:  session object and associated cookie
          
         @param url: Optional. request url of API
-        @param url: Verify.  boolean to determine if SSL cert will be verified 
-        @param url: allow_redirects.  boolean to determine if SSL cert will be verified 
+        @param redirect_url: Url to redirect 
+        @param verify: Verify.  boolean to determine if SSL cert will be verified 
+        @param allow_redirects.: allow_redirects.  boolean to determine if SSL cert will be verified 
         @return: a request session object
         
         '''      
@@ -127,4 +128,29 @@ class GateKeeperService(object):
         if(url==None): 
             url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['delete_v1'])     
         response = session.post(url,verify=False)         
+        return response
+    
+    def user_info(self,session,user_id,application,url=None,verify=None):
+        
+        '''    
+        Returns user info for a valid user id and session cookie
+    
+        @param session:  session object and associated cookie
+         
+        @param url: Optional. request url of API
+        @param user_id: user id we are querying
+        @param application: application that we will filter on 
+        @param verify: Verify.  boolean to determine if SSL cert will be verified 
+        @param allow_redirects:  boolean to determine if redirects are allowed
+        @return: a request session object containg the user info
+        
+        '''      
+         
+        if(url==None): 
+            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['user_info_v1'])                   
+        request_url = url + '/%s/?application_name=%s'              
+        request_url = request_url % (user_id,application)
+        if(verify==None):
+            verify=False  
+        response = session.get(url=request_url, verify=verify)         
         return response
