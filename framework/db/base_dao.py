@@ -52,8 +52,7 @@ class BaseDAO():
            
         @return: 
         
-        '''     
-        
+        '''             
         trans = self.connection.begin()
         try:
             self.connection.execute(query)
@@ -63,6 +62,6 @@ class BaseDAO():
             trans.rollback()
             raise   
             return False
-        finally:
-            self.connection.close()
+        #finally:
+        #    self.connection.close()
         

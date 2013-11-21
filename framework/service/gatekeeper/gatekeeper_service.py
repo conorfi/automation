@@ -154,3 +154,29 @@ class GateKeeperService(object):
             verify=False  
         response = session.get(url=request_url, verify=verify)         
         return response
+    
+    
+    def validate_end_point(self,session,end_point=None,url=None,verify=None):
+        
+        '''    
+        Returns user info for a valid user id and session cookie
+    
+        @param session:  session object and associated cookie
+         
+        @param url: Optional. request url of API
+        @param user_id: user id we are querying
+        @param application: application that we will filter on 
+        @param verify: Verify.  boolean to determine if SSL cert will be verified 
+        @param allow_redirects:  boolean to determine if redirects are allowed
+        @return: a request session object containg the user info
+        
+        '''      
+         
+        if(url==None): 
+            url = 'https://{0}:{1}/'.format(config['gatekeeper']['dummy']['host'],config['gatekeeper']['dummy']['port'])
+        if(end_point!=None):
+            url = url + end_point
+        if(verify==None):
+            verify=False  
+        response = session.get(url=url, verify=verify)         
+        return response

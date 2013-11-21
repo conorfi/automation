@@ -17,11 +17,21 @@ from framework.db.gate_keeper_dao import GateKeeperDAO
 import Cookie
 import random
 
+import string
+
 #adfuser is the defaut test application
 DEFAULT_TEST_APP = "adfuser"
 #adefaul test user is 1 
 # TODO: write db function to return the user
 DEFAULT_TEST_USER = 1
+
+#default user permission configured for adfuser 
+DEFAULT_ADFUSER_USER  = 'ADFUSER_USER'
+DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
+
+# hash of the apssword test - using this rather than implementing the gatekeepr hashing function
+HASH_PASSWORD_TEST = "pbkdf2_sha256$12000$m5uwpzIW9qaO$88pIM25AqnXu4Fgt/Xgtpp3AInYgk5sxaxJmxxpcR8A="
+
 class TestGateKeeperAPI:
 
     @classmethod
@@ -61,7 +71,8 @@ class TestGateKeeperAPI:
         #assert against database
         db_response =self.gk_dao.get_session_by_session_id(self.db,session_id)       
         assert db_response['session_id'] == session_id  
-        
+        assert db_response['user_id'] == DEFAULT_TEST_USER
+                
         #create a session - allow redirects   
         response=self.gk_service.create_session_urlencoded(allow_redirects=True,redirect_url=config['gatekeeper']['redirect'])
         #200 response
@@ -84,7 +95,8 @@ class TestGateKeeperAPI:
         #assert against database
         db_response =self.gk_dao.get_session_by_session_id(self.db,session_id)       
         assert db_response['session_id'] == session_id  
-        
+        assert db_response['user_id'] == DEFAULT_TEST_USER
+         
         #create a session - allow redirects   
         response=self.gk_service.create_session_urlencoded(allow_redirects=True)
         #200 response
@@ -249,7 +261,8 @@ class TestGateKeeperAPI:
         assert response.status_code == requests.codes.ok           
         assert '<title>Gatekeeper / Arts Alliance Media</title>' in response.text  
         
-        #reopen another db connection - :TODO investigate a cleaner solution than this
+        #reopen another db connection 
+        # TODO: investigate a cleaner solution than this
         self.db = BaseDAO(config['gatekeeper']['db']['connection'])        
         #User login causes expired coookie to be deleted
         response=self.gk_service.create_session_urlencoded(allow_redirects=False)
@@ -344,7 +357,7 @@ class TestGateKeeperAPI:
         db_response =self.gk_dao.get_session_by_session_id(self.db,cookie_value)  
         assert db_response== None
     
-    @attr(env=['test'],priority =2)
+    @attr(env=['test'],priority =1)
     def test_can_return_user_info_with_valid_info(self):
         '''   
         GATEKEEPER-API013 Ensures user info can be return from the user api when a valid session,
@@ -375,11 +388,328 @@ class TestGateKeeperAPI:
         assert 'ADFUSER_ADMIN'              in response.json()['permissions'][1]
         assert 'ADFUSER_USER'               in response.json()['permissions'][2]
         assert 'ADFUSER_DUMMYUSER'          in response.json()['permissions'][3]
+    
+    @attr(env=['test'],priority =1)
+    def test_validate_user_api_and_authorization_app_only_permissions(self):
+        '''   
+        GATEKEEPER-API014 - test user api and permissions for user with only app access  
+        Part a - Ensures user info can be return from the user api when a valid session,
+        ,user id and application is provided for a user
+        Part b  - Using the dummy application verify the end points the user can access
+        when the user only has access to the dummy app
+        
+        '''        
+        
+        '''
+        create a user and associate user with relevant pre confiured application for dummy app 
+        '''
+        username = 'automation_' + self.random_str(5)
+        appname =  DEFAULT_TEST_APP
+        fullname = 'automation ' + self.random_str(5)
+        email    = self.random_str(5) + '@' + self.random_str(5) + '.com'
+        
+        #create basic user - no permisssions
+        assert (self.gk_dao.set_gk_user(self.db, username, HASH_PASSWORD_TEST, email , fullname, '123-456-789123456'))
+        
+        #get user_id
+        user_id = self.gk_dao.get_user_id_by_username(self.db, username)['user_id']
+        
+        #get app id                
+        app_id = self.gk_dao.get_app_id_by_app_name(self.db,appname)['application_id']
+                
+        #associate user with app
+        assert(self.gk_dao.set_user_app_id(self.db,app_id, user_id))
+        
+        
+        '''
+        create a session for the user
+        '''
+        credentials_payload = {'username': username , 'password': 'test'}  
+        #create a session - do not allow redirects - urlencoded post        
+        response=self.gk_service.create_session_urlencoded(allow_redirects=False,payload=credentials_payload)
+        #303 response
+        assert response.status_code == requests.codes.other      
+        #covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value  = cookie['sso_cookie'].value                    
+        my_cookie = dict(name='sso_cookie',value=cookie_value)        
+        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
+        
+        
+        '''
+        Verify the user API
+        '''
+        
+        response = self.gk_service.user_info(session,user_id,appname) 
+        assert response.status_code == requests.codes.ok                        
+                   
+        assert username     in response.json()['username']
+        assert []           == response.json()['organizations']
+        assert str(user_id) in response.json()['user_id']  
+        assert []           == response.json()['groups']       
+        assert fullname     in response.json()['fullname']   
+        assert email        in response.json()['email']
+        assert []           == response.json()['permissions']
+
+        '''
+        Using the dummy application verify the permissions the user is authorized for
+        '''
+        #verify the dummy applcation can be accessed
+        response = self.gk_service.validate_end_point(session)        
+        assert response.status_code == requests.codes.ok  
+        
+        #verify the user end point cannot be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['user_endpoint'])        
+        assert response.status_code == requests.codes.forbidden 
+          
+        #verify the admin end point cannot be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['admin_endpoint'])        
+        assert response.status_code == requests.codes.forbidden 
+        
+        
+        '''
+        delete the user and application
+        '''        
+        #delete user - cascade delete by default
+        assert (self.gk_dao.del_user(self.db, user_id))        
+        
+    @attr(env=['test'],priority =1)
+    def test_validate_user_api_and_authorization_user_permissions(self):
+        '''   
+        GATEKEEPER-API015 test user api and permissions for user with user_permission access  
+        Part a - Using the dummy application verify the end points the user can access
+        when the user has permissions configured for the with user permissions in the user_permissions table
+        Part b  - Ensures user info can be return from the user api when a valid session,
+        ,user id and application is provided for a user
+        
+        '''        
+        
+        '''
+        create a user and associate user with relevant pre confiured application for dummy app 
+        '''
+        username = 'automation_' + self.random_str(5)
+        appname =  DEFAULT_TEST_APP
+        fullname = 'automation ' + self.random_str(5)
+        email    = self.random_str(5) + '@' + self.random_str(5) + '.com'
+        user_permission = user_id = self.gk_dao.get_permission_id_by_name(self.db,DEFAULT_ADFUSER_USER)['permission_id']
+        admin_permission = user_id = self.gk_dao.get_permission_id_by_name(self.db,DEFAULT_ADFUSER_ADMIN)['permission_id']
+        
+        #create basic user - no permisssions
+        assert (self.gk_dao.set_gk_user(self.db, username, HASH_PASSWORD_TEST, email , fullname, '123-456-789123456'))
+        
+        #get user_id
+        user_id = self.gk_dao.get_user_id_by_username(self.db, username)['user_id']
+        
+        #get app id                
+        app_id = self.gk_dao.get_app_id_by_app_name(self.db,appname)['application_id']
+                
+        #associate user with app
+        assert(self.gk_dao.set_user_app_id(self.db,app_id, user_id))
+        
+              
+        
+        '''
+        create a session for the user
+        '''
+        credentials_payload = {'username': username , 'password': 'test'}  
+        #create a session - do not allow redirects - urlencoded post        
+        response=self.gk_service.create_session_urlencoded(allow_redirects=False,payload=credentials_payload)
+        #303 response
+        assert response.status_code == requests.codes.other      
+        #covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value  = cookie['sso_cookie'].value                    
+        my_cookie = dict(name='sso_cookie',value=cookie_value)        
+        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
+        
+        
+        '''
+        set the user permissions for the app i.e user can only access the dummy application and user end point
+        '''        
+        assert (self.gk_dao.set_user_permissions_id(self.db, user_id,user_permission))
+        
+        '''
+        Using the dummy application verify the permissions the user is authorized
+        '''
+        #verify the dummy applcation can be accessed
+        response = self.gk_service.validate_end_point(session)        
+        assert response.status_code == requests.codes.ok  
+        
+        #verify the user end point can be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['user_endpoint'])        
+        assert response.status_code == requests.codes.ok  
+          
+        #verify the admin end point cannot be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['admin_endpoint'])        
+        assert response.status_code == requests.codes.forbidden 
+        
+        
+        '''
+        set the admin permissions for the app i.e user can  access admin end point
+        '''        
+        assert (self.gk_dao.set_user_permissions_id(self.db, user_id,admin_permission))
+                
+        '''
+        Using the dummy application verify the permissions the user is authorized
+        '''
+        #verify the dummy applcation can be accessed
+        response = self.gk_service.validate_end_point(session)        
+        assert response.status_code == requests.codes.ok  
+        
+        #verify the user end point can be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['user_endpoint'])        
+        assert response.status_code == requests.codes.ok  
+          
+        #verify the admin end point can be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['admin_endpoint'])        
+        assert response.status_code == requests.codes.ok
+                
+        
+        '''
+        Verify the user API
+        '''
+        response = self.gk_service.user_info(session,user_id,appname) 
+        assert response.status_code == requests.codes.ok                        
+                   
+        assert username             in response.json()['username']
+        assert []                   == response.json()['organizations']
+        assert str(user_id)         in response.json()['user_id']  
+        assert []                   == response.json()['groups']       
+        assert fullname             in response.json()['fullname']   
+        assert email                in response.json()['email']
+        assert DEFAULT_ADFUSER_ADMIN == response.json()['permissions'][0]
+        assert DEFAULT_ADFUSER_USER  == response.json()['permissions'][1]
          
+        '''
+        delete the user and application
+        '''        
+        #delete user - cascade delete by default
+        assert (self.gk_dao.del_user(self.db, user_id))        
+        
+    
+    
+    @attr(env=['test'],priority =1)
+    def test_validate_user_api_and_authorization_group_permissions(self):
+        '''   
+        GATEKEEPER-API016 - test user api and permissions for user with group_permission access
+        Part a - Using the dummy application verify the end points the user can access
+        when the user has permissions configured for the with user permissions in the group_permissions table
+        Part b  - Ensures user info can be return from the user api when a valid session,
+        ,user id and application is provided for a user
+        
+        '''        
+        
+        
+        '''
+        create a user and associate user with relevant pre confiured application for dummy app 
+        '''
+        username = 'automation_' + self.random_str(5)
+        appname =  DEFAULT_TEST_APP
+        fullname = 'automation ' + self.random_str(5)
+        email    = self.random_str(5) + '@' + self.random_str(5) + '.com'
+        user_permission = user_id = self.gk_dao.get_permission_id_by_name(self.db,DEFAULT_ADFUSER_USER)['permission_id']
+        admin_permission = user_id = self.gk_dao.get_permission_id_by_name(self.db,DEFAULT_ADFUSER_ADMIN)['permission_id']
+        
+        #create basic user - no permisssions
+        assert (self.gk_dao.set_gk_user(self.db, username, HASH_PASSWORD_TEST, email , fullname, '123-456-789123456'))
+        
+        #get user_id
+        user_id = self.gk_dao.get_user_id_by_username(self.db, username)['user_id']
+        
+        #get app id                
+        app_id = self.gk_dao.get_app_id_by_app_name(self.db,appname)['application_id']
+                
+        #associate user with app
+        assert(self.gk_dao.set_user_app_id(self.db,app_id, user_id))
+        
+              
+        
+        '''
+        create a session for the user
+        '''
+        credentials_payload = {'username': username , 'password': 'test'}  
+        #create a session - do not allow redirects - urlencoded post        
+        response=self.gk_service.create_session_urlencoded(allow_redirects=False,payload=credentials_payload)
+        #303 response
+        assert response.status_code == requests.codes.other      
+        #covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value  = cookie['sso_cookie'].value                    
+        my_cookie = dict(name='sso_cookie',value=cookie_value)        
+        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
+        
+        
+        '''
+        set the user permissions for the app i.e user can only access the dummy application and user end point
+        '''        
+        assert (self.gk_dao.set_user_permissions_id(self.db, user_id,user_permission))
+        
+        '''
+        Using the dummy application verify the permissions the user is authorized
+        '''
+        #verify the dummy applcation can be accessed
+        response = self.gk_service.validate_end_point(session)        
+        assert response.status_code == requests.codes.ok  
+        
+        #verify the user end point can be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['user_endpoint'])        
+        assert response.status_code == requests.codes.ok  
+          
+        #verify the admin end point cannot be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['admin_endpoint'])        
+        assert response.status_code == requests.codes.forbidden 
+        
+        
+        '''
+        set the admin permissions for the app i.e user can  access admin end point
+        '''        
+        assert (self.gk_dao.set_user_permissions_id(self.db, user_id,admin_permission))
+                
+        '''
+        Using the dummy application verify the permissions the user is authorized
+        '''
+        #verify the dummy applcation can be accessed
+        response = self.gk_service.validate_end_point(session)        
+        assert response.status_code == requests.codes.ok  
+        
+        #verify the user end point can be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['user_endpoint'])        
+        assert response.status_code == requests.codes.ok  
+          
+        #verify the admin end point can be accessed
+        response = self.gk_service.validate_end_point(session,end_point=config['gatekeeper']['dummy']['admin_endpoint'])        
+        assert response.status_code == requests.codes.ok
+                
+        
+        '''
+        Verify the user API
+        '''
+        response = self.gk_service.user_info(session,user_id,appname) 
+        assert response.status_code == requests.codes.ok                        
+                   
+        assert username             in response.json()['username']
+        assert []                   == response.json()['organizations']
+        assert str(user_id)         in response.json()['user_id']  
+        assert []                   == response.json()['groups']       
+        assert fullname             in response.json()['fullname']   
+        assert email                in response.json()['email']
+        assert DEFAULT_ADFUSER_ADMIN == response.json()['permissions'][0]
+        assert DEFAULT_ADFUSER_USER  == response.json()['permissions'][1]
+         
+        '''
+        delete the user and application
+        '''        
+        #delete user - cascade delete by default
+        assert (self.gk_dao.del_user(self.db, user_id))        
+        
+                     
     @attr(env=['test'],priority =1)
     def test_user_info_with_invalid_cookie_session(self):
         '''   
-        GATEKEEPER-API014 Ensures user info CANNOT be return from the user api when a invalid session,
+        GATEKEEPER-API017 Ensures user info CANNOT be return from the user api when a invalid session,
         is provided
         '''        
         #urlencoded post
@@ -402,7 +732,7 @@ class TestGateKeeperAPI:
     @attr(env=['test'],priority =1)
     def test_return_user_info_with_invalid_application(self):
         '''   
-        GATEKEEPER-API015 Ensures user info CANNOT be return from the user api when a invalid 
+        GATEKEEPER-API018 Ensures user info CANNOT be return from the user api when a invalid 
         application is provided
         '''        
         #urlencoded post
@@ -427,7 +757,7 @@ class TestGateKeeperAPI:
     @attr(env=['test'],priority =1)
     def test_return_user_info_with_invalid_user_id(self):
         '''   
-        GATEKEEPER-API016 Ensures user info CANNOT be return from the user api when a invalid 
+        GATEKEEPER-API019 Ensures user info CANNOT be return from the user api when a invalid 
         user id is provided
         '''        
         #urlencoded post
@@ -448,3 +778,7 @@ class TestGateKeeperAPI:
         #ensure that the request is forbidden(403) without a valid session cookie 
         assert response.status_code == requests.codes.forbidden         
         assert "User is either not logged in or not the same user as the user described in the resource URI" in response.json()['error']
+        
+    
+    def random_str(self,n):
+        return "".join(random.choice(string.ascii_lowercase) for x in xrange(n))
