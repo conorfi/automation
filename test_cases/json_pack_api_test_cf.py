@@ -40,7 +40,7 @@ def test_pack_test_tms_5():
 	r_packs_length  =  r_packs['data'].__len__()
 		
 		
-@attr(env=['test'],priority =2)
+@attr(env=['test'],priority =1)
 def test_pack():
 		
 	ads = {

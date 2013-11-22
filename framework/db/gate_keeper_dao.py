@@ -91,7 +91,27 @@ class GateKeeperDAO(object):
                 return None                
             else:
                 return result[0]
-                             
+    
+    def get_gk_group_id_by_name(self,db,grp_name):
+            '''    
+            Returns group id based on group name
+        
+            @param db: the database connection that will be utilized
+        
+            @param grp_name: group name
+        
+            @return: group id
+            
+            ''' 
+            query ="""select group_id
+                        from gatekeeper_group
+                        where name='%s'"""  % grp_name
+            result = db.query(query)
+            if (not result):
+                return None                
+            else:
+                return result[0]
+                                     
     def set_session_to_expire_by_session_id(self,db,session_id):
             '''    
             updates session info to be expired based on a specific session ID
@@ -130,7 +150,70 @@ class GateKeeperDAO(object):
             
             result = db.trans(query)
             return result         
-              
+    
+    def set_gk_group(self,db,name):
+            '''    
+            create a new group in the group_gatekeeper table
+        
+            @param db: the database connection that will be utilized
+        
+            @param session_id: session_id(cookie value) of the session created by a post
+            
+            @param  name : group name
+        
+            @return: boolean
+            
+            ''' 
+            query = """INSERT INTO 
+            gatekeeper_group(name) 
+            VALUES ('%s');
+            """ % (name)
+            
+            result = db.trans(query)
+            return result         
+    
+    def set_user_group(self,db,user_id,grp_id):
+            '''    
+            associate user with a group
+        
+            @param db: the database connection that will be utilized
+        
+            @param user_id: user id
+            
+            @param group_id : group_id
+        
+            @return: boolean
+            
+            ''' 
+            query = """INSERT INTO 
+            user_group(user_id,group_id) 
+            VALUES (%d,%d);
+            """ % (user_id,grp_id)
+            
+            result = db.trans(query)
+            return result         
+    
+    def set_group_permission(self,db,grp_id,per_id):
+            '''    
+            associate a permission with a group
+        
+            @param db: the database connection that will be utilized
+        
+            @param per_id: permisions id
+            
+            @param group_id : group_id
+        
+            @return: boolean
+            
+            ''' 
+            query = """INSERT INTO 
+            group_permission(group_id,permission_id) 
+            VALUES (%d,%d);
+            """ % (grp_id,per_id)
+            
+            result = db.trans(query)
+            return result        
+                          
     def set_app(self,db,app_name):
             '''    
             create a new application in the application table
@@ -168,7 +251,26 @@ class GateKeeperDAO(object):
             """ % (app_id,user_id)            
             result = db.trans(query)
             return result      
-              
+    
+    def set_group_app_id(self,db,app_id,grp_id):
+            '''    
+            associate a user with an application
+        
+            @param db: the database connection that will be utilized
+        
+            @param app_id: application identifier
+            @param grp_id: group identifier
+            @return: boolean
+            
+            ''' 
+            query = """
+            INSERT INTO 
+            group_application(application_id, group_id)
+            VALUES (%d,%d);
+            """ % (app_id,grp_id)            
+            result = db.trans(query)
+            return result      
+                  
     def set_user_permissions_id(self,db,user_id,per_id):
             '''    
             associate a user with an application
@@ -188,39 +290,35 @@ class GateKeeperDAO(object):
             result = db.trans(query)
             return result                     
                 
-    def del_user(self,db,user_id):
+    def del_gk_user(self,db,user_id):
             '''    
             deletes a user and cascade deletes from user_application
         
             @param db: the database connection that will be utilized
-        
-            @param app_id: application identifier
             @param user_id: user identifier
             @return: boolean
             
             ''' 
             query = """
-            delete user_id 
+            delete 
             from gatekeeper_user
             where user_id='%s'""" % (user_id)            
             result = db.trans(query)
             return result     
         
-    def del_user(self,db,user_id):
+    def del_gk_group(self,db,grp_id):
             '''    
-            deletes a user and cascade deletes from user_application
+            deletes a group and cascade deletes 
         
-            @param db: the database connection that will be utilized
-        
-            @param app_id: application identifier
-            @param user_id: user identifier
+            @param db: the database connection that will be utilized       
+            @param grp_id: froup identifier
             @return: boolean
             
             ''' 
             query = """
             delete  
-            from gatekeeper_user
-            where user_id=%d""" % (user_id)            
+            from gatekeeper_group
+            where group_id=%d""" % (grp_id)            
             result = db.trans(query)
             return result       
         
@@ -239,5 +337,23 @@ class GateKeeperDAO(object):
             delete 
             from application
             where application_id=%d""" % (app_id)            
+            result = db.trans(query)
+            return result       
+        
+    def del_(self,db,user_id):
+            '''    
+            deletes a user and cascade deletes from user_application
+        
+            @param db: the database connection that will be utilized
+        
+            @param app_id: application identifier
+            @param user_id: user identifier
+            @return: boolean
+            
+            ''' 
+            query = """
+            delete  
+            from gatekeeper_user
+            where user_id=%d""" % (user_id)            
             result = db.trans(query)
             return result               

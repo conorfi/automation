@@ -7,7 +7,6 @@
 
 '''
 
-import json
 import requests
 from testconfig import config
 

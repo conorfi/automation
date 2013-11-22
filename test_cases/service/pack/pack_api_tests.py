@@ -41,6 +41,11 @@ class TestGateKeeperAPI:
     
        
     @attr(env=['test'],priority =1)
-    def test_save_pack(self):  
-        response = self.packs_service.save_pack()
+    def test_save_json_pack(self):  
+        response = self.packs_service.save_pack_json()
+        print response
+        
+    @attr(env=['test'],priority =1)
+    def test_save_xml_pack(self):  
+        response = self.packs_service.save_pack_xml()
         print response

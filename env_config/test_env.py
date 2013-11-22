@@ -5,7 +5,7 @@ config['google-server'] = {}
 config['google-server']['host'] = "https://google.ca"
 
 config['tms'] = {}
-config['tms']['ip'] = '172.28.29.11'
+config['tms']['ip'] = '172.17.115.14'
 config['tms']['port'] = 8080
 config['tms']['db'] = 'C:\\aam-lms\\db\\cinema_services.db'
 config['tms']['db_type'] = 'sqlite:///'
