@@ -12,20 +12,24 @@ from framework.db.base_dao import BaseDAO
 
 class GateKeeperDAO(object):
       
-    def get_session_by_session_id(self,db,session_id):
+    def get_session_by_cookie_id(self,db,cookie_id):
             '''    
             Returns session info based on a specific session ID
         
             @param db: the database connection that will be utilized
         
-            @param session_id: session_id(cookie value) of the session created bya post
+            @param cookie_id: cookie_id(cookie value) of the session created bya post
         
-            @return: dict of session info
+            @return: dict of session info            
+            '''
+                                 
+            query = """select s.session_id, s.user_id,
+            c.cookie_id,c.type_name,c.expiry_date
+            from cookie c
+            join session s on c.session_id = s.session_id 
+            where c.cookie_id='%s'
+            """ % cookie_id
             
-            ''' 
-            query ="""select session_id,user_id 
-                        from session
-                         where session_id='%s'"""  % session_id
             result = db.query(query)
             if (not result):
                 return None                
@@ -112,7 +116,7 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
                                      
-    def set_session_to_expire_by_session_id(self,db,session_id):
+    def set_session_to_expire_by_session_id(self,db,cookie_id):
             '''    
             updates session info to be expired based on a specific session ID
         
@@ -123,9 +127,9 @@ class GateKeeperDAO(object):
             @return: dict of session info
             
             ''' 
-            query ="""update session 
+            query ="""update cookie
                         set expiry_date = '2000-01-01 01:01:01'
-                         where session_id='%s'"""  % session_id
+                         where cookie_id='%s'"""  % cookie_id
                                     
             result = db.trans(query)
             return result

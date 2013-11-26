@@ -49,7 +49,7 @@ class GateKeeperService(object):
     
    
     
-    def validate_session(self,session_id,url=None):
+    def validate_session(self,cookie_id,session,url=None):
         
         '''    
         validates a session_id
@@ -66,9 +66,9 @@ class GateKeeperService(object):
                                                ,config['api']['user']['session']['validate_v1'])
         
         request_url = url + '/%s'               
-        request_url = request_url % (session_id)
-        r = requests.get(request_url,verify=False)
-        return r      
+        request_url = request_url % (cookie_id)
+        response = session.get(request_url,verify=False)
+        return response
 
     def create_requests_session_with_cookie(self,cookie): 
         
