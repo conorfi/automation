@@ -111,7 +111,7 @@ class GateKeeperService(object):
         response = session.get(url=url, verify=verify,allow_redirects=allow_redirects)         
         return response 
     
-    def delete_user_session(self,session,url=None):
+    def logout_user_session(self,session,url=None):
         
         '''    
         single sign out, deletes user session
@@ -125,7 +125,7 @@ class GateKeeperService(object):
         '''      
          
         if(url==None): 
-            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['delete_v1'])     
+            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['logout_v1'])     
         response = session.post(url,verify=False)         
         return response
     
