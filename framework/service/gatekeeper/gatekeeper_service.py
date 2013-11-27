@@ -49,7 +49,7 @@ class GateKeeperService(object):
     
    
     
-    def validate_session(self,cookie_id,session,url=None):
+    def validate_session(self,cookie_id,session,url=None,application=None):
         
         '''    
         validates a session_id
@@ -65,8 +65,12 @@ class GateKeeperService(object):
         url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port']
                                                ,config['api']['user']['session']['validate_v1'])
         
-        request_url = url + '/%s'               
+        request_url = url + '/%s'         
         request_url = request_url % (cookie_id)
+        
+        if (application != None):
+            request_url = request_url + '/?application_name=%s'
+            request_url = request_url %  (application)
         response = session.get(request_url,verify=False)
         return response
 
