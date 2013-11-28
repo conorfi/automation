@@ -76,7 +76,7 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
     
-    def get_permission_id_by_name(self,db,per_name):
+    def get_permission_id_by_name(self,db,per_name,app_id):
             '''    
             Returns permission id based on per name
         
@@ -89,7 +89,8 @@ class GateKeeperDAO(object):
             ''' 
             query ="""select permission_id
                         from permission
-                         where name='%s'"""  % per_name
+                         where name='%s'
+                         and application_id=%d"""  % (per_name,app_id)
             result = db.query(query)
             if (not result):
                 return None                

@@ -21,16 +21,15 @@ config['gatekeeper']['db']['type'] = 'postgresql'
 config['gatekeeper']['db']['credentials'] = 'postgres:postgres'
 config['gatekeeper']['db']['host'] = 'localhost'
 config['gatekeeper']['db']['port'] = '5432'
-config['gatekeeper']['db']['db_name'] = 'gatekeeper_automation'
+config['gatekeeper']['db']['db_name'] = 'gatekeeper'
 config['gatekeeper']['db']['connection'] = \
-    'postgresql://postgres:postgres@localhost:5432/gatekeeper_automation'
+    'postgresql://postgres:postgres@localhost:5432/gatekeeper'
 config['gatekeeper']['redirect'] = '?redirect=http%3A%2F%2Fwww.example.com'
 config['gatekeeper']['dummy'] = {}
 config['gatekeeper']['dummy']['host'] = 'localhost'
 config['gatekeeper']['dummy']['port'] = '8001'
 config['gatekeeper']['dummy']['user_endpoint'] = 'user'
-config['gatekeeper']['dummy']['admin_endpoint'] = 'admin' 
-
+config['gatekeeper']['dummy']['admin_endpoint'] = 'admin'
 config['api'] = {}
 config['api']['core'] = {}
 config['api']['core']['pack'] = {}
