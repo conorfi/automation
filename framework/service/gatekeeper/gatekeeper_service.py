@@ -84,6 +84,7 @@ class GateKeeperService(object):
         @return: a request session object
         
         '''         
+        
         session = requests.session() 
         session.cookies.set(**cookie)
         return session
