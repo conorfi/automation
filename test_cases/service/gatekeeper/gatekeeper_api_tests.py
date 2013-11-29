@@ -446,9 +446,10 @@ class TestGateKeeperAPI:
 
         headers = response.headers['Set-Cookie']
         #assert that the header httponly is present
-        assert 'httponly' in headers
-
-
+        if config['gatekeeper']['scheme'] == 'https':
+            assert 'httponly' in headers
+        else:
+            assert 'httponly' not in headers
 
     @attr(env=['test'],priority =1)
     def test_can_logout_with_redirect(self):
