@@ -116,7 +116,30 @@ class GateKeeperDAO(object):
                 return None                
             else:
                 return result[0]
-                                     
+     
+    
+    def get_verification_code_by_user_id(self,db,user_id):
+            '''    
+            deletes a user and cascade deletes from user_application
+        
+            @param db: the database connection that will be utilized
+        
+            @param app_id: application identifier
+            @param user_id: user identifier
+            @return: boolean
+            
+            ''' 
+            query = """
+            select verification_code from verification
+            where user_id=%d
+            order by verification_id desc""" % (user_id)
+            
+            result = db.query(query)
+            if (not result):
+                return None                
+            else:
+                return result[0]           
+                                         
     def set_session_to_expire_by_session_id(self,db,cookie_id):
             '''    
             updates session info to be expired based on a specific session ID
@@ -343,22 +366,4 @@ class GateKeeperDAO(object):
             from application
             where application_id=%d""" % (app_id)            
             result = db.trans(query)
-            return result       
-        
-    def del_(self,db,user_id):
-            '''    
-            deletes a user and cascade deletes from user_application
-        
-            @param db: the database connection that will be utilized
-        
-            @param app_id: application identifier
-            @param user_id: user identifier
-            @return: boolean
-            
-            ''' 
-            query = """
-            delete  
-            from gatekeeper_user
-            where user_id=%d""" % (user_id)            
-            result = db.trans(query)
-            return result               
+            return result

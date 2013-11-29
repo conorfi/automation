@@ -1037,6 +1037,5 @@ class TestGateKeeperAPI:
         #assert response.status_code == requests.codes.forbidden
         # assert "Missing parameters: application_name" in response.json()['error']
 
-
     def random_str(self,n):
         return "".join(random.choice(string.ascii_lowercase) for x in xrange(n))
