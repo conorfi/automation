@@ -69,9 +69,27 @@ class TestGateKeeper2FaAPI:
         session = self.gk_service.create_requests_session_with_cookie(my_cookie)  
         
         verification_code = self.gk_dao.get_verification_code_by_user_id(self.db,self.DEFAULT_TEST_USER)['verification_code']    
-                
+        #print    verification_code    
         payload = {'verification_code' : verification_code}
-        response = self.gk_service.submit_verification_code(session,payload)
+        #print payload
+        response = self.gk_service.submit_verification_code(session,payload,allow_redirects=False)
         
-        print response.status_code
-        print response.text
+        assert response.ok
+        
+        #print response.headers
+        
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        #print cookie
+        #cookie_id_cred   = cookie['sso_credentials'].value
+        #cookie_id_verf   = cookie['sso_verifcation_code'].value
+        cookie_id_sso    = cookie['sso_cookie'].value
+        
+        #print cookie_id_sso 
+        
+        
+        cookie.load(response.headers['set-cookie'])
+        print  cookie
+        
+        
+        

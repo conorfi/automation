@@ -224,9 +224,8 @@ class TestGateKeeperAPI:
 
         #ensure that the request is forbidden(403) without a valid session cookie
         # TODO: verify on 403 if this defect is resolved - https://www.pivotaltracker.com/story/show/61545596
-        #assert response.status_code == requests.codes.forbidden
-        # TODO: remove the assert when this defect is resolved https://www.pivotaltracker.com/story/show/61606456
-        #assert "No session with cookie fake found." in response.json()['error']
+        #assert response.status_code == requests.codes.forbidden       
+        assert "Cookie does not exist" in response.json()['error']
 
     @attr(env=['test'],priority =1)
     def test_validate_session_with_no_cookie_id(self):
@@ -275,14 +274,19 @@ class TestGateKeeperAPI:
         my_cookie = dict(name='sso_cookie',value=fake_value)
 
         response = self.gk_service.validate_session(cookie_id=cookie_value,session=self.gk_service.create_requests_session_with_cookie(my_cookie))
-
+        
+        #ensure that the request is forbidden(403) without a valid session cookie
+        # TODO: verify on 403 if this defect is resolved - https://www.pivotaltracker.com/story/show/61545596
+        #assert response.status_code == requests.codes.forbidden
         # TODO: add assertion when this defect is resolved https://www.pivotaltracker.com/story/show/61551776
-
+        assert "User not allowed access this session!" in response.json()['error']
+        
     @attr(env=['test'],priority =1)
     def test_validate_session_with_application_filter_with_no_application(self):
         '''
         GATEKEEPER-API009 test_validate_session_with_application_filter_with_no_application - creates a session through a POST to the login API and then validates the
         session by providing no application name to the application filter
+        As the application filter is optional - if no application name is provided it as treated as if the application filter is not applied
         '''
 
         #urlencoded post
@@ -301,9 +305,15 @@ class TestGateKeeperAPI:
         my_cookie = dict(name='sso_cookie',value=cookie_id)
         response = self.gk_service.validate_session(cookie_id=cookie_id,session=self.gk_service.create_requests_session_with_cookie(my_cookie),application=application)
 
-        #TODO assert when https://www.pivotaltracker.com/story/show/61543326 is resolved
+        #
+        assert response.status_code == requests.codes.ok
+        #obtain session id and user id from database
+        db_response =self.gk_dao.get_session_by_cookie_id(self.db,cookie_id)
 
-
+        #assert against database
+        assert response.json()['user_id']    == db_response['user_id']
+        assert response.json()['session_id'] == db_response['session_id']
+        
     @attr(env=['test'],priority =1)
     def test_validate_session_with_application_filter_with_invalid_application(self):
         '''

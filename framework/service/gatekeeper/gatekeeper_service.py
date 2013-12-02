@@ -214,7 +214,7 @@ class GateKeeperService(object):
         
         '''    
         if(url==None):
-            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['sumbit_verification_v1'])
+            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['submit_verification_v1'])
                            
         if(redirect_url != None):
             url = url + redirect_url            
@@ -227,5 +227,5 @@ class GateKeeperService(object):
             allow_redirects=True   
             
         #url encoded
-        response = requests.post(url=url,data=payload,verify=verify,allow_redirects=allow_redirects)        
+        response = session.post(url=url,data=payload,verify=verify,allow_redirects=allow_redirects)        
         return response
