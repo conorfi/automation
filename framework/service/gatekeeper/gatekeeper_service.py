@@ -211,7 +211,6 @@ class GateKeeperService(object):
         @param redirect_url: Url to redirect
         @param allow_redirects.: allow_redirects.  boolean to determine if SSL cert will be verified
         @return: a request object
-
         '''
         if(url==None):
             url = self._create_url(
