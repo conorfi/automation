@@ -24,11 +24,11 @@ class GateKeeperService(object):
                                   allow_redirects=None, redirect_url=None):
         """
         creates a session through the login API
-        @param url: Optional. request url of API    
+        @param url: Optional. request url of API
         @param payload: Optional. The credentials of the user
-        @param redirect_url: Url to redirect 
-        @param verify: Verify.  boolean to determine if SSL cert will be verified 
-        @param allow_redirects.: allow_redirects.  boolean to determine if SSL cert will be verified 
+        @param redirect_url: Url to redirect
+        @param verify: Verify.  boolean to determine if SSL cert will be verified
+        @param allow_redirects.: allow_redirects.  boolean to determine if SSL cert will be verified
         @return: a request object
 
         """
@@ -195,37 +195,38 @@ class GateKeeperService(object):
         if(end_point!=None):
             url = url + end_point
         if(verify==None):
-            verify=False  
-        response = session.get(url=url, verify=verify)         
+            verify=False
+        response = session.get(url=url, verify=verify)
         return response
-    
-    
+
+
     def submit_verification_code(self,session,payload,url=None,verify=None,allow_redirects=None,redirect_url=None):
-        '''    
+        '''
         submits the verification_code for two factor authentication
-    
+
         @param session: a python-requests session object
         @param url: Optional. request url of API
         @param payload: Optional. The credentials of the user
-        @param verify: Verify.  boolean to determine if SSL cert will be verified 
-        @param redirect_url: Url to redirect         
-        @param allow_redirects.: allow_redirects.  boolean to determine if SSL cert will be verified 
+        @param verify: Verify.  boolean to determine if SSL cert will be verified
+        @param redirect_url: Url to redirect
+        @param allow_redirects.: allow_redirects.  boolean to determine if SSL cert will be verified
         @return: a request object
-        
-        '''    
+
+        '''
         if(url==None):
-            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['submit_verification_v1'])
-                           
+            url = self._create_url(
+                config['api']['user']['session']['submit_verification_v1'])
+
         if(redirect_url != None):
-            url = url + redirect_url            
-                    
+            url = url + redirect_url
+
         #requests is url-encoded by default
         if(verify==None):
             verify=False
-            
+
         if(allow_redirects==None):
-            allow_redirects=True   
-            
+            allow_redirects=True
+
         #url encoded
-        response = session.post(url=url,data=payload,verify=verify,allow_redirects=allow_redirects)        
+        response = session.post(url=url,data=payload,verify=verify,allow_redirects=allow_redirects)
         return response
