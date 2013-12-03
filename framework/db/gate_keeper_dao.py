@@ -317,7 +317,24 @@ class GateKeeperDAO(object):
             """ % (user_id,per_id)            
             result = db.trans(query)
             return result                     
-                
+    
+    def set_verification_code_to_expire_by_verification_code(self,db,verification_code):
+            '''    
+            updates verification code to be expired based on a specific verification code
+        
+            @param db: the database connection that will be utilized
+        
+            @param verification_code: verification_code that is used as the second authentication factor
+        
+            @return: boolean
+            
+            ''' 
+            query ="""update verification
+                        set expiry_date = '2000-01-01 01:01:01'
+                         where verification_code='%s'"""  % verification_code
+                                    
+            result = db.trans(query)
+            return result            
     def del_gk_user(self,db,user_id):
             '''    
             deletes a user and cascade deletes from user_application

@@ -213,9 +213,9 @@ class GateKeeperService(object):
         @return: a request object
         
         '''    
-        if(url==None):
-            url = 'https://{0}:{1}/{2}'.format(config['gatekeeper']['host'],config['gatekeeper']['port'],config['api']['user']['session']['submit_verification_v1'])
-                           
+        if(url==None):            
+            url = self._create_url(
+                config['api']['user']['session']['submit_verification_v1'])               
         if(redirect_url != None):
             url = url + redirect_url            
                     

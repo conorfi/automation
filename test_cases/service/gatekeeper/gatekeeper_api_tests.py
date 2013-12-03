@@ -1,8 +1,8 @@
 '''
-@summary: Contains a set oF API tests for the gate keeper(single sign on) project
-these test have a number of dependencies
+@summary: Contains a set of API tests for the gate keeper(single sign on) project - 1 factor authentication test cases
+These test have a number of dependencies
 1. the database update script updates the gatekeepr schema - the script can be found at the root of the gatekeeper app
-2. the build script starts the gatekkper app with ssl enbaled by default
+2. the build script starts the gatekeeper app with ssl enbaled by default
 4. the build script starts the dummy app with ssl enabled and application_name is adfuser
 4. The dummy app is pre-configure with two permissions 'ADFUSER_USER' and 'ADFUSER_ADMIN'
 
@@ -18,9 +18,9 @@ from nose.plugins.attrib import attr
 from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
+from framework.utility.utility import Utility
 import Cookie
-import random
-import string
+
 
 import imaplib
 import email
@@ -60,7 +60,8 @@ class TestGateKeeperAPI:
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
         self.DEFAULT_TEST_USER = self.gk_dao.get_user_id_by_username(self.db, ADMIN_USER)['user_id']
-
+        self.util = Utility()
+        
     def __init__(self):
         '''Things to be initalized'''
 
@@ -276,9 +277,8 @@ class TestGateKeeperAPI:
         response = self.gk_service.validate_session(cookie_id=cookie_value,session=self.gk_service.create_requests_session_with_cookie(my_cookie))
         
         #ensure that the request is forbidden(403) without a valid session cookie
-        # TODO: verify on 403 if this defect is resolved - https://www.pivotaltracker.com/story/show/61545596
-        #assert response.status_code == requests.codes.forbidden
-        # TODO: add assertion when this defect is resolved https://www.pivotaltracker.com/story/show/61551776
+        # TODO: verify on 403 if this defect is resolved - https://www.pivotaltracker.com/story/show/61545596   
+        #assert response.status_code == requests.codes.forbidden    
         assert "User not allowed access this session!" in response.json()['error']
         
     @attr(env=['test'],priority =1)
@@ -548,10 +548,10 @@ class TestGateKeeperAPI:
         '''
         create a user and associate user with relevant pre confiured application for dummy app
         '''
-        username = 'automation_' + self.random_str(5)
+        username = 'automation_' + self.util.random_str(5)
         appname =  ANOTHER_TEST_APP
-        fullname = 'automation ' + self.random_str(5)
-        email    = self.random_str(5) + '@' + self.random_str(5) + '.com'
+        fullname = 'automation ' + self.util.random_str(5)
+        email    = self.util.random_str(5) + '@' + self.util.random_str(5) + '.com'
 
         #create basic user - no permisssions
         assert (self.gk_dao.set_gk_user(self.db, username, HASH_PASSWORD_TEST, email , fullname, '123-456-789123456'))
@@ -641,10 +641,10 @@ class TestGateKeeperAPI:
         '''
         create a user and associate user with relevant pre confiured application for dummy app
         '''
-        username = 'automation_' + self.random_str(5)
+        username = 'automation_' + self.util.random_str(5)
         appname =  ANOTHER_TEST_APP
-        fullname = 'automation ' + self.random_str(5)
-        email    = self.random_str(5) + '@' + self.random_str(5) + '.com'
+        fullname = 'automation ' + self.util.random_str(5)
+        email    = self.util.random_str(5) + '@' + self.util.random_str(5) + '.com'
 
         #create basic user - no permisssions
         assert (self.gk_dao.set_gk_user(self.db, username, HASH_PASSWORD_TEST, email , fullname, '123-456-789123456'))
@@ -765,12 +765,12 @@ class TestGateKeeperAPI:
         '''
         create a user and associate user with relevant pre confiured application for dummy app
         '''
-        username = 'automation_' + self.random_str(5)
+        username = 'automation_' + self.util.random_str(5)
         appname =  ANOTHER_TEST_APP
-        fullname = 'automation ' + self.random_str(5)
-        email    = self.random_str(5) + '@' + self.random_str(5) + '.com'
-        grp_name = 'automation_' + self.random_str(5)
-        grp_name_2 = 'automation_' + self.random_str(5)
+        fullname = 'automation ' + self.util.random_str(5)
+        email    = self.util.random_str(5) + '@' + self.util.random_str(5) + '.com'
+        grp_name = 'automation_' + self.util.random_str(5)
+        grp_name_2 = 'automation_' + self.util.random_str(5)
 
         #create basic user - no permisssions
         assert (self.gk_dao.set_gk_user(self.db, username, HASH_PASSWORD_TEST, email , fullname, '123-456-789123456'))
@@ -1047,5 +1047,3 @@ class TestGateKeeperAPI:
         #assert response.status_code == requests.codes.forbidden
         # assert "Missing parameters: application_name" in response.json()['error']
 
-    def random_str(self,n):
-        return "".join(random.choice(string.ascii_lowercase) for x in xrange(n))
