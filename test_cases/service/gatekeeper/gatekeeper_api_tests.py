@@ -61,7 +61,7 @@ class TestGateKeeperAPI:
         self.gk_dao = GateKeeperDAO()
         self.DEFAULT_TEST_USER = self.gk_dao.get_user_id_by_username(self.db, ADMIN_USER)['user_id']
         self.util = Utility()
-        
+
     def __init__(self):
         '''Things to be initalized'''
 
@@ -225,7 +225,7 @@ class TestGateKeeperAPI:
 
         #ensure that the request is forbidden(403) without a valid session cookie
         # TODO: verify on 403 if this defect is resolved - https://www.pivotaltracker.com/story/show/61545596
-        #assert response.status_code == requests.codes.forbidden       
+        #assert response.status_code == requests.codes.forbidden
         assert "Cookie does not exist" in response.json()['error']
 
     @attr(env=['test'],priority =1)
@@ -275,12 +275,12 @@ class TestGateKeeperAPI:
         my_cookie = dict(name='sso_cookie',value=fake_value)
 
         response = self.gk_service.validate_session(cookie_id=cookie_value,session=self.gk_service.create_requests_session_with_cookie(my_cookie))
-        
+
         #ensure that the request is forbidden(403) without a valid session cookie
-        # TODO: verify on 403 if this defect is resolved - https://www.pivotaltracker.com/story/show/61545596   
-        #assert response.status_code == requests.codes.forbidden    
+        # TODO: verify on 403 if this defect is resolved - https://www.pivotaltracker.com/story/show/61545596
+        #assert response.status_code == requests.codes.forbidden
         assert "User not allowed access this session!" in response.json()['error']
-        
+
     @attr(env=['test'],priority =1)
     def test_validate_session_with_application_filter_with_no_application(self):
         '''
@@ -313,7 +313,7 @@ class TestGateKeeperAPI:
         #assert against database
         assert response.json()['user_id']    == db_response['user_id']
         assert response.json()['session_id'] == db_response['session_id']
-        
+
     @attr(env=['test'],priority =1)
     def test_validate_session_with_application_filter_with_invalid_application(self):
         '''
@@ -990,10 +990,10 @@ class TestGateKeeperAPI:
         assert "User is either not logged in or not the same user as the user described in the resource URI" in response.json()['error']
 
     @attr(env=['test'],priority =1)
-    def test_return_user_info_with_no_user_id(self):
+    def test_return_user_info_with_no_args(self):
         '''
         GATEKEEPER-API024 test_return_user_info_with_no_user_id - Ensures user info CANNOT be return from the user api when no
-        user id is provided
+        user id or application name is provided
         '''
         #urlencoded post
         #create a session - do not allow redirects
@@ -1009,41 +1009,9 @@ class TestGateKeeperAPI:
         my_cookie = dict(name='sso_cookie',value=cookie_value)
         session = self.gk_service.create_requests_session_with_cookie(my_cookie)
 
-        response = self.gk_service.user_info(session,'',DEFAULT_TEST_APP)
+        response = self.gk_service.user_info(session,'','')
 
         #ensure that the request is forbidden(403) without a valid session cookie
         # TODO: verify on 403 if this defect is resolved - https://www.pivotaltracker.com/story/show/61545596
         #assert response.status_code == requests.codes.forbidden
-        assert "Missing parameters: user_id" in response.json()['error']
-
-
-    @attr(env=['test'],priority =1)
-    def test_return_user_info_with_no_application(self):
-        '''
-        GATEKEEPER-API025 test_return_user_info_with_no_application - Ensures user info CANNOT be return from the user api when no
-        application  is provided
-        '''
-        #urlencoded post
-        #create a session - do not allow redirects
-        response=self.gk_service.create_session_urlencoded(allow_redirects=False,redirect_url=config['gatekeeper']['redirect'])
-        #303 response
-        assert response.status_code == requests.codes.other
-        #covert Set_Cookie response header to simple cookie object
-
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-        cookie_value  = cookie['sso_cookie'].value
-
-        my_cookie = dict(name='sso_cookie',value=cookie_value)
-        session = self.gk_service.create_requests_session_with_cookie(my_cookie)
-
-        user_id = self.gk_dao.get_user_id_by_username(self.db, ADMIN_USER)['user_id']
-        response = self.gk_service.user_info(session,user_id,'')
-
-
-        # TODO:  uncomment checks when correct error message si returned and correct status code  https://www.pivotaltracker.com/story/show/61542566
-
-        #ensure that the request is forbidden(403) without a valid session cookie
-        #assert response.status_code == requests.codes.forbidden
-        # assert "Missing parameters: application_name" in response.json()['error']
-
+        assert "Missing parameters: application_name,user_id" in response.json()['error']
