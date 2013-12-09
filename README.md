@@ -6,7 +6,7 @@ Folder structure
 ----------------
 
 /automation/tests_cases/ -- actual test cases captured here 
-/automation/framework --  framework services and dao here
+/automation/framework --  framework services, utilityservices and database functionality here
 /automation/env_config -- enviroment configuration values
 /automation/lib -- third party libraries 
 
