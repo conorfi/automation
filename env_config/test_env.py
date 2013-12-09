@@ -52,6 +52,7 @@ config['api']['user']['session']['create_v1'] = 'login/'
 config['api']['user']['session']['validate_v1'] = 'api/v1/user/session'
 #trailing / required for logout
 config['api']['user']['session']['logout_v1'] = 'logout/'
-config['api']['user']['session']['user_info_v1'] = 'api/v1/user'
+config['api']['user']['session']['user_info_v1'] = \
+    'api/v1/user/%s/application/%s'
 config['api']['user']['session']['submit_verification_v1'] = 'login/?step=verification_code'
 

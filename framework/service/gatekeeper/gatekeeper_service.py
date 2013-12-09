@@ -164,8 +164,7 @@ class GateKeeperService(object):
         if(url==None):
             url = self._create_url(
                 config['api']['user']['session']['user_info_v1'])
-        request_url = url + '/%s/?application_name=%s'
-        request_url = request_url % (user_id,application)
+        request_url = url % (user_id,application)
         if(verify==None):
             verify=False
         response = session.get(url=request_url, verify=verify)
