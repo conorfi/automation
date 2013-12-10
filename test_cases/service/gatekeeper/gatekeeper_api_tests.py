@@ -39,6 +39,7 @@ DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
 # special permission that allows acess to the gk admin end point
 GK_ALL_PERMISSION = "gatekeeper_all"
 
+
 """
 hash of the password test - using this rather than implementing the
 gatekeeper hashing function if the hashing function ever change sit will
@@ -56,6 +57,7 @@ USER_ERROR = (
 SESSION_FORBIDDEN = 'Forbidden session with cookie %s for application fake'
 SESSION_NOT_ALLOWED = 'User not allowed access this session!'
 MISSING_PARAMETERS = "Missing parameters: application_name,user_id"
+CONFIRM_LOGOUT = "Please confirm logout"
 
 
 class TestGateKeeperAPI:
@@ -602,8 +604,9 @@ class TestGateKeeperAPI:
     @attr(env=['test'], priority=1)
     def test_can_logout_with_redirect(self):
         """
-        GATEKEEPER-API016 test_can_logout_with_redirect - Ensures a user
-        session can be deleted using single logout(for a json created session)
+        GATEKEEPER-API016 test_can_logout_with_redirect
+        Ensures a user session can be deleted using single logout
+        using POST
         Specified redirect on logout
         """
         # urlencoded post
@@ -632,6 +635,7 @@ class TestGateKeeperAPI:
         assert response.status_code == requests.codes.ok
         assert 'Example Domain' in response.text
 
+        # logout with POST
         response = self.gk_service.logout_user_session(session)
         assert response.status_code == requests.codes.ok
 
@@ -646,11 +650,13 @@ class TestGateKeeperAPI:
         )
         assert db_response is None
 
+
     @attr(env=['test'], priority=1)
     def test_can_logout_default_redirect(self):
         """
-        GATEKEEPER-API017 test_can_logout_default_redirect - Ensures a user
-        session can be deleted using single logout(for a json created session)
+        GATEKEEPER-API017 test_can_logout_default_redirect
+        Ensures a user session can be deleted using single logout
+        using a POST
         Default redirect on logout
         """
         # urlencoded post
@@ -673,12 +679,13 @@ class TestGateKeeperAPI:
         response = self.gk_service.validate_url_with_cookie(session)
         assert response.status_code == requests.codes.ok
 
+        # logout with a post
         response = self.gk_service.logout_user_session(session)
         assert response.status_code == requests.codes.ok
 
         response = self.gk_service.validate_url_with_cookie(session)
         assert response.status_code == requests.codes.ok
-        assert GATEKEEPER_TITLE in response.text
+        assert "Please confirm logout" in response.text
 
         # assert againist the database - ensure it no longer exists
         db_response = self.gk_dao.get_session_by_cookie_id(
@@ -686,6 +693,40 @@ class TestGateKeeperAPI:
             cookie_value
         )
         assert db_response is None
+
+    @attr(env=['test'], priority=2)
+    def test_can_logout_get(self):
+        """
+        GATEKEEPER-API017A test_can_logout_default_redirect
+        Ensures the logout confirmation button is returned
+        when the logout is called with a get
+        Note: the python-request library can not be sued for web based tests
+        so cannot click the confirmation button
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value = cookie['sso_cookie'].value
+
+        my_cookie = dict(name='sso_cookie', value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        response = self.gk_service.validate_url_with_cookie(session)
+        assert response.status_code == requests.codes.ok
+
+        # logout using GET call
+        response = self.gk_service.logout_user_session_get(session)
+        assert response.status_code == requests.codes.ok
+        assert CONFIRM_LOGOUT in response.text
 
     @attr(env=['test'], priority=1)
     def test_validate_user_api_and_auth_app_permissions(self):
@@ -1296,7 +1337,7 @@ class TestGateKeeperAPI:
         # assert response.status_code == requests.codes.forbidden
         assert MISSING_PARAMETERS in response.json()['error']
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_validate_user_access_gk_route(self):
         """
         GATEKEEPER-API025 test_validate_user_access_gk_route
@@ -1411,7 +1452,7 @@ class TestGateKeeperAPI:
         # delete user - cascade delete by default
         assert (self.gk_dao.del_gk_user(self.db, user_id))
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_validate_group_access_gk_route(self):
         """
         GATEKEEPER-API026 test_validate_group_access_gk_route
