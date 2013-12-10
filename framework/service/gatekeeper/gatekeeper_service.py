@@ -30,6 +30,7 @@ class GateKeeperService(object):
         @param redirect_url: Url to redirect
         @param verify: boolean to determine if SSL cert will be verified
         @param allow_redirects: boolean determines if SSL cert will be verified
+
         @return: a request object
 
         """
@@ -212,6 +213,7 @@ class GateKeeperService(object):
                                    port=config['gatekeeper']['dummy']['port'])
         if(end_point is not None):
             url = url + end_point
+
         if(verify is None):
             verify = False
         response = session.get(url=url, verify=verify)
@@ -259,4 +261,5 @@ class GateKeeperService(object):
             verify=verify,
             allow_redirects=allow_redirects
         )
+
         return response
