@@ -1,5 +1,6 @@
 '''
-@summary: Contains a set oF API tests for the gate keeper(single sign on) project
+@summary: Contains a set of API tests for the
+gate keeper(single sign on) project
 
 @since: Created on October 31st 2013
 
@@ -12,8 +13,8 @@ from testconfig import config
 from nose.plugins.attrib import attr
 from sqlalchemy import create_engine
 from framework.service.packs.pack_service import PackService
-#from framework.db.base_dao import BaseDAO
-#from framework.db.gate_keeper_dao import GateKeeperDAO
+# from framework.db.base_dao import BaseDAO
+# from framework.db.gate_keeper_dao import GateKeeperDAO
 
 
 class TestGateKeeperAPI:
@@ -21,31 +22,24 @@ class TestGateKeeperAPI:
     @classmethod
     def setUpClass(self):
         '''Things that need to be done once.'''
-                 
+
     def setup(self):
-        '''Things to run before each test.''' 
-                         
-        #self.db = BaseDAO(config['gatekeeper']['db']['connection'])
-        #self.gk_service = GateKeeperService() 
-        #self.gk_dao = GateKeeperDAO()
+        '''Things to run before each test.'''
         self.packs_service = PackService()
-        
-    def __init__(self):              
+
+    def __init__(self):
         '''Things to be initalized'''
-         
-         
+
     def teardown(self):
-        '''Things to run after each test.'''  
-        #self.db.connection.close()
-             
-    
-       
-    @attr(env=['test'],priority =1)
-    def test_save_json_pack(self):  
+        '''Things to run after each test.'''
+        # self.db.connection.close()
+
+    @attr(env=['test'], priority=1)
+    def test_save_json_pack(self):
         response = self.packs_service.save_pack_json()
         print response
-        
-    @attr(env=['test'],priority =1)
-    def test_save_xml_pack(self):  
+
+    @attr(env=['test'], priority=1)
+    def test_save_xml_pack(self):
         response = self.packs_service.save_pack_xml()
         print response
