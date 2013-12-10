@@ -27,6 +27,7 @@ import Cookie
 # adfuser is the defaut test application
 DEFAULT_TEST_APP = "adfuser"
 ANOTHER_TEST_APP = "anotherapp"
+GK_APP = "gatekeeper"
 
 # admin user is 'admin' and is used as the default user
 ADMIN_USER = 'admin'
@@ -35,6 +36,8 @@ ADMIN_USER = 'admin'
 DEFAULT_ADFUSER_USER = 'ADFUSER_USER'
 # default admin permission configured for adfuser in the dummy app
 DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
+# special permission that allows acess to the gk admin end point
+GK_ALL_PERMISSION = "gatekeeper_all"
 
 """
 hash of the password test - using this rather than implementing the
@@ -1292,3 +1295,256 @@ class TestGateKeeperAPI:
         # https://www.pivotaltracker.com/story/show/61545596
         # assert response.status_code == requests.codes.forbidden
         assert MISSING_PARAMETERS in response.json()['error']
+
+    @attr(env=['test'], priority=2)
+    def test_validate_user_access_gk_route(self):
+        """
+        GATEKEEPER-API025 test_validate_user_access_gk_route
+        Ensure a user with the permission gatekeeper_all
+        can access the admin endpoint on gatekeeper application
+        The test ensure that the endpoint cannot be acccessed
+        without the permission and can be acccesed with the permission
+        """
+
+        # create a user and associate user with relevant
+        # pre confiured application for dummy app
+
+        username = 'automation_' + self.util.random_str(5)
+        appname = GK_APP
+        fullname = 'automation_' + self.util.random_str(5)
+        email = self.util.random_email(5)
+
+        # create basic user - no permisssions
+        assert (
+            self.gk_dao.set_gk_user(
+                self.db, username,
+                HASH_PASSWORD_TEST,
+                email,
+                fullname,
+                '123-456-789123456')
+        )
+
+        # get user_id
+        user_id = self.gk_dao.get_user_id_by_username(
+            self.db,
+            username
+        )['user_id']
+
+        # get app id
+        app_id = self.gk_dao.get_app_id_by_app_name(
+            self.db,
+            appname
+        )['application_id']
+
+        # get permissions
+        gk_all_permission = self.gk_dao.get_permission_id_by_name(
+            self.db,
+            GK_ALL_PERMISSION, app_id
+        )['permission_id']
+
+        # associate user with app
+        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+
+        # create a session for the user
+        credentials_payload = {'username': username, 'password': 'test'}
+        # create a session - do not allow redirects - urlencoded post
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False,
+            payload=credentials_payload
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value_sso = cookie['sso_cookie'].value
+
+        my_cookie = dict(name='sso_cookie', value=cookie_value_sso)
+
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # create a defaul url for gatekeeper app
+        gk_url = self.gk_service._create_url('')
+
+        # verify the admin endpoint can NOT be accessed
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point=config['gatekeeper']['admin_endpoint'],
+            url=gk_url
+        )
+
+        # ensure that the request is forbidden (403)
+        assert response.status_code == requests.codes.forbidden
+
+        # set the user permission for the gatekeeper admin endpoint
+        assert (
+            self.gk_dao.set_user_permissions_id(
+                self.db,
+                user_id,
+                gk_all_permission
+                )
+        )
+
+        # verify the admin endpoint can be accessed
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point=config['gatekeeper']['admin_endpoint'],
+            url=gk_url
+        )
+
+        # ensure that the request is ok(200)
+        assert response.status_code == requests.codes.ok
+
+        # Verify the user API
+        response = self.gk_service.user_info(session, user_id, appname)
+        assert response.status_code == requests.codes.ok
+        assert username in response.json()['username']
+        assert [] == response.json()['organizations']
+        assert str(user_id) in response.json()['user_id']
+        assert [] == response.json()['groups']
+        assert fullname in response.json()['fullname']
+        assert email in response.json()['email']
+        assert GK_ALL_PERMISSION == response.json()['permissions'][0]
+
+        # delete user - cascade delete by default
+        assert (self.gk_dao.del_gk_user(self.db, user_id))
+
+    @attr(env=['test'], priority=2)
+    def test_validate_group_access_gk_route(self):
+        """
+        GATEKEEPER-API026 test_validate_group_access_gk_route
+        Ensure a group with the permission gatekeeper_all
+        can access the admin endpoint on gatekeeper application
+        The test ensure that the endpoint cannot be acccessed
+        without the permission and can be acccesed with the permission
+        """
+
+        # create a user and associate user with relevant
+        # pre confiured application for dummy app
+
+        username = 'automation_' + self.util.random_str(5)
+        appname = GK_APP
+        fullname = 'automation ' + self.util.random_str(5)
+        email = self.util.random_email(5)
+        grp_name = 'automation_' + self.util.random_str(5)
+
+        # create basic user - no permisssions
+        assert (
+            self.gk_dao.set_gk_user(
+                self.db,
+                username,
+                HASH_PASSWORD_TEST,
+                email,
+                fullname,
+                '123-456-789123456'
+            )
+        )
+
+        # get user_id
+        user_id = self.gk_dao.get_user_id_by_username(
+            self.db,
+            username
+        )['user_id']
+
+        # get app id
+        app_id = self.gk_dao.get_app_id_by_app_name(
+            self.db,
+            appname
+        )['application_id']
+
+        # get permissions
+        gk_all_permission = self.gk_dao.get_permission_id_by_name(
+            self.db,
+            GK_ALL_PERMISSION,
+            app_id
+        )['permission_id']
+
+        # associate user with app
+        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+
+        # creat gatekeeper group
+        assert (self.gk_dao.set_gk_group(self.db, grp_name))
+        # get group id
+        group_id = self.gk_dao.get_gk_group_id_by_name(
+            self.db,
+            grp_name
+        )['group_id']
+
+        # associate user with group
+        assert(self.gk_dao.set_user_group(self.db, user_id, group_id))
+
+        # associate group with application
+        assert(self.gk_dao.set_group_app_id(self.db, app_id, group_id))
+
+        # create a session for the user
+
+        credentials_payload = {'username': username, 'password': 'test'}
+        # create a session - do not allow redirects - urlencoded post
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False,
+            payload=credentials_payload
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value_sso = cookie['sso_cookie'].value
+
+        my_cookie = dict(name='sso_cookie', value=cookie_value_sso)
+
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # create a defaul url for gatekeeper app
+        gk_url = self.gk_service._create_url('')
+
+        # verify the admin endpoint can NOT be accessed
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point=config['gatekeeper']['admin_endpoint'],
+            url=gk_url
+        )
+
+        # ensure that the request is forbidden (403)
+        assert response.status_code == requests.codes.forbidden
+
+        # set the group permission for the gatekeeper admin endpoint
+        assert(
+            self.gk_dao.set_group_permission(
+                self.db,
+                group_id,
+                gk_all_permission)
+        )
+
+        # verify the admin endpoint can be accessed
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point=config['gatekeeper']['admin_endpoint'],
+            url=gk_url
+        )
+
+        # ensure that the request is ok(200)
+        assert response.status_code == requests.codes.ok
+
+        # Verify the user API
+        response = self.gk_service.user_info(session, user_id, appname)
+
+        assert response.status_code == requests.codes.ok
+        assert username in response.json()['username']
+        assert [] == response.json()['organizations']
+        assert str(user_id) in response.json()['user_id']
+        assert grp_name in response.json()['groups'][0]
+        assert fullname in response.json()['fullname']
+        assert email in response.json()['email']
+        assert GK_ALL_PERMISSION == response.json()['permissions'][0]
+
+        # delete the group and user
+
+        # delete the group
+        assert (self.gk_dao.del_gk_group(self.db, group_id))
+        # delete user - cascade delete by default
+        assert (self.gk_dao.del_gk_user(self.db, user_id))
