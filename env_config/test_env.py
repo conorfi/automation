@@ -31,11 +31,13 @@ config['gatekeeper']['db']['connection'] = (
     "@10.20.254.142:5432/gatekeeper"
 )
 config['gatekeeper']['redirect'] = '?redirect=http%3A%2F%2Fwww.example.com'
+config['gatekeeper']['admin_endpoint'] = 'admin'
 config['gatekeeper']['dummy'] = {}
 config['gatekeeper']['dummy']['host'] = 'app-t01'
 config['gatekeeper']['dummy']['port'] = '8001'
 config['gatekeeper']['dummy']['user_endpoint'] = 'user'
 config['gatekeeper']['dummy']['admin_endpoint'] = 'admin'
+
 
 config['api'] = {}
 config['api']['core'] = {}
