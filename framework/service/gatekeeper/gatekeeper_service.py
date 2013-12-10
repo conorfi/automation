@@ -144,7 +144,7 @@ class GateKeeperService(object):
     def logout_user_session(self, session, url=None):
 
         """
-        single sign out, deletes user session
+        single sign out, deletes user session using post
 
         @param session:  session object and associated cookie
 
@@ -158,6 +158,25 @@ class GateKeeperService(object):
             url = self._create_url(
                 config['api']['user']['session']['logout_v1'])
         response = session.post(url, verify=False)
+        return response
+
+    def logout_user_session_get(self, session, url=None):
+
+        """
+        single sign out, deletes user session using get
+
+        @param session:  session object and associated cookie
+
+        @param url: Optional. request url of API
+
+        @return: a request session object
+
+        """
+
+        if(url is None):
+            url = self._create_url(
+                config['api']['user']['session']['logout_v1'])
+        response = session.get(url, verify=False)
         return response
 
     def user_info(self, session, user_id, application, url=None, verify=None):
