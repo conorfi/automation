@@ -22,6 +22,7 @@ from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
+from time import sleep
 import Cookie
 
 # adfuser is the defaut test application
@@ -650,7 +651,6 @@ class TestGateKeeperAPI:
         )
         assert db_response is None
 
-
     @attr(env=['test'], priority=1)
     def test_can_logout_default_redirect(self):
         """
@@ -694,7 +694,7 @@ class TestGateKeeperAPI:
         )
         assert db_response is None
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_can_logout_get(self):
         """
         GATEKEEPER-API017A test_can_logout_default_redirect
@@ -725,6 +725,8 @@ class TestGateKeeperAPI:
 
         # logout using GET call
         response = self.gk_service.logout_user_session_get(session)
+        # adding a 1 second dealy to allow the redirect occur
+        sleep(1)
         assert response.status_code == requests.codes.ok
         assert CONFIRM_LOGOUT in response.text
 
