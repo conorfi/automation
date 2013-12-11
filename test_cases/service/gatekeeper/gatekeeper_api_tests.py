@@ -685,7 +685,7 @@ class TestGateKeeperAPI:
 
         response = self.gk_service.validate_url_with_cookie(session)
         assert response.status_code == requests.codes.ok
-        assert "Please confirm logout" in response.text
+        assert GATEKEEPER_TITLE in response.text
 
         # assert againist the database - ensure it no longer exists
         db_response = self.gk_dao.get_session_by_cookie_id(
@@ -725,8 +725,6 @@ class TestGateKeeperAPI:
 
         # logout using GET call
         response = self.gk_service.logout_user_session_get(session)
-        # adding a 1 second dealy to allow the redirect occur
-        sleep(1)
         assert response.status_code == requests.codes.ok
         assert CONFIRM_LOGOUT in response.text
 
