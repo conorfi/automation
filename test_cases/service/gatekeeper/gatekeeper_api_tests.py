@@ -1330,11 +1330,8 @@ class TestGateKeeperAPI:
         )
         response = self.gk_service.user_info(session, '', '')
 
-        # ensure that the request is forbidden(403)
-        # without a valid session cookie
-        # TODO: verify on 403 if this defect is resolved
-        # https://www.pivotaltracker.com/story/show/61545596
-        # assert response.status_code == requests.codes.forbidden
+        # a 404 will alwasy be returend
+        assert response.status_code == requests.codes.not_found
         assert MISSING_PARAMETERS in response.json()['error']
 
     @attr(env=['test'], priority=1)

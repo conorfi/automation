@@ -35,6 +35,7 @@ HASH_PASSWORD_TEST = (
     "IM25AqnXu4Fgt/Xgtpp3AInYgk5sxaxJmxxpcR8A="
 )
 GATEKEEPER_TITLE = "<title>Gatekeeper / Arts Alliance Media</title>"
+INVALID_VERIFCATION_CODE = "Verification+code+not+valid"
 
 
 class TestGateKeeper2FaAPI:
@@ -298,7 +299,7 @@ class TestGateKeeper2FaAPI:
         assert GATEKEEPER_TITLE in response.text
 
     @attr(env=['test'], priority=1)
-    def test_invalid_verifcation_code(self):
+    def test_invalid_verification_code(self):
         """
         GATEKEEPER-2FA-API004 - test_invalid_verifcation_code -
         ensure that an invalid verification is not accepted,
@@ -329,15 +330,19 @@ class TestGateKeeper2FaAPI:
             my_cookie
         )
 
-        # make up a random verifcation code
+        # fake verificaton code
         verification_code = 123456
-        # print    verification_code
         payload = {'verification_code': verification_code}
-        # print payload
-        response = self.gk_service.submit_verification_code(session, payload)
-        assert response.status_code == requests.codes.ok
-        # ensure verification page was returned
-        assert "verification_code" in response.text
+
+        # try the invalid verification code
+        response = self.gk_service.submit_verification_code(
+            session,
+            payload, allow_redirects=False
+        )
+        # 303 response(as allow_redirects=False)
+        # ensure the url encoded error message is correct
+        assert response.status_code == requests.codes.other
+        assert INVALID_VERIFCATION_CODE in response.text
 
         # ensure we can still use the correct verification code
         verification_code = self.gk_dao.get_verification_code_by_user_id(
@@ -414,19 +419,16 @@ class TestGateKeeper2FaAPI:
             )
         )
 
-        # TODO: When exception handling is in place do disable redirect
-        # and verify the 303 error message
-
         payload = {'verification_code': verification_code}
-        # print payload
+        # try the invalid verification code
         response = self.gk_service.submit_verification_code(
             session,
-            payload,
-            allow_redirects=True)
-        assert response.status_code == requests.codes.ok
-
-        # ensure verification page was returned
-        assert "verification_code" in response.text
+            payload, allow_redirects=False
+        )
+        # 303 response(as allow_redirects=False)
+        # ensure the url encoded error message is correct
+        assert response.status_code == requests.codes.other
+        assert INVALID_VERIFCATION_CODE in response.text
 
     @attr(env=['test'], priority=1)
     def test_only_latest_verification_code_is_valid(self):
@@ -473,20 +475,16 @@ class TestGateKeeper2FaAPI:
             self.DEFAULT_TEST_USER
         )['verification_code']
 
-        # TODO: When exception handling is in place do disable redirect
-        # and verify the 303 error message
-
         payload = {'verification_code': verification_code_one}
-        # print payload
+
         response = self.gk_service.submit_verification_code(
             session,
-            payload,
-            allow_redirects=True
+            payload, allow_redirects=False
         )
-        assert response.status_code == requests.codes.ok
-
-        # ensure verification page was returned
-        assert "verification_code" in response.text
+        # 303 response(as allow_redirects=False)
+        # ensure the url encoded error message is correct
+        assert response.status_code == requests.codes.other
+        assert INVALID_VERIFCATION_CODE in response.text
 
         payload = {'verification_code': verification_code_two}
         response = self.gk_service.submit_verification_code(
@@ -515,7 +513,7 @@ class TestGateKeeper2FaAPI:
         assert db_response['cookie_id'] == cookie_id_sso
 
     @attr(env=['test'], priority=1)
-    def test_invalid_credientials_cook_value_in_session(self):
+    def test_invalid_credientials_cookie_value_in_session(self):
         """
         GATEKEEPER-2FA-API007  test_invalid_credientials_cook_value_in_session,
         verify that a verification code cannot be posted when the session
@@ -550,20 +548,20 @@ class TestGateKeeper2FaAPI:
             self.db,
             self.DEFAULT_TEST_USER
         )['verification_code']
-        # print    verification_code
         payload = {'verification_code': verification_code}
-
-        # TODO: When exception handling is in place
-        # do disable redirect and verify the 303 error message
 
         response = self.gk_service.submit_verification_code(
             session,
             payload,
-            allow_redirects=True
+            allow_redirects=False
         )
 
-        # TODO: assert when this is resolved
-        # https://www.pivotaltracker.com/story/show/61748846
+        # 303 response(as allow_redirects=False)
+        # ensure the url encoded error message is correct
+        assert response.status_code == requests.codes.other
+        no_cookie_found = \
+            "No+session+with+cookie+%s+found" % (fake_cookie_value)
+        assert no_cookie_found in response.text
 
     @attr(env=['test'], priority=1)
     def test_no_verifcation_code(self):
@@ -599,15 +597,11 @@ class TestGateKeeper2FaAPI:
         # print    verification_code
         payload = {'verification_code': verification_code_blank}
 
-        # TODO: When exception handling is in place do disable redirect
-        # and verify the 303 error message
-
         response = self.gk_service.submit_verification_code(
             session,
-            payload,
-            allow_redirects=True
+            payload, allow_redirects=False
         )
-
-        assert response.status_code == requests.codes.ok
-        # ensure verification page was returned
-        assert "verification_code" in response.text
+        # 303 response(as allow_redirects=False)
+        # ensure the url encoded error message is correct
+        assert response.status_code == requests.codes.other
+        assert INVALID_VERIFCATION_CODE in response.text
