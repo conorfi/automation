@@ -10,6 +10,7 @@ for the gate keeper(single sign on) project
 
 import requests
 from testconfig import config
+from framework.utility.utility import Utility
 
 
 class GateKeeperService(object):
@@ -292,10 +293,10 @@ class GateKeeperService(object):
         verify=None
     ):
         """
-        Returns user info for a valid user id and session cookie
+        Application API for CRUD operations
 
         @param session:  session object and associated cookie
-        @method: method i.e GET,POST,PUT or DELETE
+        @param: method i.e GET,POST,PUT or DELETE
         @param app_id: application id
         @param app_data: data for PUT and DELETE
         @param verify: boolean to determine if SSL cert will be verified
@@ -328,3 +329,76 @@ class GateKeeperService(object):
             response = session.delete(url=request_url, verify=verify)
 
         return response
+
+    def user(
+        self,
+        session,
+        method,
+        user_id=None,
+        user_data=None,
+        verify=None
+    ):
+        """
+        User API for CRUD operations
+        @param session:  session object and associated cookie
+        @param: method: i.e GET,POST,PUT or DELETE
+        @param user_id: user id
+        @param user_data: data for PUT and DELETE
+        @param verify: boolean to determine if SSL cert will be verified
+        @param allow_redirects:  boolean to determine if redirects are allowed
+        @return: a request session object containing the user info
+
+        """
+
+        url = self._create_url(config['api']['user']['user_v1']['post'])
+
+        if(user_id is not None):
+            request_url = self._create_url(
+                config['api']['user']['user_v1']['id']
+            )
+            request_url = request_url % (user_id)
+
+        if(method == 'POST' or method == 'PUT' and user_data is None):
+            user_data = self.create_user_data()
+
+        if(verify is None):
+            verify = False
+
+        if method == 'GET':
+            response = session.get(url=request_url, verify=verify)
+        if method == 'POST':
+            response = session.post(url=url, data=user_data, verify=verify)
+        if method == 'PUT':
+            response = session.put(
+                url=request_url, data=user_data, verify=verify
+                )
+        if method == 'DELETE':
+            response = session.delete(url=request_url, verify=verify)
+
+        return response
+
+    def create_user_data(self, user_dict=None):
+
+        """
+        Creation of a user dict
+        @param user_dict: optional dict - can be merged with a default dict
+        @return: a user data dict
+
+        """
+
+        self.util = Utility()
+        rand_str = self.util.random_str(5)
+        phone = self.util.phone_number()
+        email = self.util.random_email()
+        user_data = {
+            'username': rand_str,
+            'name': rand_str,
+            'phone': phone,
+            'email': email,
+            'password': rand_str
+        }
+
+        if user_dict is not None:
+            user_data.update(user_dict)
+
+        return user_data

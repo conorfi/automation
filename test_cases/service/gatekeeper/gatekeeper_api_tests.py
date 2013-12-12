@@ -79,7 +79,7 @@ class TestGateKeeperAPI:
 
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
-        self.DEFAULT_TEST_USER = self.gk_dao.get_user_id_by_username(
+        self.DEFAULT_TEST_USER = self.gk_dao.get_user_by_username(
             self.db,
             ADMIN_USER
         )['user_id']
@@ -760,7 +760,7 @@ class TestGateKeeperAPI:
         )
 
         # get user_id
-        user_id = self.gk_dao.get_user_id_by_username(
+        user_id = self.gk_dao.get_user_by_username(
             self.db,
             username
         )['user_id']
@@ -862,7 +862,7 @@ class TestGateKeeperAPI:
         )
 
         # get user_id
-        user_id = self.gk_dao.get_user_id_by_username(
+        user_id = self.gk_dao.get_user_by_username(
             self.db,
             username
         )['user_id']
@@ -1017,7 +1017,7 @@ class TestGateKeeperAPI:
         )
 
         # get user_id
-        user_id = self.gk_dao.get_user_id_by_username(
+        user_id = self.gk_dao.get_user_by_username(
             self.db,
             username
         )['user_id']
@@ -1288,7 +1288,7 @@ class TestGateKeeperAPI:
         )
 
         # add one to the user id to create a random element to userid
-        random_user_id = self.gk_dao.get_user_id_by_username(
+        random_user_id = self.gk_dao.get_user_by_username(
             self.db,
             ADMIN_USER
         )['user_id'] + 1
@@ -1364,7 +1364,7 @@ class TestGateKeeperAPI:
         )
 
         # get user_id
-        user_id = self.gk_dao.get_user_id_by_username(
+        user_id = self.gk_dao.get_user_by_username(
             self.db,
             username
         )['user_id']
@@ -1482,7 +1482,7 @@ class TestGateKeeperAPI:
         )
 
         # get user_id
-        user_id = self.gk_dao.get_user_id_by_username(
+        user_id = self.gk_dao.get_user_by_username(
             self.db,
             username
         )['user_id']
@@ -2074,3 +2074,437 @@ class TestGateKeeperAPI:
         assert read_response.status_code == requests.codes.not_found
         # verify that the error message is correct
         assert NO_DATA_ERROR in read_response.json()['error']
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_create(self):
+        """
+        GATEKEEPER-API037 test_user_api_create
+        create a new user using the user api,
+        clean up the data (implictly tests DELETE and GET)
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value = cookie['sso_cookie'].value
+        my_cookie = dict(name='sso_cookie', value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # create a new application
+        create_response = self.gk_service.user(
+            session, method='POST'
+        )
+
+        # ensure a 200 is returned
+        assert create_response.status_code == requests.codes.ok
+
+        # set username
+        username = create_response.json()['username']
+        # get user_info directly from database
+        user_info = self.gk_dao.get_user_by_username(self.db, username)
+
+        # verify the creation of the user POST action
+        assert create_response.json()['username'] == user_info['username']
+        assert create_response.json()['user_id'] == user_info['user_id']
+        assert create_response.json()['name'] == user_info['name']
+        assert create_response.json()['phone'] == user_info['phone']
+        assert create_response.json()['email'] == user_info['email']
+        assert (
+            create_response.json()['last_logged_in']
+            == user_info['last_logged_in']
+        )
+
+        # set user_id
+        user_id = create_response.json()['user_id']
+        # clean up - delete the application
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
+        )
+        # ensure a 200 is returned
+        assert del_response.status_code == requests.codes.ok
+
+        # read the new application data
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
+        )
+        assert NO_DATA_ERROR in read_response.json()['error']
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_create_missing_params(self):
+        """
+        GATEKEEPER-API038 test_user_api_create_missing_params
+        attempt to create a new user using the user api with missing params
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value = cookie['sso_cookie'].value
+        my_cookie = dict(name='sso_cookie', value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # list of dicts with missing data
+        no_data = [
+            {'username': None},
+            {'name': None},
+            {'phone': None},
+            {'email': None},
+            {'password': None}
+        ]
+
+        for user_dict in no_data:
+
+            user_data = self.gk_service.create_user_data(user_dict)
+            create_response = self.gk_service.user(
+                session, method='POST', user_data=user_data
+            )
+        # TODO: add verification when the defect is resolved
+        # https://www.pivotaltracker.com/story/show/62325832
+        assert response.status_code != requests.codes.internal_server_error
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_create_duplicate_username(self):
+        """
+        GATEKEEPER-API039 test_user_api_create_duplicate_username
+        attempt to create a new user using the user api with missing params
+        """
+
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value = cookie['sso_cookie'].value
+        my_cookie = dict(name='sso_cookie', value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # create a new application
+        create_response = self.gk_service.user(
+            session, method='POST'
+        )
+
+        rand_str = self.util.random_str(5)
+        user_dict = {'username': rand_str}
+        user_data = self.gk_service.create_user_data(user_dict)
+        create_response = self.gk_service.user(
+            session, method='POST', user_data=user_data
+        )
+        # ensure a 200 is returned
+        assert create_response.status_code == requests.codes.ok
+
+        user_data = self.gk_service.create_user_data(user_dict)
+        create_response = self.gk_service.user(
+            session, method='POST', user_data=user_data
+        )
+
+        # TODO: add verification when the defect is resolved
+        # https://www.pivotaltracker.com/story/show/62325236
+        assert response.status_code != requests.codes.internal_server_error
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_update(self):
+        """
+        GATEKEEPER-API040 test_user_api_update
+        update all the user data using the user api
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value = cookie['sso_cookie'].value
+        my_cookie = dict(name='sso_cookie', value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # create a new application
+        create_response = self.gk_service.user(
+            session, method='POST'
+        )
+
+        # ensure a 200 is returned
+        assert create_response.status_code == requests.codes.ok
+        # set user_id
+        user_id = create_response.json()['user_id']
+        # set username
+        username = create_response.json()['username']
+
+        # update application
+        update_response = self.gk_service.user(
+            session, method='PUT', user_id=user_id
+        )
+
+
+        # get user_info directly from database
+        user_info = self.gk_dao.get_user_by_username(self.db, username)
+
+        # TODO: revisit when defect is resolved
+        # https://www.pivotaltracker.com/story/show/62328182
+
+        # verify the creation of the user POST action
+        assert update_response.json()['username'] == user_info['username']
+        assert update_response.json()['user_id'] == user_info['user_id']
+        assert update_response.json()['name'] == user_info['name']
+        assert update_response.json()['phone'] == user_info['phone']
+        assert update_response.json()['email'] == user_info['email']
+        assert (
+            update_response.json()['last_logged_in']
+            == user_info['last_logged_in']
+        )
+
+        # clean up - delete the application
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
+        )
+        # ensure a 200 is returned
+        assert del_response.status_code == requests.codes.ok
+
+        # read the new application data
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
+        )
+        assert NO_DATA_ERROR in read_response.json()['error']
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_update_individually(self):
+        """
+        GATEKEEPER-API041  test_user_api_update_individually
+        update fields individually
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value = cookie['sso_cookie'].value
+        my_cookie = dict(name='sso_cookie', value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # create a new application
+        create_response = self.gk_service.user(
+            session, method='POST'
+        )
+
+        # ensure a 200 is returned
+        assert create_response.status_code == requests.codes.ok
+        # set user_id
+        user_id = create_response.json()['user_id']
+        # set username
+        username = create_response.json()['username']
+
+        # create individual dicts for updating each paramater
+        rand_str = self.util.random_str(5)
+        phone = self.util.phone_number()
+        email = self.util.random_email()
+        user_dict = [
+            {'username': rand_str},
+            {'name': rand_str},
+            {'phone': phone},
+            {'email': email},
+            {'password': rand_str}
+        ]
+
+        for data in user_dict:
+            print data
+            user_data = self.gk_service.create_user_data(data)
+            update_response = self.gk_service.user(
+                session, method='PUT', user_data=user_data, user_id=user_id
+            )
+            print update_response.status_code
+            print update_response.json()
+
+        # get user_info directly from database
+        user_info = self.gk_dao.get_user_by_username(self.db, username)
+
+        # TODO: revisit when defect is resolved
+        # https://www.pivotaltracker.com/story/show/62328182
+
+        # verify the creation of the user POST action
+        assert update_response.json()['username'] == user_info['username']
+        assert update_response.json()['user_id'] == user_info['user_id']
+        assert update_response.json()['name'] == user_info['name']
+        assert update_response.json()['phone'] == user_info['phone']
+        assert update_response.json()['email'] == user_info['email']
+        assert (
+            update_response.json()['last_logged_in']
+            == user_info['last_logged_in']
+        )
+
+        # clean up - delete the application
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
+        )
+        # ensure a 200 is returned
+        assert del_response.status_code == requests.codes.ok
+
+        # read the new application data
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
+        )
+        assert NO_DATA_ERROR in read_response.json()['error']
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_update_non_existant_user_id(self):
+        """
+        GATEKEEPER-API042  test_user_api_update_non_existant_user_id
+        attempt to update a non existant user id
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value = cookie['sso_cookie'].value
+        my_cookie = dict(name='sso_cookie', value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        user_id = self.util.random_int()
+        update_response = self.gk_service.user(
+            session, method='PUT', user_id=user_id
+        )
+
+        # 404 response
+        assert update_response.status_code == requests.codes.not_found
+        # verify that the error message is correct
+        assert NO_DATA_ERROR in update_response.json()['error']
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_read(self):
+        """
+        GATEKEEPER-API043 test_user_api_read
+        verify the read(GET) response
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value = cookie['sso_cookie'].value
+        my_cookie = dict(name='sso_cookie', value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # create a new application
+        create_response = self.gk_service.user(
+            session, method='POST'
+        )
+
+        # ensure a 200 is returned
+        assert create_response.status_code == requests.codes.ok
+
+        # set user_id
+        user_id = create_response.json()['user_id']
+        # set username
+        username = create_response.json()['username']
+        # get user_info directly from database
+        user_info = self.gk_dao.get_user_by_username(self.db, username)
+
+        # read(GET) application data
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
+        )
+
+        # verify the creation of the user POST action
+        assert read_response.json()['username'] == user_info['username']
+        assert read_response.json()['user_id'] == user_info['user_id']
+        assert read_response.json()['name'] == user_info['name']
+        assert read_response.json()['phone'] == user_info['phone']
+        assert read_response.json()['email'] == user_info['email']
+        assert (
+            create_response.json()['last_logged_in']
+            == user_info['last_logged_in']
+        )
+
+        # clean up - delete the application
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
+        )
+        # ensure a 200 is returned
+        assert del_response.status_code == requests.codes.ok
+
+        # read the new application data
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
+        )
+        assert NO_DATA_ERROR in read_response.json()['error']
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_get_non_existant_user_id(self):
+        """
+        GATEKEEPER-API044  test_user_api_get_non_existant_user_id
+        attempt to get a non existant user id
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # covert Set_Cookie response header to simple cookie object
+        cookie = Cookie.SimpleCookie()
+        cookie.load(response.headers['Set-Cookie'])
+        cookie_value = cookie['sso_cookie'].value
+        my_cookie = dict(name='sso_cookie', value=cookie_value)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        user_id = self.util.random_int()
+        update_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
+        )
+
+        # 404 response
+        assert update_response.status_code == requests.codes.not_found
+        # verify that the error message is correct
+        assert NO_DATA_ERROR in update_response.json()['error']

@@ -55,7 +55,7 @@ class TestGateKeeper2FaAPI:
         self.db = BaseDAO(config['gatekeeper']['db']['connection'])
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
-        self.DEFAULT_TEST_USER = self.gk_dao.get_user_id_by_username(
+        self.DEFAULT_TEST_USER = self.gk_dao.get_user_by_username(
             self.db,
             ADMIN_USER
         )['user_id']
@@ -151,7 +151,7 @@ class TestGateKeeper2FaAPI:
         )
 
         # get user_id
-        user_id = self.gk_dao.get_user_id_by_username(
+        user_id = self.gk_dao.get_user_by_username(
             self.db,
             username
         )['user_id']
