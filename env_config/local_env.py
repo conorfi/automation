@@ -62,3 +62,6 @@ config['api']['user']['session']['user_info_v1'] = \
     'api/v1/user/%s/application/%s'
 config['api']['user']['session']['submit_verification_v1'] = \
     'login/?step=verification_code'
+config['api']['user']['application_v1'] = {}
+config['api']['user']['application_v1']['post'] = 'api/v1/application/'
+config['api']['user']['application_v1']['id'] = 'api/v1/application/%s'
