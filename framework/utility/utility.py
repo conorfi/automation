@@ -20,3 +20,14 @@ class Utility(object):
     def random_email(self, len):
         email = self.random_str(len) + '@' + self.random_str(len) + '.com'
         return email
+
+    def random_url(self, len):
+        url = 'http://www.' + self.random_str(len) + '.com'
+        return url
+
+    def random_int(self, lower=None, upper=None):
+        if(lower is not None and upper is not None):
+            rand_int = random.randint(lower, upper)
+        else:
+            rand_int = random.randint(10000000, 100000000)
+        return rand_int

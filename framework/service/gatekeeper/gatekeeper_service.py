@@ -282,3 +282,49 @@ class GateKeeperService(object):
         )
 
         return response
+
+    def application(
+        self,
+        session,
+        method,
+        app_id=None,
+        app_data=None,
+        verify=None
+    ):
+        """
+        Returns user info for a valid user id and session cookie
+
+        @param session:  session object and associated cookie
+        @method: method i.e GET,POST,PUT or DELETE
+        @param app_id: application id
+        @param app_data: data for PUT and DELETE
+        @param verify: boolean to determine if SSL cert will be verified
+        @param allow_redirects:  boolean to determine if redirects are allowed
+        @return: a request session object containing the user info
+
+        """
+
+        url = self._create_url(config['api']['user']['application_v1']['post'])
+
+        if(app_id is not None):
+
+            request_url = self._create_url(
+                config['api']['user']['application_v1']['id']
+            )
+            request_url = request_url % (app_id)
+
+        if(verify is None):
+            verify = False
+
+        if method == 'GET':
+            response = session.get(url=request_url, verify=verify)
+        if method == 'POST':
+            response = session.post(url=url, data=app_data, verify=verify)
+        if method == 'PUT':
+            response = session.put(
+                url=request_url, data=app_data, verify=verify
+                )
+        if method == 'DELETE':
+            response = session.delete(url=request_url, verify=verify)
+
+        return response
