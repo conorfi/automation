@@ -316,6 +316,9 @@ class GateKeeperService(object):
             )
             request_url = request_url % (app_id)
 
+        if(method == 'POST' or method == 'PUT' and app_data is None):
+            app_data = self.create_app_data()
+
         if(verify is None):
             verify = False
 
@@ -404,6 +407,24 @@ class GateKeeperService(object):
             user_data.update(user_dict)
 
         return user_data
+
+    def create_app_data(self, app_dict=None):
+
+        """
+        Creation of a user dict
+        @param user_dict: optional dict - can be merged with a default dict
+        @return: a user data dict
+
+        """
+        self.util = Utility()
+        new_app = self.util.random_str(5)
+        new_url = self.util.random_url(5)
+        app_data = {'name': new_app, 'default_url': new_url}
+
+        if app_dict is not None:
+            app_data.update(app_dict)
+
+        return app_data
 
     def extract_sso_cookie_value(self, headers):
         """

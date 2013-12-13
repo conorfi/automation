@@ -772,7 +772,7 @@ class TestGateKeeperAPI:
         )['user_id']
 
         # get app id
-        app_id = self.gk_dao.get_app_id_by_app_name(
+        app_id = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
         )['application_id']
@@ -873,7 +873,7 @@ class TestGateKeeperAPI:
         )['user_id']
 
         # get app id
-        app_id = self.gk_dao.get_app_id_by_app_name(
+        app_id = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
         )['application_id']
@@ -1028,7 +1028,7 @@ class TestGateKeeperAPI:
         )['user_id']
 
         # get app id
-        app_id = self.gk_dao.get_app_id_by_app_name(
+        app_id = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
         )['application_id']
@@ -1376,7 +1376,7 @@ class TestGateKeeperAPI:
         )['user_id']
 
         # get app id
-        app_id = self.gk_dao.get_app_id_by_app_name(
+        app_id = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
         )['application_id']
@@ -1493,7 +1493,7 @@ class TestGateKeeperAPI:
         )['user_id']
 
         # get app id
-        app_id = self.gk_dao.get_app_id_by_app_name(
+        app_id = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
         )['application_id']
@@ -1598,8 +1598,7 @@ class TestGateKeeperAPI:
         """
         GATEKEEPER-API027 test_application_api_create
         create a new application using the application api,
-        verify the reponse with the read function(implictly tests GET)
-        clean up the data (implictly tests DELETE)
+        clean up the data (implictly tests DELETE and GET)
         """
         # urlencoded post
         # create a session - do not allow redirects
@@ -1613,10 +1612,6 @@ class TestGateKeeperAPI:
             response.headers
         )
 
-        new_app = self.util.random_str(5)
-        new_url = self.util.random_url(5)
-        app_data = {'name': new_app, 'default_url': new_url}
-
         my_cookie = dict(name='sso_cookie', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
@@ -1624,32 +1619,31 @@ class TestGateKeeperAPI:
 
         # create a new application
         create_response = self.gk_service.application(
-            session, method='POST', app_data=app_data
+            session, method='POST'
         )
         # ensure a 200 is returned
         assert create_response.status_code == requests.codes.ok
 
         app_id = create_response.json()['application_id']
-
-        # read the new application data
-        read_response = self.gk_service.application(
-            session, method='GET', app_id=app_id
+        appname = create_response.json()['name']
+        # get app data
+        app_data = self.gk_dao.get_app_by_app_name(
+            self.db,
+            appname
         )
-        # ensure a 200 is returned
-        assert read_response.status_code == requests.codes.ok
 
-        # verify the post data againist the get data
+        # verify the post data againist the db data
         assert (
             create_response.json()['application_id']
-            == read_response.json()['application_id']
+            == app_data['application_id']
         )
         assert (
             create_response.json()['name']
-            == read_response.json()['name']
+            == app_data['name']
         )
         assert (
             create_response.json()['default_url']
-            == read_response.json()['default_url']
+            == app_data['default_url']
         )
 
         # clean up - delete the application
@@ -1659,7 +1653,7 @@ class TestGateKeeperAPI:
         # ensure a 200 is returned
         assert del_response.status_code == requests.codes.ok
 
-        # read the new application data
+        # read the data
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
@@ -1686,8 +1680,8 @@ class TestGateKeeperAPI:
         )
 
         new_app = self.util.random_str(5)
-        new_url = self.util.random_url(5)
-        app_data = {'name': new_app, 'default_url': new_url}
+        name_dict = {'name': new_app}
+        app_data = self.gk_service.create_app_data(name_dict)
 
         my_cookie = dict(name='sso_cookie', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
@@ -1703,6 +1697,7 @@ class TestGateKeeperAPI:
         # ensure a 200 is returned
         assert response.status_code == requests.codes.ok
 
+        # attempt to use the same data with the same app name again
         response = self.gk_service.application(
             session, method='POST', app_data=app_data
         )
@@ -1724,10 +1719,10 @@ class TestGateKeeperAPI:
         assert NO_DATA_ERROR in read_response.json()['error']
 
     @attr(env=['test'], priority=1)
-    def test_application_api_create_no_data(self):
+    def test_application_api_create_missing_params(self):
         """
         GATEKEEPER-API029 test_application_api_create_no_data
-        attempt to create a new application with no data
+        attempt to create a new application missing paramters
         """
         # urlencoded post
         # create a session - do not allow redirects
@@ -1741,21 +1736,30 @@ class TestGateKeeperAPI:
             response.headers
         )
 
-        new_app = self.util.random_str(5)
-        app_data = {}
-
         my_cookie = dict(name='sso_cookie', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
         )
 
-        # create the new application with no data
-        response = self.gk_service.application(
-            session, method='POST', app_data=app_data
-        )
-        # TODO: add verification when the defect is resolved
-        # https://www.pivotaltracker.com/story/show/62325832
-        assert response.status_code != requests.codes.internal_server_error
+        # list of dicts with missing data
+        no_data = [
+            {'name': None},
+            {'default_url': None},
+        ]
+
+        for app_dict in no_data:
+
+            app_data = self.gk_service.create_app_data(app_dict)
+            create_response = self.gk_service.application(
+                session, method='POST', app_data=app_data
+            )
+
+            # TODO: add verification when the defect is resolved
+            # https://www.pivotaltracker.com/story/show/62325832
+            assert (
+                create_response.status_code !=
+                requests.codes.internal_server_error
+            )
 
     @attr(env=['test'], priority=1)
     def test_application_api_update(self):
@@ -1777,11 +1781,6 @@ class TestGateKeeperAPI:
             response.headers
         )
 
-        new_app = self.util.random_str(5)
-        new_url = self.util.random_url(5)
-        update_app = self.util.random_str(5)
-        update_url = self.util.random_url(5)
-        app_data = {'name': new_app, 'default_url': new_url}
         my_cookie = dict(name='sso_cookie', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
@@ -1789,42 +1788,128 @@ class TestGateKeeperAPI:
 
         # create a new application
         create_response = self.gk_service.application(
-            session, method='POST', app_data=app_data
+            session, method='POST'
         )
         # ensure a 200 is returned
         assert create_response.status_code == requests.codes.ok
         app_id = create_response.json()['application_id']
 
         # update the application
-        app_data = {'name': update_app, 'default_url': update_url}
+
         update_response = self.gk_service.application(
-            session, method='PUT', app_data=app_data, app_id=app_id
+            session, method='PUT', app_id=app_id
         )
 
         # ensure a 200 is returned
         assert update_response.status_code == requests.codes.ok
 
+        # TODO: ensure assertion is correct after this defect is resloved
+        # https://www.pivotaltracker.com/story/show/62328182
+
+        app_id = update_response.json()['application_id']
+        appname = update_response.json()['name']
+        # get app data
+        app_data = self.gk_dao.get_app_by_app_name(
+            self.db,
+            appname
+        )
+
+        # verify the post data againist the db data
+        assert (
+            update_response.json()['application_id']
+            == app_data['application_id']
+        )
+        assert (
+            update_response.json()['name']
+            == app_data['name']
+        )
+        assert (
+            update_response.json()['default_url']
+            == app_data['default_url']
+        )
+
+        # clean up - delete the application
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
+        )
+        # ensure a 200 is returned
+        assert del_response.status_code == requests.codes.ok
+
         # read the new application data
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
-        # ensure a 200 is returned
-        assert read_response.status_code == requests.codes.ok
+        assert NO_DATA_ERROR in read_response.json()['error']
 
-        # verify the put data againist the get data
+    @attr(env=['test'], priority=1)
+    def test_application_api_update_individually(self):
+        """
+        GATEKEEPER-API030A test_application_api_update_individually
+        update application fields individually using the application api,
+        verify the repposne with the read function
+        clean up the data (implictly tests DELETE and GET)
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_sso_cookie_value(
+            response.headers
+        )
+
+        my_cookie = dict(name='sso_cookie', value=cookie_id)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # create a new application
+        create_response = self.gk_service.application(
+            session, method='POST'
+        )
+        # ensure a 200 is returned
+        assert create_response.status_code == requests.codes.ok
+        app_id = create_response.json()['application_id']
+
+        # update the application
+        rand_str = self.util.random_str(5)
+        update_data = [
+            {'name': rand_str},
+            {'default_url': rand_str},
+        ]
+
+        for app_dict in update_data:
+            app_data = self.gk_service.create_app_data(app_dict)
+            update_response = self.gk_service.application(
+                session, method='PUT', app_data=app_data, app_id=app_id
+            )
+            # ensure a 200 is returned
+            assert update_response.status_code == requests.codes.ok
+
         # TODO: ensure assertion is correct after this defect is resloved
         # https://www.pivotaltracker.com/story/show/62328182
+        appname = update_response.json()['name']
+        # get app data
+        app_data = self.gk_dao.get_app_by_app_name(
+            self.db,
+            appname
+        )
+
+        # verify the update data againist the db data
         assert (
             update_response.json()['application_id']
-            == read_response.json()['application_id']
+            == app_data['application_id']
         )
         assert (
             update_response.json()['name']
-            == read_response.json()['name']
+            == app_data['name']
         )
         assert (
             update_response.json()['default_url']
-            == read_response.json()['default_url']
+            == app_data['default_url']
         )
 
         # clean up - delete the application
@@ -1910,9 +1995,88 @@ class TestGateKeeperAPI:
         assert NO_DATA_ERROR in read_response.json()['error']
 
     @attr(env=['test'], priority=1)
+    def test_application_api_read(self):
+        """
+        GATEKEEPER-API033 test_application_api_read
+        read an application data using the application api
+        clean up the data (implictly tests DELETE and GET)
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_sso_cookie_value(
+            response.headers
+        )
+
+        my_cookie = dict(name='sso_cookie', value=cookie_id)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # create a new application
+        create_response = self.gk_service.application(
+            session, method='POST'
+        )
+        # ensure a 200 is returned
+        assert create_response.status_code == requests.codes.ok
+        app_id = create_response.json()['application_id']
+
+        # update the application
+
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
+        )
+
+        # ensure a 200 is returned
+        assert read_response.status_code == requests.codes.ok
+
+        # TODO: ensure assertion is correct after this defect is resloved
+        # https://www.pivotaltracker.com/story/show/62328182
+
+        app_id = read_response.json()['application_id']
+        appname = read_response.json()['name']
+        # get app data
+        app_data = self.gk_dao.get_app_by_app_name(
+            self.db,
+            appname
+        )
+
+        # verify the post data againist the db data
+        assert (
+            read_response.json()['application_id']
+            == app_data['application_id']
+        )
+        assert (
+            read_response.json()['name']
+            == app_data['name']
+        )
+        assert (
+            read_response.json()['default_url']
+            == app_data['default_url']
+        )
+
+        # clean up - delete the application
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
+        )
+        # ensure a 200 is returned
+        assert del_response.status_code == requests.codes.ok
+
+        # read the new application data
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
+        )
+        assert NO_DATA_ERROR in read_response.json()['error']
+
+    @attr(env=['test'], priority=1)
     def test_application_api_update_not_existant_app_id(self):
         """
-        GATEKEEPER-API033 test_application_api_invalid_app_id
+        GATEKEEPER-API033A test_application_api_invalid_app_id
         attempt to update an application with an app_id that dosen't exist
         """
         # urlencoded post

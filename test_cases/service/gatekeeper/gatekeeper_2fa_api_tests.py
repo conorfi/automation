@@ -157,7 +157,7 @@ class TestGateKeeper2FaAPI:
         )['user_id']
 
         # get app id
-        app_id = self.gk_dao.get_app_id_by_app_name(
+        app_id = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
         )['application_id']

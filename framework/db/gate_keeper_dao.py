@@ -50,19 +50,16 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
 
-    def get_app_id_by_app_name(self, db, app_name):
+    def get_app_by_app_name(self, db, app_name):
             """
-            Returns app id based on app name
+            Returns app data based on app name
 
             @param db: the database connection that will be utilized
-
-            @param session_id: session_id(cookie value) of the session created
-            by a post
-
+            @param app_name: application name
             @return: dict of app info
 
             """
-            query = """select application_id
+            query = """select *
                         from application
                          where name='%s'""" % app_name
             result = db.query(query)
