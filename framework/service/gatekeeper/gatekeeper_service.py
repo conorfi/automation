@@ -11,6 +11,7 @@ for the gate keeper(single sign on) project
 import requests
 from testconfig import config
 from framework.utility.utility import Utility
+import Cookie
 
 
 class GateKeeperService(object):
@@ -23,7 +24,8 @@ class GateKeeperService(object):
             config['gatekeeper']['scheme'], host, port, path)
 
     def create_session_urlencoded(self, url=None, payload=None, verify=None,
-                                  allow_redirects=None, redirect_url=None):
+                                  allow_redirects=None, redirect_url=None,
+                                  credentials=None):
         """
         creates a session through the login API
         @param url: Optional. request url of API
@@ -40,8 +42,8 @@ class GateKeeperService(object):
                 config['api']['user']['session']['create_v1'])
 
         # requests is url-encoded by default
-        if payload is None:
-            payload = config['gatekeeper']['credentials']
+        if credentials is None:
+            credentials = config['gatekeeper']['credentials']
 
         if redirect_url is not None:
             url = url + redirect_url
@@ -58,7 +60,7 @@ class GateKeeperService(object):
         # url encoded
         response = requests.post(
             url=url,
-            data=payload,
+            data=credentials,
             verify=verify,
             allow_redirects=allow_redirects
         )
@@ -402,3 +404,25 @@ class GateKeeperService(object):
             user_data.update(user_dict)
 
         return user_data
+
+    def extract_sso_cookie_value(self, headers):
+        """
+        Extract data from cookie
+        @return: cookie value
+        """
+
+        cookie = Cookie.SimpleCookie()
+        cookie.load(headers['Set-Cookie'])
+        cookie_id = cookie['sso_cookie'].value
+        return cookie_id
+
+    def extract_cred_cookie_value(self, headers):
+        """
+        Extract data from cookie
+        @return: cookie value
+        """
+
+        cookie = Cookie.SimpleCookie()
+        cookie.load(headers['Set-Cookie'])
+        cookie_id = cookie['sso_credentials'].value
+        return cookie_id
