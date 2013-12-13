@@ -1,5 +1,5 @@
 """
-@summary: A class for simple utility functions. Larger utility
+@summary: A class for simple and samll utility functions. Larger utility
 functionality/areas should be created
 as separate classes
 @since: Created on December 3rd 2013
@@ -17,7 +17,9 @@ class Utility(object):
             string.ascii_lowercase) for x in xrange(n)
         )
 
-    def random_email(self, len):
+    def random_email(self, len=None):
+        if(len is None):
+            len = 5
         email = self.random_str(len) + '@' + self.random_str(len) + '.com'
         return email
 
@@ -31,3 +33,7 @@ class Utility(object):
         else:
             rand_int = random.randint(10000000, 100000000)
         return rand_int
+
+    def phone_number(self):
+        phone = "123-456-789123456"
+        return phone

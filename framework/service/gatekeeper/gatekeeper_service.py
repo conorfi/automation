@@ -10,6 +10,8 @@ for the gate keeper(single sign on) project
 
 import requests
 from testconfig import config
+from framework.utility.utility import Utility
+import Cookie
 
 
 class GateKeeperService(object):
@@ -22,7 +24,8 @@ class GateKeeperService(object):
             config['gatekeeper']['scheme'], host, port, path)
 
     def create_session_urlencoded(self, url=None, payload=None, verify=None,
-                                  allow_redirects=None, redirect_url=None):
+                                  allow_redirects=None, redirect_url=None,
+                                  credentials=None):
         """
         creates a session through the login API
         @param url: Optional. request url of API
@@ -39,8 +42,8 @@ class GateKeeperService(object):
                 config['api']['user']['session']['create_v1'])
 
         # requests is url-encoded by default
-        if payload is None:
-            payload = config['gatekeeper']['credentials']
+        if credentials is None:
+            credentials = config['gatekeeper']['credentials']
 
         if redirect_url is not None:
             url = url + redirect_url
@@ -57,7 +60,7 @@ class GateKeeperService(object):
         # url encoded
         response = requests.post(
             url=url,
-            data=payload,
+            data=credentials,
             verify=verify,
             allow_redirects=allow_redirects
         )
@@ -292,10 +295,10 @@ class GateKeeperService(object):
         verify=None
     ):
         """
-        Returns user info for a valid user id and session cookie
+        Application API for CRUD operations
 
         @param session:  session object and associated cookie
-        @method: method i.e GET,POST,PUT or DELETE
+        @param: method i.e GET,POST,PUT or DELETE
         @param app_id: application id
         @param app_data: data for PUT and DELETE
         @param verify: boolean to determine if SSL cert will be verified
@@ -313,6 +316,9 @@ class GateKeeperService(object):
             )
             request_url = request_url % (app_id)
 
+        if(method == 'POST' or method == 'PUT' and app_data is None):
+            app_data = self.create_app_data()
+
         if(verify is None):
             verify = False
 
@@ -328,3 +334,116 @@ class GateKeeperService(object):
             response = session.delete(url=request_url, verify=verify)
 
         return response
+
+    def user(
+        self,
+        session,
+        method,
+        user_id=None,
+        user_data=None,
+        verify=None
+    ):
+        """
+        User API for CRUD operations
+        @param session:  session object and associated cookie
+        @param: method: i.e GET,POST,PUT or DELETE
+        @param user_id: user id
+        @param user_data: data for PUT and DELETE
+        @param verify: boolean to determine if SSL cert will be verified
+        @param allow_redirects:  boolean to determine if redirects are allowed
+        @return: a request session object containing the user info
+
+        """
+
+        url = self._create_url(config['api']['user']['user_v1']['post'])
+
+        if(user_id is not None):
+            request_url = self._create_url(
+                config['api']['user']['user_v1']['id']
+            )
+            request_url = request_url % (user_id)
+
+        if(method == 'POST' or method == 'PUT' and user_data is None):
+            user_data = self.create_user_data()
+
+        if(verify is None):
+            verify = False
+
+        if method == 'GET':
+            response = session.get(url=request_url, verify=verify)
+        if method == 'POST':
+            response = session.post(url=url, data=user_data, verify=verify)
+        if method == 'PUT':
+            response = session.put(
+                url=request_url, data=user_data, verify=verify
+                )
+        if method == 'DELETE':
+            response = session.delete(url=request_url, verify=verify)
+
+        return response
+
+    def create_user_data(self, user_dict=None):
+
+        """
+        Creation of a user dict
+        @param user_dict: optional dict - can be merged with a default dict
+        @return: a user data dict
+
+        """
+
+        self.util = Utility()
+        rand_str = self.util.random_str(5)
+        phone = self.util.phone_number()
+        email = self.util.random_email()
+        user_data = {
+            'username': rand_str,
+            'name': rand_str,
+            'phone': phone,
+            'email': email,
+            'password': rand_str
+        }
+
+        if user_dict is not None:
+            user_data.update(user_dict)
+
+        return user_data
+
+    def create_app_data(self, app_dict=None):
+
+        """
+        Creation of a user dict
+        @param user_dict: optional dict - can be merged with a default dict
+        @return: a user data dict
+
+        """
+        self.util = Utility()
+        new_app = self.util.random_str(5)
+        new_url = self.util.random_url(5)
+        app_data = {'name': new_app, 'default_url': new_url}
+
+        if app_dict is not None:
+            app_data.update(app_dict)
+
+        return app_data
+
+    def extract_sso_cookie_value(self, headers):
+        """
+        Extract data from cookie
+        @return: cookie value
+        """
+
+        cookie = Cookie.SimpleCookie()
+        cookie.load(headers['Set-Cookie'])
+        cookie_id = cookie['sso_cookie'].value
+        return cookie_id
+
+    def extract_cred_cookie_value(self, headers):
+        """
+        Extract data from cookie
+        @return: cookie value
+        """
+
+        cookie = Cookie.SimpleCookie()
+        cookie.load(headers['Set-Cookie'])
+        cookie_id = cookie['sso_credentials'].value
+        return cookie_id

@@ -55,7 +55,7 @@ class TestGateKeeper2FaAPI:
         self.db = BaseDAO(config['gatekeeper']['db']['connection'])
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
-        self.DEFAULT_TEST_USER = self.gk_dao.get_user_id_by_username(
+        self.DEFAULT_TEST_USER = self.gk_dao.get_user_by_username(
             self.db,
             ADMIN_USER
         )['user_id']
@@ -74,22 +74,22 @@ class TestGateKeeper2FaAPI:
         # 303 response
         assert response.status_code == requests.codes.other
 
-        # covert Set_Cookie response header to simple cookie object
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-        cookie_id_cred = cookie['sso_credentials'].value
-        # assert against database
-        db_response = self.gk_dao.get_session_by_cookie_id(
-            self.db,
-            cookie_id_cred
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_cred_cookie_value(
+            response.headers
         )
-        assert db_response['cookie_id'] == cookie_id_cred
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
-
-        my_cookie = dict(name='sso_credentials', value=cookie_id_cred)
+        my_cookie = dict(name='sso_credentials', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
         )
+
+        # assert against database
+        db_response = self.gk_dao.get_session_by_cookie_id(
+            self.db,
+            cookie_id
+        )
+        assert db_response['cookie_id'] == cookie_id
+        assert db_response['user_id'] == self.DEFAULT_TEST_USER
 
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
@@ -151,13 +151,13 @@ class TestGateKeeper2FaAPI:
         )
 
         # get user_id
-        user_id = self.gk_dao.get_user_id_by_username(
+        user_id = self.gk_dao.get_user_by_username(
             self.db,
             username
         )['user_id']
 
         # get app id
-        app_id = self.gk_dao.get_app_id_by_app_name(
+        app_id = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
         )['application_id']
@@ -171,28 +171,27 @@ class TestGateKeeper2FaAPI:
 
         # create a session - do not allow redirects
         response = self.gk_service.create_session_urlencoded(
-            payload=credentials_payload,
+            credentials=credentials_payload,
             allow_redirects=False
         )
         # 303 response
         assert response.status_code == requests.codes.other
 
-        # covert Set_Cookie response header to simple cookie object
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-        cookie_id_cred = cookie['sso_credentials'].value
-        # assert against database
-        db_response = self.gk_dao.get_session_by_cookie_id(
-            self.db,
-            cookie_id_cred
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_cred_cookie_value(
+            response.headers
         )
-        assert db_response['cookie_id'] == cookie_id_cred
-        assert db_response['user_id'] == user_id
-
-        my_cookie = dict(name='sso_credentials', value=cookie_id_cred)
+        my_cookie = dict(name='sso_credentials', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
         )
+        # assert against database
+        db_response = self.gk_dao.get_session_by_cookie_id(
+            self.db,
+            cookie_id
+        )
+        assert db_response['cookie_id'] == cookie_id
+        assert db_response['user_id'] == user_id
 
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
@@ -253,22 +252,22 @@ class TestGateKeeper2FaAPI:
         # 303 response
         assert response.status_code == requests.codes.other
 
-        # covert Set_Cookie response header to simple cookie object
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-        cookie_id_cred = cookie['sso_credentials'].value
-        # assert against database
-        db_response = self.gk_dao.get_session_by_cookie_id(
-            self.db,
-            cookie_id_cred
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_cred_cookie_value(
+            response.headers
         )
-        assert db_response['cookie_id'] == cookie_id_cred
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
-
-        my_cookie = dict(name='sso_credentials', value=cookie_id_cred)
+        my_cookie = dict(name='sso_credentials', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
         )
+
+        # assert against database
+        db_response = self.gk_dao.get_session_by_cookie_id(
+            self.db,
+            cookie_id
+        )
+        assert db_response['cookie_id'] == cookie_id
+        assert db_response['user_id'] == self.DEFAULT_TEST_USER
 
         # redirected to login page if it tries to access other pages
 
@@ -313,22 +312,21 @@ class TestGateKeeper2FaAPI:
         # 303 response
         assert response.status_code == requests.codes.other
 
-        # covert Set_Cookie response header to simple cookie object
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-        cookie_id_cred = cookie['sso_credentials'].value
-        # assert against database
-        db_response = self.gk_dao.get_session_by_cookie_id(
-            self.db,
-            cookie_id_cred
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_cred_cookie_value(
+            response.headers
         )
-        assert db_response['cookie_id'] == cookie_id_cred
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
-
-        my_cookie = dict(name='sso_credentials', value=cookie_id_cred)
+        my_cookie = dict(name='sso_credentials', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
         )
+        # assert against database
+        db_response = self.gk_dao.get_session_by_cookie_id(
+            self.db,
+            cookie_id
+        )
+        assert db_response['cookie_id'] == cookie_id
+        assert db_response['user_id'] == self.DEFAULT_TEST_USER
 
         # fake verificaton code
         verification_code = 123456
@@ -389,22 +387,21 @@ class TestGateKeeper2FaAPI:
         # 303 response
         assert response.status_code == requests.codes.other
 
-        # covert Set_Cookie response header to simple cookie object
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-        cookie_id_cred = cookie['sso_credentials'].value
-        # assert against database
-        db_response = self.gk_dao.get_session_by_cookie_id(
-            self.db,
-            cookie_id_cred
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_cred_cookie_value(
+            response.headers
         )
-        assert db_response['cookie_id'] == cookie_id_cred
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
-
-        my_cookie = dict(name='sso_credentials', value=cookie_id_cred)
+        my_cookie = dict(name='sso_credentials', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
         )
+        # assert against database
+        db_response = self.gk_dao.get_session_by_cookie_id(
+            self.db,
+            cookie_id
+        )
+        assert db_response['cookie_id'] == cookie_id
+        assert db_response['user_id'] == self.DEFAULT_TEST_USER
 
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
@@ -444,10 +441,6 @@ class TestGateKeeper2FaAPI:
         # 303 response
         assert response.status_code == requests.codes.other
 
-        # covert Set_Cookie response header to simple cookie object
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-
         verification_code_one = self.gk_dao.get_verification_code_by_user_id(
             self.db,
             self.DEFAULT_TEST_USER
@@ -460,12 +453,11 @@ class TestGateKeeper2FaAPI:
         # 303 response
         assert response.status_code == requests.codes.other
 
-        # covert Set_Cookie response header to simple cookie object
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-        cookie_id_cred = cookie['sso_credentials'].value
-
-        my_cookie = dict(name='sso_credentials', value=cookie_id_cred)
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_cred_cookie_value(
+            response.headers
+        )
+        my_cookie = dict(name='sso_credentials', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
         )
@@ -526,16 +518,16 @@ class TestGateKeeper2FaAPI:
         # 303 response
         assert response.status_code == requests.codes.other
 
-        # covert Set_Cookie response header to simple cookie object
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-        cookie_id_cred = cookie['sso_credentials'].value
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_cred_cookie_value(
+            response.headers
+        )
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
-            cookie_id_cred
+            cookie_id
         )
-        assert db_response['cookie_id'] == cookie_id_cred
+        assert db_response['cookie_id'] == cookie_id
         assert db_response['user_id'] == self.DEFAULT_TEST_USER
 
         fake_cookie_value = "fakecredCookie"
@@ -576,22 +568,24 @@ class TestGateKeeper2FaAPI:
         # 303 response
         assert response.status_code == requests.codes.other
 
-        # covert Set_Cookie response header to simple cookie object
-        cookie = Cookie.SimpleCookie()
-        cookie.load(response.headers['Set-Cookie'])
-        cookie_id_cred = cookie['sso_credentials'].value
-        # assert against database
-        db_response = self.gk_dao.get_session_by_cookie_id(
-            self.db,
-            cookie_id_cred
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_cred_cookie_value(
+            response.headers
         )
-        assert db_response['cookie_id'] == cookie_id_cred
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
 
-        my_cookie = dict(name='sso_credentials', value=cookie_id_cred)
+        my_cookie = dict(name='sso_credentials', value=cookie_id)
         session = self.gk_service.create_requests_session_with_cookie(
             my_cookie
         )
+
+        # assert against database
+        db_response = self.gk_dao.get_session_by_cookie_id(
+            self.db,
+            cookie_id
+        )
+
+        assert db_response['cookie_id'] == cookie_id
+        assert db_response['user_id'] == self.DEFAULT_TEST_USER
 
         verification_code_blank = ''
         # print    verification_code

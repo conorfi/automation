@@ -68,3 +68,6 @@ config['api']['user']['session']['submit_verification_v1'] = \
 config['api']['user']['application_v1'] = {}
 config['api']['user']['application_v1']['post'] = 'api/v1/application/'
 config['api']['user']['application_v1']['id'] = 'api/v1/application/%s'
+config['api']['user']['user_v1'] = {}
+config['api']['user']['user_v1']['post'] = 'api/v1/user/'
+config['api']['user']['user_v1']['id'] = 'api/v1/user/%s'
