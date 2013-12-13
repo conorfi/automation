@@ -1621,8 +1621,8 @@ class TestGateKeeperAPI:
         create_response = self.gk_service.application(
             session, method='POST', app_data=app_data
         )
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert create_response.status_code == requests.codes.created
 
         app_id = create_response.json()['application_id']
 
@@ -1630,10 +1630,10 @@ class TestGateKeeperAPI:
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
-        # ensure a 200 is returned
+        # ensure correct status code is returned
         assert read_response.status_code == requests.codes.ok
 
-        # verify the post data againist the get data
+        # verify the post data against the get data
         assert (
             create_response.json()['application_id']
             == read_response.json()['application_id']
@@ -1651,8 +1651,8 @@ class TestGateKeeperAPI:
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.application(
@@ -1695,22 +1695,21 @@ class TestGateKeeperAPI:
         )
         # capture the application id
         app_id = response.json()['application_id']
-        # ensure a 200 is returned
-        assert response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert response.status_code == requests.codes.created
 
         response = self.gk_service.application(
             session, method='POST', app_data=app_data
         )
-        # TODO: add verification when the defect is resolved
-        # https://www.pivotaltracker.com/story/show/62325236
-        assert response.status_code != requests.codes.internal_server_error
+        # ensure correct status code is returned
+        assert response.status_code == requests.codes.conflict
 
         # clean up - delete the application
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.application(
@@ -1787,7 +1786,7 @@ class TestGateKeeperAPI:
             session, method='POST', app_data=app_data
         )
         # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        assert create_response.status_code == requests.codes.created
         app_id = create_response.json()['application_id']
 
         # update the application
@@ -1797,7 +1796,7 @@ class TestGateKeeperAPI:
         )
 
         # ensure a 200 is returned
-        assert update_response.status_code == requests.codes.ok
+        assert update_response.status_code == requests.codes.accepted
 
         # read the new application data
         read_response = self.gk_service.application(
@@ -1826,8 +1825,8 @@ class TestGateKeeperAPI:
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.application(
@@ -1871,36 +1870,35 @@ class TestGateKeeperAPI:
         app_one_response = self.gk_service.application(
             session, method='POST', app_data=app_one_data
         )
-        # ensure a 200 is returned
-        assert app_one_response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert app_one_response.status_code == requests.codes.created
         app_id_one = app_one_response.json()['application_id']
 
         # create  application two
         app_two_response = self.gk_service.application(
             session, method='POST', app_data=app_two_data
         )
-        # ensure a 200 is returned
-        assert app_two_response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert app_two_response.status_code == requests.codes.created
 
         # update the application one with application two data
         update_response = self.gk_service.application(
             session, method='PUT', app_data=app_two_data, app_id=app_id_one
         )
 
-        # TODO: add verification when the defect is resolved
-        # https://www.pivotaltracker.com/story/show/62325236
-        assert response.status_code != requests.codes.internal_server_error
+        # ensure correct status code is returned
+        assert update_response.status_code == requests.codes.conflict
 
         # clean up - delete the application
         del_response = self.gk_service.application(
-            session, method='DELETE', app_id=app_one_id
+            session, method='DELETE', app_id=app_id_one
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.application(
-            session, method='GET', app_id=app_id
+            session, method='GET', app_id=app_id_one
         )
         assert NO_DATA_ERROR in read_response.json()['error']
 
@@ -2013,8 +2011,8 @@ class TestGateKeeperAPI:
         create_response = self.gk_service.application(
             session, method='POST', app_data=app_data
         )
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert create_response.status_code == requests.codes.created
 
         app_id = create_response.json()['application_id']
 
@@ -2022,17 +2020,17 @@ class TestGateKeeperAPI:
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
-        # ensure a 200 is returned
+        # ensure correct status code is returned
         assert read_response.status_code == requests.codes.ok
 
         # clean up - delete the application
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure correct status code is returned
+        assert del_response.status_code == requests.codes.no_content
         # ensure no response is returned
-        assert len(del_response.json()) == 0
+        assert len(del_response.content) == 0
 
         # read the new application data
         read_response = self.gk_service.application(
