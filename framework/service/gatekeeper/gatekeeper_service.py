@@ -316,7 +316,7 @@ class GateKeeperService(object):
             )
             request_url = request_url % (app_id)
 
-        if(method == 'POST' or method == 'PUT' and app_data is None):
+        if((method == 'POST' or method == 'PUT') and app_data is None):
             app_data = self.create_app_data()
 
         if(verify is None):
@@ -363,7 +363,7 @@ class GateKeeperService(object):
             )
             request_url = request_url % (user_id)
 
-        if(method == 'POST' or method == 'PUT' and user_data is None):
+        if((method == 'POST' or method == 'PUT') and user_data is None):
             user_data = self.create_user_data()
 
         if(verify is None):

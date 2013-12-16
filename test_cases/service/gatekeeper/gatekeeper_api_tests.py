@@ -60,6 +60,8 @@ SESSION_NOT_ALLOWED = 'User not allowed access this session!'
 MISSING_PARAMETERS = "Missing parameters: application_name,user_id"
 CONFIRM_LOGOUT = "Please confirm logout"
 NO_DATA_ERROR = "No data for ID"
+DUPLICATE_KEY = "duplicate key value violates unique constraint"
+MISSING_PARAM = "Missing parameter(s)"
 
 
 class TestGateKeeperAPI:
@@ -836,7 +838,7 @@ class TestGateKeeperAPI:
         # delete user - cascade delete by default
         assert (self.gk_dao.del_gk_user(self.db, user_id))
 
-    @attr(env=['test'], priority=1)
+    @attr(env=['test'], priority=2)
     def test_validate_user_app_api_and_auth_user_permissions(self):
         """
         GATEKEEPER-API019 test_validate_user_app_api_and_auth_user_permissions
@@ -852,6 +854,7 @@ class TestGateKeeperAPI:
         # pre confiured application for dummy app
 
         username = 'automation_' + self.util.random_str(5)
+        print username
         appname = ANOTHER_TEST_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
@@ -969,6 +972,8 @@ class TestGateKeeperAPI:
             session,
             end_point=config['gatekeeper']['dummy']['admin_endpoint']
         )
+        # TODO: verify assertion when defect is resolved
+        # https://www.pivotaltracker.com/story/show/62540824
         assert response.status_code == requests.codes.ok
 
         # Verify the user API
@@ -986,7 +991,7 @@ class TestGateKeeperAPI:
         # delete user - cascade delete by default
         assert (self.gk_dao.del_gk_user(self.db, user_id))
 
-    @attr(env=['test'], priority=1)
+    @attr(env=['test'], priority=2)
     def test_validate_user_app_api_and_auth_group_permissions(self):
         """
         GATEKEEPER-API020 test_validate_user_app_api_and_auth_group_permissions
@@ -1003,6 +1008,7 @@ class TestGateKeeperAPI:
         # pre confiured application for dummy app
 
         username = 'automation_' + self.util.random_str(5)
+        print username
         appname = ANOTHER_TEST_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
@@ -1147,6 +1153,8 @@ class TestGateKeeperAPI:
             session,
             end_point=config['gatekeeper']['dummy']['admin_endpoint']
         )
+        # TODO: verify assertion when defect is resolved
+        # https://www.pivotaltracker.com/story/show/62540824
         assert response.status_code == requests.codes.ok
 
         # Verify the user API
@@ -1752,13 +1760,11 @@ class TestGateKeeperAPI:
             create_response = self.gk_service.application(
                 session, method='POST', app_data=app_data
             )
-
-            # TODO: add verification when the defect is resolved
-            # https://www.pivotaltracker.com/story/show/62325832
             assert (
-                create_response.status_code !=
-                requests.codes.internal_server_error
+                create_response.status_code ==
+                requests.codes.bad_request
             )
+            assert MISSING_PARAM in create_response.json()['error']
 
     @attr(env=['test'], priority=1)
     def test_application_api_update(self):
@@ -1799,11 +1805,8 @@ class TestGateKeeperAPI:
             session, method='PUT', app_id=app_id
         )
 
-        # ensure a 200 is returned
+        # ensure a 202 is returned
         assert update_response.status_code == requests.codes.accepted
-
-        # TODO: ensure assertion is correct after this defect is resloved
-        # https://www.pivotaltracker.com/story/show/62328182
 
         app_id = update_response.json()['application_id']
         appname = update_response.json()['name']
@@ -1831,8 +1834,8 @@ class TestGateKeeperAPI:
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure a 204 is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.application(
@@ -1869,8 +1872,8 @@ class TestGateKeeperAPI:
         create_response = self.gk_service.application(
             session, method='POST'
         )
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        # ensure a 201 is returned
+        assert create_response.status_code == requests.codes.created
         app_id = create_response.json()['application_id']
 
         # update the application
@@ -1885,11 +1888,9 @@ class TestGateKeeperAPI:
             update_response = self.gk_service.application(
                 session, method='PUT', app_data=app_data, app_id=app_id
             )
-            # ensure a 200 is returned
-            assert update_response.status_code == requests.codes.ok
+            # ensure a 202 is returned
+            assert update_response.status_code == requests.codes.accepted
 
-        # TODO: ensure assertion is correct after this defect is resloved
-        # https://www.pivotaltracker.com/story/show/62328182
         appname = update_response.json()['name']
         # get app data
         app_data = self.gk_dao.get_app_by_app_name(
@@ -1978,7 +1979,7 @@ class TestGateKeeperAPI:
 
         # ensure correct status code is returned
         assert update_response.status_code == requests.codes.conflict
-
+        assert DUPLICATE_KEY in update_response.json()['error']
         # clean up - delete the application
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id_one
@@ -2020,8 +2021,8 @@ class TestGateKeeperAPI:
         create_response = self.gk_service.application(
             session, method='POST'
         )
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        # ensure a 201 is returned
+        assert create_response.status_code == requests.codes.created
         app_id = create_response.json()['application_id']
 
         # update the application
@@ -2032,9 +2033,6 @@ class TestGateKeeperAPI:
 
         # ensure a 200 is returned
         assert read_response.status_code == requests.codes.ok
-
-        # TODO: ensure assertion is correct after this defect is resloved
-        # https://www.pivotaltracker.com/story/show/62328182
 
         app_id = read_response.json()['application_id']
         appname = read_response.json()['name']
@@ -2062,8 +2060,8 @@ class TestGateKeeperAPI:
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure a 204 is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.application(
@@ -2271,8 +2269,8 @@ class TestGateKeeperAPI:
             session, method='POST'
         )
 
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        # ensure a 201 is returned
+        assert create_response.status_code == requests.codes.created
 
         # set username
         username = create_response.json()['username']
@@ -2296,8 +2294,8 @@ class TestGateKeeperAPI:
         del_response = self.gk_service.user(
             session, method='DELETE', user_id=user_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure a 204 is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.user(
@@ -2342,15 +2340,14 @@ class TestGateKeeperAPI:
             create_response = self.gk_service.user(
                 session, method='POST', user_data=user_data
             )
-        # TODO: add verification when the defect is resolved
-        # https://www.pivotaltracker.com/story/show/62325832
-        assert response.status_code == requests.ok
+            assert create_response.status_code == requests.codes.bad_request
+            assert MISSING_PARAM in create_response.json()['error']
 
     @attr(env=['test'], priority=1)
     def test_user_api_create_duplicate_username(self):
         """
         GATEKEEPER-API039 test_user_api_create_duplicate_username
-        attempt to create a new user using the user api with missing params
+        attempt to create a new user using the user api with same params
         """
 
         # urlencoded post
@@ -2369,28 +2366,21 @@ class TestGateKeeperAPI:
             my_cookie
         )
 
+        user_data = self.gk_service.create_user_data()
         # create a new application
         create_response = self.gk_service.user(
-            session, method='POST'
-        )
-
-        rand_str = self.util.random_str(5)
-        user_dict = {'username': rand_str}
-        user_data = self.gk_service.create_user_data(user_dict)
-        create_response = self.gk_service.user(
             session, method='POST', user_data=user_data
         )
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
 
-        user_data = self.gk_service.create_user_data(user_dict)
+        # ensure a 201 is returned
+        assert create_response.status_code == requests.codes.created
+
         create_response = self.gk_service.user(
             session, method='POST', user_data=user_data
         )
 
-        # TODO: add verification when the defect is resolved
-        # https://www.pivotaltracker.com/story/show/62325236
-        assert response.status_code == requests.ok
+        assert create_response.status_code == requests.codes.conflict
+        assert DUPLICATE_KEY in create_response.json()['error']
 
     @attr(env=['test'], priority=1)
     def test_user_api_update(self):
@@ -2419,23 +2409,21 @@ class TestGateKeeperAPI:
             session, method='POST'
         )
 
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        # ensure a 201 is returned
+        assert create_response.status_code == requests.codes.created
         # set user_id
         user_id = create_response.json()['user_id']
-        # set username
-        username = create_response.json()['username']
 
         # update application
         update_response = self.gk_service.user(
             session, method='PUT', user_id=user_id
         )
 
+        # set username
+        username = update_response.json()['username']
+
         # get user_info directly from database
         user_info = self.gk_dao.get_user_by_username(self.db, username)
-
-        # TODO: revisit when defect is resolved
-        # https://www.pivotaltracker.com/story/show/62328182
 
         # verify the creation of the user POST action
         assert update_response.json()['username'] == user_info['username']
@@ -2452,8 +2440,8 @@ class TestGateKeeperAPI:
         del_response = self.gk_service.user(
             session, method='DELETE', user_id=user_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure a 204 is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.user(
@@ -2488,12 +2476,10 @@ class TestGateKeeperAPI:
             session, method='POST'
         )
 
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        # ensure a 201 is returned
+        assert create_response.status_code == requests.codes.created
         # set user_id
         user_id = create_response.json()['user_id']
-        # set username
-        username = create_response.json()['username']
 
         # create individual dicts for updating each paramater
         rand_str = self.util.random_str(5)
@@ -2513,11 +2499,11 @@ class TestGateKeeperAPI:
                 session, method='PUT', user_data=user_data, user_id=user_id
             )
 
+        # set username
+        username = update_response.json()['username']
+
         # get user_info directly from database
         user_info = self.gk_dao.get_user_by_username(self.db, username)
-
-        # TODO: revisit when defect is resolved
-        # https://www.pivotaltracker.com/story/show/62328182
 
         # verify the creation of the user POST action
         assert update_response.json()['username'] == user_info['username']
@@ -2534,8 +2520,8 @@ class TestGateKeeperAPI:
         del_response = self.gk_service.user(
             session, method='DELETE', user_id=user_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure a 204 is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.user(
@@ -2602,8 +2588,8 @@ class TestGateKeeperAPI:
             session, method='POST'
         )
 
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        # ensure a 201 is returned
+        assert create_response.status_code == requests.codes.created
 
         # set user_id
         user_id = create_response.json()['user_id']
@@ -2632,8 +2618,8 @@ class TestGateKeeperAPI:
         del_response = self.gk_service.user(
             session, method='DELETE', user_id=user_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure a 204 is returned
+        assert del_response.status_code == requests.codes.no_content
 
         # read the new application data
         read_response = self.gk_service.user(
@@ -2700,8 +2686,8 @@ class TestGateKeeperAPI:
             session, method='POST'
         )
 
-        # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.ok
+        # ensure a 201 is returned
+        assert create_response.status_code == requests.codes.created
 
         # set user_id
         user_id = create_response.json()['user_id']
@@ -2709,10 +2695,10 @@ class TestGateKeeperAPI:
         del_response = self.gk_service.user(
             session, method='DELETE', user_id=user_id
         )
-        # ensure a 200 is returned
-        assert del_response.status_code == requests.codes.ok
+        # ensure a 204 is returned
+        assert del_response.status_code == requests.codes.no_content
         # ensure no response is returned
-        assert len(del_response.json()) == 0
+        assert len(del_response.content) == 0
 
         # read the new application data
         read_response = self.gk_service.user(
