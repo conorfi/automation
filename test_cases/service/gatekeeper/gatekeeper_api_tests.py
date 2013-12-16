@@ -838,7 +838,7 @@ class TestGateKeeperAPI:
         # delete user - cascade delete by default
         assert (self.gk_dao.del_gk_user(self.db, user_id))
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_validate_user_app_api_and_auth_user_permissions(self):
         """
         GATEKEEPER-API019 test_validate_user_app_api_and_auth_user_permissions
@@ -991,7 +991,7 @@ class TestGateKeeperAPI:
         # delete user - cascade delete by default
         assert (self.gk_dao.del_gk_user(self.db, user_id))
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_validate_user_app_api_and_auth_group_permissions(self):
         """
         GATEKEEPER-API020 test_validate_user_app_api_and_auth_group_permissions
@@ -1711,6 +1711,7 @@ class TestGateKeeperAPI:
         )
         # ensure correct status code is returned
         assert response.status_code == requests.codes.conflict
+        assert DUPLICATE_KEY in response.json()['error']
 
         # clean up - delete the application
         del_response = self.gk_service.application(
@@ -1892,7 +1893,7 @@ class TestGateKeeperAPI:
             assert update_response.status_code == requests.codes.accepted
 
         appname = update_response.json()['name']
-        # get app data
+        # get app data from db
         app_data = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
@@ -2036,7 +2037,7 @@ class TestGateKeeperAPI:
 
         app_id = read_response.json()['application_id']
         appname = read_response.json()['name']
-        # get app data
+        # get app data from db
         app_data = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
@@ -2274,7 +2275,7 @@ class TestGateKeeperAPI:
 
         # set username
         username = create_response.json()['username']
-        # get user_info directly from database
+        # get user data directly from database
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # verify the creation of the user POST action
@@ -2446,6 +2447,70 @@ class TestGateKeeperAPI:
         # read the new application data
         read_response = self.gk_service.user(
             session, method='GET', user_id=user_id
+        )
+        assert NO_DATA_ERROR in read_response.json()['error']
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_update_duplicate_name(self):
+        """
+        GATEKEEPER-API040A test_user_api_update_duplicate_name
+        attempt to update an user using the user api but
+        the username should not be unique
+        clean up the data (implictly tests DELETE and GET)
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_sso_cookie_value(
+            response.headers
+        )
+
+        my_cookie = dict(name='sso_cookie', value=cookie_id)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        rand_username = self.util.random_str(5)
+        user_one_data = self.gk_service.create_user_data()
+        user_two_data = self.gk_service.create_user_data()
+        # create user one
+        user_one_response = self.gk_service.user(
+            session, method='POST', user_data=user_one_data
+        )
+        # ensure correct status code is returned
+        assert user_one_response.status_code == requests.codes.created
+        user_id_one = user_one_response.json()['user_id']
+
+        # create user two
+        user_two_response = self.gk_service.user(
+            session, method='POST', user_data=user_two_data
+        )
+        # ensure correct status code is returned
+        assert user_two_response.status_code == requests.codes.created
+
+        # update the application one with application two data
+        update_response = self.gk_service.user(
+            session, method='PUT', user_data=user_two_data, user_id=user_id_one
+        )
+
+        # ensure correct status code is returned
+        assert update_response.status_code == requests.codes.conflict
+        assert DUPLICATE_KEY in update_response.json()['error']
+        # clean up - delete the application
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id_one
+        )
+        # ensure correct status code is returned
+        assert del_response.status_code == requests.codes.no_content
+
+        # read the new application data
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id_one
         )
         assert NO_DATA_ERROR in read_response.json()['error']
 
