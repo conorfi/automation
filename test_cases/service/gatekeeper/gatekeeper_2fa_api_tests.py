@@ -47,15 +47,14 @@ class TestGateKeeper2FaAPI:
     @classmethod
     def tearDownClass(cls):
         '''Things that need to be done once.'''
-        cls.db.connection.close()
+        cls.db.close()
 
     def setup(self):
 
         # Things to run before each test
-        self.db = BaseDAO(config['gatekeeper']['db']['connection'])
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
-        self.DEFAULT_TEST_USER = self.gk_dao.get_user_by_username(
+        self.default_test_user = self.gk_dao.get_user_by_username(
             self.db,
             ADMIN_USER
         )['user_id']
@@ -89,11 +88,11 @@ class TestGateKeeper2FaAPI:
             cookie_id
         )
         assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
+        assert db_response['user_id'] == self.default_test_user
 
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
-            self.DEFAULT_TEST_USER
+            self.default_test_user
         )['verification_code']
         # print    verification_code
         payload = {'verification_code': verification_code}
@@ -267,7 +266,7 @@ class TestGateKeeper2FaAPI:
             cookie_id
         )
         assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
+        assert db_response['user_id'] == self.default_test_user
 
         # redirected to login page if it tries to access other pages
 
@@ -326,7 +325,7 @@ class TestGateKeeper2FaAPI:
             cookie_id
         )
         assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
+        assert db_response['user_id'] == self.default_test_user
 
         # fake verificaton code
         verification_code = 123456
@@ -345,7 +344,7 @@ class TestGateKeeper2FaAPI:
         # ensure we can still use the correct verification code
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
-            self.DEFAULT_TEST_USER
+            self.default_test_user
         )['verification_code']
         # print    verification_code
         payload = {'verification_code': verification_code}
@@ -401,11 +400,11 @@ class TestGateKeeper2FaAPI:
             cookie_id
         )
         assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
+        assert db_response['user_id'] == self.default_test_user
 
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
-            self.DEFAULT_TEST_USER
+            self.default_test_user
         )['verification_code']
 
         # expire the verification code
@@ -443,7 +442,7 @@ class TestGateKeeper2FaAPI:
 
         verification_code_one = self.gk_dao.get_verification_code_by_user_id(
             self.db,
-            self.DEFAULT_TEST_USER
+            self.default_test_user
         )['verification_code']
 
         # user_login - do not allow redirects
@@ -464,7 +463,7 @@ class TestGateKeeper2FaAPI:
 
         verification_code_two = self.gk_dao.get_verification_code_by_user_id(
             self.db,
-            self.DEFAULT_TEST_USER
+            self.default_test_user
         )['verification_code']
 
         payload = {'verification_code': verification_code_one}
@@ -528,7 +527,7 @@ class TestGateKeeper2FaAPI:
             cookie_id
         )
         assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
+        assert db_response['user_id'] == self.default_test_user
 
         fake_cookie_value = "fakecredCookie"
         my_cookie = dict(name='sso_credentials', value=fake_cookie_value)
@@ -538,7 +537,7 @@ class TestGateKeeper2FaAPI:
 
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
-            self.DEFAULT_TEST_USER
+            self.default_test_user
         )['verification_code']
         payload = {'verification_code': verification_code}
 
@@ -585,7 +584,7 @@ class TestGateKeeper2FaAPI:
         )
 
         assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
+        assert db_response['user_id'] == self.default_test_user
 
         verification_code_blank = ''
         # print    verification_code

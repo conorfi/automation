@@ -22,8 +22,6 @@ from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
-from time import sleep
-import Cookie
 
 # adfuser is the defaut test application
 DEFAULT_TEST_APP = "adfuser"
@@ -74,14 +72,14 @@ class TestGateKeeperAPI:
     @classmethod
     def tearDownClass(cls):
         # Things that need to be done once.
-        cls.db.connection.close()
+        cls.db.close()
 
     def setup(self):
         # Things to run before each test.
 
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
-        self.DEFAULT_TEST_USER = self.gk_dao.get_user_by_username(
+        self.default_test_user = self.gk_dao.get_user_by_username(
             self.db,
             ADMIN_USER
         )['user_id']
@@ -110,7 +108,7 @@ class TestGateKeeperAPI:
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
         assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
+        assert db_response['user_id'] == self.default_test_user
 
         # create a session - allow redirects
         response = self.gk_service.create_session_urlencoded(
@@ -141,7 +139,7 @@ class TestGateKeeperAPI:
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
         assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.DEFAULT_TEST_USER
+        assert db_response['user_id'] == self.default_test_user
 
         # create a session - allow redirects
         response = self.gk_service.create_session_urlencoded(
@@ -213,7 +211,7 @@ class TestGateKeeperAPI:
         response = self.gk_service.validate_url_with_cookie(
             self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                ),
+            ),
             redirect_url=config['gatekeeper']['redirect']
         )
         assert response.status_code == requests.codes.ok
@@ -244,7 +242,7 @@ class TestGateKeeperAPI:
             cookie_id=cookie_id,
             session=self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                ),
+            ),
             application=DEFAULT_TEST_APP
         )
 
@@ -284,7 +282,7 @@ class TestGateKeeperAPI:
             cookie_id=cookie_value,
             session=self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                )
+            )
         )
 
         # ensure that the request is forbidden(403)
@@ -322,7 +320,7 @@ class TestGateKeeperAPI:
             cookie_id=cookie_value,
             session=self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                )
+            )
         )
 
         # ensure that the request is forbidden(403)
@@ -360,7 +358,7 @@ class TestGateKeeperAPI:
             cookie_id=cookie_id,
             session=self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                )
+            )
         )
 
         # ensure that the request is forbidden(403) without a
@@ -400,7 +398,7 @@ class TestGateKeeperAPI:
             cookie_id=cookie_id,
             session=self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                ),
+            ),
             application=application
         )
 
@@ -442,7 +440,7 @@ class TestGateKeeperAPI:
             cookie_id=cookie_id,
             session=self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                ),
+            ),
             application=application
         )
 
@@ -477,7 +475,7 @@ class TestGateKeeperAPI:
         response = self.gk_service.validate_url_with_cookie(
             self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                )
+            )
         )
         assert response.status_code == requests.codes.ok
         assert "/logout/" in response.text
@@ -508,7 +506,7 @@ class TestGateKeeperAPI:
         response = self.gk_service.validate_url_with_cookie(
             self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                )
+            )
         )
         assert response.status_code == requests.codes.ok
         assert GATEKEEPER_TITLE in response.text
@@ -536,7 +534,7 @@ class TestGateKeeperAPI:
         response = self.gk_service.validate_url_with_cookie(
             self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                )
+            )
         )
 
         assert response.status_code == requests.codes.ok
@@ -566,14 +564,14 @@ class TestGateKeeperAPI:
             self.gk_dao.set_session_to_expire_by_session_id(
                 self.db,
                 cookie_id
-                )
+            )
         )
 
         my_cookie = dict(name='sso_cookie', value=cookie_id)
         response = self.gk_service.validate_url_with_cookie(
             self.gk_service.create_requests_session_with_cookie(
                 my_cookie
-                )
+            )
         )
         assert response.status_code == requests.codes.ok
         assert GATEKEEPER_TITLE in response.text
@@ -764,7 +762,7 @@ class TestGateKeeperAPI:
                 email,
                 fullname,
                 '123-456-789123456'
-                )
+            )
         )
 
         # get user_id
@@ -854,7 +852,6 @@ class TestGateKeeperAPI:
         # pre confiured application for dummy app
 
         username = 'automation_' + self.util.random_str(5)
-        print username
         appname = ANOTHER_TEST_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
@@ -922,7 +919,7 @@ class TestGateKeeperAPI:
                 self.db,
                 user_id,
                 user_permission
-                )
+            )
         )
 
         # Using the dummy application verify the permissions for the user
@@ -952,25 +949,30 @@ class TestGateKeeperAPI:
             self.gk_dao.set_user_permissions_id(
                 self.db, user_id,
                 admin_permission
-                )
+            )
         )
 
+        # must disable caching in dummyapp for this check
+        parameters = {'sso_cache_enabled': False}
         # Using the dummy application verify the permissions for the user
         # verify the dummy applcation can be accessed
-        response = self.gk_service.validate_end_point(session)
+        response = self.gk_service.validate_end_point(session,
+                                                      parameters=parameters)
         assert response.status_code == requests.codes.ok
 
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint']
+            end_point=config['gatekeeper']['dummy']['user_endpoint'],
+            parameters=parameters
         )
         assert response.status_code == requests.codes.ok
 
         # verify the admin end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['admin_endpoint']
+            end_point=config['gatekeeper']['dummy']['admin_endpoint'],
+            parameters=parameters
         )
         # TODO: verify assertion when defect is resolved
         # https://www.pivotaltracker.com/story/show/62540824
@@ -1008,7 +1010,6 @@ class TestGateKeeperAPI:
         # pre confiured application for dummy app
 
         username = 'automation_' + self.util.random_str(5)
-        print username
         appname = ANOTHER_TEST_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
@@ -1136,22 +1137,26 @@ class TestGateKeeperAPI:
 
         # Using the dummy application
         # verify the permissions the user is authorized
-
-        # verify the dummy applcation can be accessed
-        response = self.gk_service.validate_end_point(session)
+        # must disable caching in dummyapp for this check
+        parameters = {'sso_cache_enabled': False}
+        # verify the dummy application can be accessed
+        response = self.gk_service.validate_end_point(session,
+                                                      parameters=parameters)
         assert response.status_code == requests.codes.ok
 
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint']
+            end_point=config['gatekeeper']['dummy']['user_endpoint'],
+            parameters=parameters
         )
         assert response.status_code == requests.codes.ok
 
         # verify the admin end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['admin_endpoint']
+            end_point=config['gatekeeper']['dummy']['admin_endpoint'],
+            parameters=parameters
         )
         # TODO: verify assertion when defect is resolved
         # https://www.pivotaltracker.com/story/show/62540824
@@ -1182,7 +1187,7 @@ class TestGateKeeperAPI:
             self.gk_dao.set_gk_group(
                 self.db,
                 grp_name_2
-                )
+            )
         )
         # get group id
         group_id_2 = self.gk_dao.get_gk_group_id_by_name(
@@ -1233,7 +1238,7 @@ class TestGateKeeperAPI:
         )
         response = self.gk_service.user_info(
             session,
-            self.DEFAULT_TEST_USER,
+            self.default_test_user,
             DEFAULT_TEST_APP
         )
         # ensure that the request is forbidden(403)
@@ -1267,7 +1272,7 @@ class TestGateKeeperAPI:
         fake_application = "fake"
         response = self.gk_service.user_info(
             session,
-            self.DEFAULT_TEST_USER,
+            self.default_test_user,
             fake_application
         )
 
@@ -1436,7 +1441,7 @@ class TestGateKeeperAPI:
                 self.db,
                 user_id,
                 gk_all_permission
-                )
+            )
         )
 
         # verify the admin endpoint can be accessed
