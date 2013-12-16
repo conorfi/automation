@@ -287,12 +287,7 @@ class TestGateKeeperAPI:
                 )
         )
 
-        # ensure that the request is forbidden(403)
-        # without a valid session cookie
-        # TODO: verify on 403 if this defect is resolved
-        # - https://www.pivotaltracker.com/story/show/61545596
-        # assert response.status_code == requests.codes.forbidden
-
+        assert response.status_code == requests.codes.not_found
         assert "Cookie does not exist" in response.json()['error']
 
     @attr(env=['test'], priority=1)
@@ -325,11 +320,7 @@ class TestGateKeeperAPI:
                 )
         )
 
-        # ensure that the request is forbidden(403)
-        # without a valid session cookie
-        # TODO: verify on 403 if this defect is resolved
-        # - https://www.pivotaltracker.com/story/show/61545596
-        # assert response.status_code == requests.codes.forbidden
+        assert response.status_code == requests.codes.not_found
         assert "Missing parameters: cookie" in response.json()['error']
 
     @attr(env=['test'], priority=1)
@@ -362,12 +353,7 @@ class TestGateKeeperAPI:
                 my_cookie
                 )
         )
-
-        # ensure that the request is forbidden(403) without a
-        # valid session cookie
-        # TODO: verify on 403 if this defect is resolved
-        # - https://www.pivotaltracker.com/story/show/61545596
-        # assert response.status_code == requests.codes.forbidden
+        assert response.status_code == requests.codes.forbidden
         assert SESSION_NOT_ALLOWED in response.json()['error']
 
     @attr(env=['test'], priority=1)
@@ -448,7 +434,7 @@ class TestGateKeeperAPI:
 
         # ensure that the request is forbidden (403)
         assert response.status_code == requests.codes.forbidden
-        # ensure the correct message si returned
+        # ensure the correct message is returned
         error_message = SESSION_FORBIDDEN % (cookie_id)
         assert error_message in response.json()['error']
 
