@@ -12,6 +12,7 @@ import requests
 from testconfig import config
 from framework.utility.utility import Utility
 import Cookie
+import time
 
 
 class GateKeeperService(object):
@@ -447,3 +448,24 @@ class GateKeeperService(object):
         cookie.load(headers['Set-Cookie'])
         cookie_id = cookie['sso_credentials'].value
         return cookie_id
+
+    def run_user_test(self, cookie, iterations=10, wait_time=0.1):
+        """
+        Accesses the dummyapp page with a valid cookie n number of times
+        @param cookie: cookie from logged in user
+        @param iterations: cookie from logged in user
+        @param cookie: cookie from logged in user
+        @return: asserts true/false
+
+        """
+        url = self._create_url(
+            '',
+            host=config['gatekeeper']['dummy']['host'],
+            port=config['gatekeeper']['dummy']['port']
+        )
+        session = requests.session()
+        session.cookies['sso_cookie'] = cookie
+        for index in range(iterations):
+            response = session.get(url, verify=False)
+            assert response.status_code == requests.codes.ok
+            time.sleep(wait_time)
