@@ -22,6 +22,9 @@ from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
+import Cookie
+from multiprocessing import Process
+import time
 
 # adfuser is the defaut test application
 DEFAULT_TEST_APP = "adfuser"
@@ -38,6 +41,7 @@ DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
 # special permission that allows acess to the gk admin end point
 GK_ALL_PERMISSION = "gatekeeper_all"
 
+USER_TOTAL = 5
 
 """
 hash of the password test - using this rather than implementing the
@@ -285,12 +289,7 @@ class TestGateKeeperAPI:
             )
         )
 
-        # ensure that the request is forbidden(403)
-        # without a valid session cookie
-        # TODO: verify on 403 if this defect is resolved
-        # - https://www.pivotaltracker.com/story/show/61545596
-        # assert response.status_code == requests.codes.forbidden
-
+        assert response.status_code == requests.codes.not_found
         assert "Cookie does not exist" in response.json()['error']
 
     @attr(env=['test'], priority=1)
@@ -323,11 +322,7 @@ class TestGateKeeperAPI:
             )
         )
 
-        # ensure that the request is forbidden(403)
-        # without a valid session cookie
-        # TODO: verify on 403 if this defect is resolved
-        # - https://www.pivotaltracker.com/story/show/61545596
-        # assert response.status_code == requests.codes.forbidden
+        assert response.status_code == requests.codes.not_found
         assert "Missing parameters: cookie" in response.json()['error']
 
     @attr(env=['test'], priority=1)
@@ -360,12 +355,7 @@ class TestGateKeeperAPI:
                 my_cookie
             )
         )
-
-        # ensure that the request is forbidden(403) without a
-        # valid session cookie
-        # TODO: verify on 403 if this defect is resolved
-        # - https://www.pivotaltracker.com/story/show/61545596
-        # assert response.status_code == requests.codes.forbidden
+        assert response.status_code == requests.codes.forbidden
         assert SESSION_NOT_ALLOWED in response.json()['error']
 
     @attr(env=['test'], priority=1)
@@ -446,7 +436,7 @@ class TestGateKeeperAPI:
 
         # ensure that the request is forbidden (403)
         assert response.status_code == requests.codes.forbidden
-        # ensure the correct message si returned
+        # ensure the correct message is returned
         error_message = SESSION_FORBIDDEN % (cookie_id)
         assert error_message in response.json()['error']
 
@@ -974,8 +964,6 @@ class TestGateKeeperAPI:
             end_point=config['gatekeeper']['dummy']['admin_endpoint'],
             parameters=parameters
         )
-        # TODO: verify assertion when defect is resolved
-        # https://www.pivotaltracker.com/story/show/62540824
         assert response.status_code == requests.codes.ok
 
         # Verify the user API
@@ -1158,8 +1146,6 @@ class TestGateKeeperAPI:
             end_point=config['gatekeeper']['dummy']['admin_endpoint'],
             parameters=parameters
         )
-        # TODO: verify assertion when defect is resolved
-        # https://www.pivotaltracker.com/story/show/62540824
         assert response.status_code == requests.codes.ok
 
         # Verify the user API
@@ -2807,3 +2793,98 @@ class TestGateKeeperAPI:
         assert update_response.status_code == requests.codes.not_found
         # verify that the error message is correct
         assert NO_DATA_ERROR in update_response.json()['error']
+
+    @attr(env=['test'], priority=1)
+    def test_session_concurrency(self):
+
+        """
+        GATEKEEPER-API047  test_session_concurrency
+        Random 403s occur when accessing the user session API via the
+        SSO tool with a large number of multiple users.
+        defect: https://www.pivotaltracker.com/story/show/62219660
+        """
+
+        # login in as admin
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_sso_cookie_value(
+            response.headers
+        )
+        my_cookie = dict(name='sso_cookie', value=cookie_id)
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # initial setup - create arbitrary number of users via REST API
+        # TODO: replace this code with the user API when the user API on
+        # the develop branch is merged to master
+        user_data = []
+        created_user_data = []
+        for index in range(USER_TOTAL):
+            user_data = {
+                'username': 'automation_' + self.util.random_str(5),
+                'name': 'automation ' + self.util.random_str(5),
+                'phone': self.util.random_email(5),
+                'email': self.util.random_email(5),
+                'password': HASH_PASSWORD_TEST
+            }
+            # create basic user - no permissions
+            assert (
+                self.gk_dao.set_gk_user(
+                    self.db,
+                    user_data['username'],
+                    user_data['password'],
+                    user_data['email'],
+                    user_data['name'],
+                    user_data['phone']
+                    )
+            )
+            # get user_id
+            user_id = self.gk_dao.get_user_by_username(
+                self.db,
+                user_data['username']
+            )['user_id']
+
+            # get app id
+            app_id = self.gk_dao.get_app_by_app_name(
+                self.db,
+                ANOTHER_TEST_APP
+            )['application_id']
+
+            # associate user with app
+            assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+
+            created_user_data.append(user_data)
+
+        # login each user and retain cookie info for use later
+        for user in created_user_data:
+            payload = {'username': user['username'], 'password': 'test'}
+            response = self.gk_service.create_session_urlencoded(
+                allow_redirects=False, credentials=payload
+            )
+            assert response.status_code == requests.codes.see_other
+            # extract cookie from response headers
+            cookie = Cookie.SimpleCookie()
+            cookie.load(response.headers['Set-Cookie'])
+            user['cookie'] = cookie['sso_cookie'].value
+
+        # create processes for each user
+        processes = []
+        for user in created_user_data:
+            process = Process(
+                target=self.gk_service.run_user_test,
+                args=[user['cookie']]
+            )
+            process.daemon = True
+            # start running user test
+            process.start()
+            processes.append(process)
+        # wait for the child processes to finish
+        for process in processes:
+            process.join()

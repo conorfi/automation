@@ -7,9 +7,10 @@ class SampleTest:
 
 
 def test_get_requests():
-    import requests
     server = config['google-server']['host']
     r = requests.get(server)
     text = r.text
-    status = r.status_code
-    assert status == 200
+    assert r.status_code == requests.codes.ok
+
+    print r.text
+    print r.status_code
