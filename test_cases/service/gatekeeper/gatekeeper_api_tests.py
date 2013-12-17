@@ -66,6 +66,7 @@ DUPLICATE_KEY = "duplicate key value violates unique constraint"
 MISSING_PARAM = "Missing parameter(s)"
 NOT_LOGGED_IN = "Not logged in"
 
+
 class TestGateKeeperAPI:
 
     @classmethod
@@ -2889,8 +2890,18 @@ class TestGateKeeperAPI:
         for process in processes:
             process.join()
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_ajax_no_redirect(self):
+        """
+        GATEKEEPER-API048 test_ajax_no_redirect
+        If the user tries to reach a uri in a browser and that uri is
+        protected by the SSO tool, user will be redirected to the login page
+        If the user makes an AJAX request, user will get a 401 and the
+        redirection URL in the JSON response and won't be redirected
+        There's no configuration or query string option to modify
+        this behaviour. We reply with redirection to browsers and JSON
+        package to AJAX calls
+        """
         # urlencoded post
         # create a session - do not allow redirects
         response = self.gk_service.create_session_urlencoded(
@@ -2909,7 +2920,9 @@ class TestGateKeeperAPI:
             my_cookie
         )
 
-        response = self.gk_service.validate_end_point(session, allow_redirects=False)
+        response = self.gk_service.validate_end_point(
+            session, allow_redirects=False
+        )
         assert response.status_code == requests.codes.ok
         assert GATEKEEPER_TITLE not in response.text
 
@@ -2920,15 +2933,21 @@ class TestGateKeeperAPI:
         # must disable caching in dummyapp for this check
         parameters = {'sso_cache_enabled': False}
 
-        response = self.gk_service.validate_end_point(session, allow_redirects=False, parameters=parameters)
-        # simualte browser call - 303 redirect
+        # firstly browser call test - 303 redirect
+        response = self.gk_service.validate_end_point(
+            session, allow_redirects=False, parameters=parameters
+        )
         assert response.status_code == requests.codes.other
-        response = self.gk_service.validate_end_point(session, parameters=parameters)
+        response = self.gk_service.validate_end_point(
+            session, parameters=parameters
+        )
         assert GATEKEEPER_TITLE in response.text
 
-
+        # set header to emualte ajax call
         session.headers.update({'X-Requested-With': 'XMLHttpRequest'})
-        response = response = self.gk_service.validate_end_point(session, allow_redirects=False, parameters=parameters)
+        response = response = self.gk_service.validate_end_point(
+            session, allow_redirects=False, parameters=parameters
+        )
         # ajax call 401
         assert response.status_code == requests.codes.unauthorized
         print response.json()['error']
