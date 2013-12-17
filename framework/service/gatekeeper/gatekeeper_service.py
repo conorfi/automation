@@ -213,7 +213,8 @@ class GateKeeperService(object):
             self,
             session, end_point=None,
             url=None,
-            verify=None
+            verify=None,
+            parameters=None
             ):
 
         """
@@ -229,6 +230,8 @@ class GateKeeperService(object):
         @return: a request session object containg the user info
 
         """
+        if parameters is None:
+            parameters = {}
 
         if(url is None):
             url = self._create_url('',
@@ -239,7 +242,7 @@ class GateKeeperService(object):
 
         if(verify is None):
             verify = False
-        response = session.get(url=url, verify=verify)
+        response = session.get(url=url, verify=verify, params=parameters)
         return response
 
     def submit_verification_code(
