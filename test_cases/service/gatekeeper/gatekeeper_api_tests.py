@@ -64,7 +64,7 @@ CONFIRM_LOGOUT = "Please confirm logout"
 NO_DATA_ERROR = "No data for ID"
 DUPLICATE_KEY = "duplicate key value violates unique constraint"
 MISSING_PARAM = "Missing parameter(s)"
-
+NOT_LOGGED_IN = "Not logged in"
 
 class TestGateKeeperAPI:
 
@@ -2888,3 +2888,48 @@ class TestGateKeeperAPI:
         # wait for the child processes to finish
         for process in processes:
             process.join()
+
+    @attr(env=['test'], priority=2)
+    def test_ajax_no_redirect(self):
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_sso_cookie_value(
+            response.headers
+        )
+
+        my_cookie = dict(name='sso_cookie', value=cookie_id)
+
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        response = self.gk_service.validate_end_point(session, allow_redirects=False)
+        assert response.status_code == requests.codes.ok
+        assert GATEKEEPER_TITLE not in response.text
+
+        # logout
+        response = self.gk_service.logout_user_session(session)
+        assert response.status_code == requests.codes.ok
+
+        # must disable caching in dummyapp for this check
+        parameters = {'sso_cache_enabled': False}
+
+        response = self.gk_service.validate_end_point(session, allow_redirects=False, parameters=parameters)
+        # simualte browser call - 303 redirect
+        assert response.status_code == requests.codes.other
+        response = self.gk_service.validate_end_point(session, parameters=parameters)
+        assert GATEKEEPER_TITLE in response.text
+
+
+        session.headers.update({'X-Requested-With': 'XMLHttpRequest'})
+        response = response = self.gk_service.validate_end_point(session, allow_redirects=False, parameters=parameters)
+        # ajax call 401
+        assert response.status_code == requests.codes.unauthorized
+        print response.json()['error']
+        assert NOT_LOGGED_IN in response.json()['error']
