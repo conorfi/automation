@@ -2950,5 +2950,4 @@ class TestGateKeeperAPI:
         )
         # ajax call 401
         assert response.status_code == requests.codes.unauthorized
-        print response.json()['error']
         assert NOT_LOGGED_IN in response.json()['error']
