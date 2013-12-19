@@ -251,6 +251,7 @@ class GateKeeperService(object):
 
         if allow_redirects is None:
             allow_redirects = True
+
         response = session.get(
             url=url,
             verify=verify,

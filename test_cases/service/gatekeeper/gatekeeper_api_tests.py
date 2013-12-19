@@ -828,6 +828,63 @@ class TestGateKeeperAPI:
         assert (self.gk_dao.del_gk_user(self.db, user_id))
 
     @attr(env=['test'], priority=1)
+    def test_validate_user_with_no_access_for_application(self):
+        """
+        GATEKEEPER-API018A
+        Ensure that user returns 403 when it tries to access an application
+        that it has assosation with
+        """
+
+        # create a user and associate user with relevant
+        # pre confiured application for dummy app
+        username = 'automation_' + self.util.random_str(5)
+        fullname = 'automation ' + self.util.random_str(5)
+        email = self.util.random_email(5)
+
+        # create basic user - no permisssions
+        assert (
+            self.gk_dao.set_gk_user(
+                self.db,
+                username,
+                HASH_PASSWORD_TEST,
+                email,
+                fullname,
+                '123-456-789123456'
+            )
+        )
+
+        # create a session for the user
+        credentials_payload = {'username': username, 'password': 'test'}
+        # create a session - do not allow redirects - urlencoded post
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False,
+            credentials=credentials_payload
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_sso_cookie_value(
+            response.headers
+        )
+        my_cookie = dict(name='sso_cookie', value=cookie_id)
+
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # verify the end point cannot be accessed
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point=config['gatekeeper']['dummy']['user_endpoint']
+        )
+        assert response.status_code == requests.codes.forbidden
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point=config['gatekeeper']['dummy']['admin_endpoint']
+        )
+        assert response.status_code == requests.codes.forbidden
+
+    @attr(env=['test'], priority=1)
     def test_validate_user_app_api_and_auth_user_permissions(self):
         """
         GATEKEEPER-API019 test_validate_user_app_api_and_auth_user_permissions
@@ -1632,7 +1689,6 @@ class TestGateKeeperAPI:
             appname
         )
         # verify the post data againist the db data
-
         assert (
             create_response.json()['application_id']
             == app_data['application_id']
@@ -2952,8 +3008,7 @@ class TestGateKeeperAPI:
         assert response.status_code == requests.codes.unauthorized
         assert NOT_LOGGED_IN in response.json()['error']
 
-
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_validate_caching(self):
         """
         GATEKEEPER-API049 - test_validate_caching

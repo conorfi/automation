@@ -34,6 +34,7 @@ config['gatekeeper']['admin_endpoint'] = 'admin'
 config['gatekeeper']['dummy'] = {}
 config['gatekeeper']['dummy']['host'] = 'app-t01'
 config['gatekeeper']['dummy']['port'] = '8001'
+config['gatekeeper']['dummy']['port2'] = '8002'
 config['gatekeeper']['dummy']['user_endpoint'] = 'user'
 config['gatekeeper']['dummy']['admin_endpoint'] = 'admin'
 
