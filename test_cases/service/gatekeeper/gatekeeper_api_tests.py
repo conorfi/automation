@@ -64,6 +64,7 @@ CONFIRM_LOGOUT = "Please confirm logout"
 NO_DATA_ERROR = "No data for ID"
 DUPLICATE_KEY = "duplicate key value violates unique constraint"
 MISSING_PARAM = "Missing parameter(s)"
+NOT_LOGGED_IN = "Not logged in"
 
 
 class TestGateKeeperAPI:
@@ -2888,3 +2889,192 @@ class TestGateKeeperAPI:
         # wait for the child processes to finish
         for process in processes:
             process.join()
+
+    @attr(env=['test'], priority=1)
+    def test_ajax_no_redirect(self):
+        """
+        GATEKEEPER-API048 test_ajax_no_redirect
+        If the user tries to reach a uri in a browser and that uri is
+        protected by the SSO tool, user will be redirected to the login page
+        If the user makes an AJAX request, user will get a 401 and the
+        redirection URL in the JSON response and won't be redirected
+        There's no configuration or query string option to modify
+        this behaviour. We reply with redirection to browsers and JSON
+        package to AJAX calls
+        """
+        # urlencoded post
+        # create a session - do not allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_sso_cookie_value(
+            response.headers
+        )
+
+        my_cookie = dict(name='sso_cookie', value=cookie_id)
+
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        response = self.gk_service.validate_end_point(
+            session, allow_redirects=False
+        )
+        assert response.status_code == requests.codes.ok
+        assert GATEKEEPER_TITLE not in response.text
+
+        # logout
+        response = self.gk_service.logout_user_session(session)
+        assert response.status_code == requests.codes.ok
+
+        # must disable caching in dummyapp for this check
+        parameters = {'sso_cache_enabled': False}
+
+        # firstly browser call test - 303 redirect
+        response = self.gk_service.validate_end_point(
+            session, allow_redirects=False, parameters=parameters
+        )
+        assert response.status_code == requests.codes.other
+        response = self.gk_service.validate_end_point(
+            session, parameters=parameters
+        )
+        assert GATEKEEPER_TITLE in response.text
+
+        # set header to emualte ajax call
+        session.headers.update({'X-Requested-With': 'XMLHttpRequest'})
+        response = response = self.gk_service.validate_end_point(
+            session, allow_redirects=False, parameters=parameters
+        )
+        # ajax call 401
+        assert response.status_code == requests.codes.unauthorized
+        assert NOT_LOGGED_IN in response.json()['error']
+
+
+    @attr(env=['test'], priority=2)
+    def test_validate_caching(self):
+        """
+        GATEKEEPER-API049 - test_validate_caching
+        Caching is enabled by default in the dummy app
+        To ensure that caching is enabled this tests work in 3 parts
+        Part A) Ensure user cannnot access user end point
+        part B) Add user endpoint permission but as caching is enabled
+                the new permission will not have been cached
+        Part C) Disable caching, the new permission will now be retrieved
+                and the user can access the user end point
+        """
+
+        # create a user and associate user with relevant
+        # pre confiured application for dummy app
+        username = 'automation_' + self.util.random_str(5)
+        appname = ANOTHER_TEST_APP
+        fullname = 'automation ' + self.util.random_str(5)
+        email = self.util.random_email(5)
+
+        # create basic user - no permisssions
+        assert (
+            self.gk_dao.set_gk_user(
+                self.db, username,
+                HASH_PASSWORD_TEST,
+                email,
+                fullname,
+                '123-456-789123456')
+        )
+
+        # get user_id
+        user_id = self.gk_dao.get_user_by_username(
+            self.db,
+            username
+        )['user_id']
+
+        # get app id
+        app_id = self.gk_dao.get_app_by_app_name(
+            self.db,
+            appname
+        )['application_id']
+
+        # get permissions
+        user_permission = self.gk_dao.get_permission_id_by_name(
+            self.db,
+            DEFAULT_ADFUSER_USER, app_id
+        )['permission_id']
+        admin_permission = self.gk_dao.get_permission_id_by_name(
+            self.db,
+            DEFAULT_ADFUSER_ADMIN, app_id
+        )['permission_id']
+
+        # associate user with app
+        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+
+        # create a session for the user
+        credentials_payload = {'username': username, 'password': 'test'}
+        # create a session - do not allow redirects - urlencoded post
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False,
+            credentials=credentials_payload
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+        # convert Set_Cookie response header to simple cookie object
+        cookie_id = self.gk_service.extract_sso_cookie_value(
+            response.headers
+        )
+
+        my_cookie = dict(name='sso_cookie', value=cookie_id)
+
+        session = self.gk_service.create_requests_session_with_cookie(
+            my_cookie
+        )
+
+        # Part A)
+        # verify the user end point dummy application cannot be accessed
+        response = self.gk_service.validate_end_point(session)
+        assert response.status_code == requests.codes.ok
+
+        # verify the user end point cannot be accessed
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point=config['gatekeeper']['dummy']['user_endpoint']
+        )
+        # 403
+        assert response.status_code == requests.codes.forbidden
+
+        # Part B)
+        # set the user permissions for the app
+        # i.e user can only access the dummy application and user end point
+        assert (
+            self.gk_dao.set_user_permissions_id(
+                self.db,
+                user_id,
+                user_permission
+                )
+        )
+
+        # verify the user end point cannot be accessed due to caching,
+        # the updated permissions will not apply
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point=config['gatekeeper']['dummy']['user_endpoint']
+        )
+        # 403
+        assert response.status_code == requests.codes.forbidden
+
+        # Part C)
+        # must disable caching in dummyapp for this check
+        parameters = {'sso_cache_enabled': False}
+        # verify the dummy application can be accessed
+        # when caching is disabled as the new permission can now
+        # be retreived
+
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point=config['gatekeeper']['dummy']['user_endpoint'],
+            parameters=parameters
+        )
+        # 200
+        assert response.status_code == requests.codes.ok
+
+        # delete user - cascade delete by default
+        assert (self.gk_dao.del_gk_user(self.db, user_id))

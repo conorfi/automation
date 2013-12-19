@@ -112,7 +112,8 @@ class GateKeeperService(object):
             url=None,
             redirect_url=None,
             verify=None,
-            allow_redirects=None
+            allow_redirects=None,
+            parameters=None
             ):
 
         """
@@ -129,6 +130,8 @@ class GateKeeperService(object):
 
         """
 
+        if parameters is None:
+            parameters = {}
         if(url is None):
             url = self._create_url(
                 config['api']['user']['session']['create_v1'])
@@ -141,7 +144,8 @@ class GateKeeperService(object):
         response = session.get(
             url=url,
             verify=verify,
-            allow_redirects=allow_redirects
+            allow_redirects=allow_redirects,
+            params=parameters
         )
         return response
 
@@ -211,10 +215,12 @@ class GateKeeperService(object):
 
     def validate_end_point(
             self,
-            session, end_point=None,
+            session,
+            end_point=None,
             url=None,
             verify=None,
-            parameters=None
+            parameters=None,
+            allow_redirects=None
             ):
 
         """
@@ -242,7 +248,15 @@ class GateKeeperService(object):
 
         if(verify is None):
             verify = False
-        response = session.get(url=url, verify=verify, params=parameters)
+
+        if allow_redirects is None:
+            allow_redirects = True
+        response = session.get(
+            url=url,
+            verify=verify,
+            params=parameters,
+            allow_redirects=allow_redirects
+        )
         return response
 
     def submit_verification_code(
