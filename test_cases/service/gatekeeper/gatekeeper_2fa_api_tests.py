@@ -66,20 +66,11 @@ class TestGateKeeper2FaAPI:
         GATEKEEPER-2FA-API001 test_can_login_two_factor
         - verify basic 2FA functionality from gatekeeper application
         '''
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
 
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_cred_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_credentials', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED"
         )
 
         # assert against database
@@ -168,22 +159,13 @@ class TestGateKeeper2FaAPI:
         credentials_payload = {'username': username, 'password': 'test'}
         # create a session - do not allow redirects - urlencoded post
 
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            credentials=credentials_payload,
-            allow_redirects=False
+         # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED",
+            credentials=credentials_payload
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
 
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_cred_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_credentials', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
-        )
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
@@ -244,20 +226,11 @@ class TestGateKeeper2FaAPI:
         - attempt to access gatekeeper or dummy app without
         entering verification code
         """
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
 
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_cred_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_credentials', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+         # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED"
         )
 
         # assert against database
@@ -304,21 +277,12 @@ class TestGateKeeper2FaAPI:
         but a valid verification code can still be entered after
         an invalid code is entered
         """
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
+         # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED"
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
 
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_cred_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_credentials', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
-        )
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
@@ -379,21 +343,12 @@ class TestGateKeeper2FaAPI:
         GATEKEEPER-2FA-API005 test_expired_verification_code,
         ensure than an expired verification code is not accepted
         """
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
+         # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED"
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
 
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_cred_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_credentials', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
-        )
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
@@ -433,32 +388,21 @@ class TestGateKeeper2FaAPI:
         Test to ensure that if multiple verifications are created,
         that only the most recent verification code is accepted
         """
-        # user_login - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED"
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
 
         verification_code_one = self.gk_dao.get_verification_code_by_user_id(
             self.db,
             self.default_test_user
         )['verification_code']
 
-        # user_login - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_cred_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_credentials', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED"
         )
 
         verification_code_two = self.gk_dao.get_verification_code_by_user_id(
@@ -510,16 +454,10 @@ class TestGateKeeper2FaAPI:
         verify that a verification code cannot be posted when the session
         contains an incorrect cookie value
         """
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_cred_cookie_value(
-            response.headers
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED"
         )
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(
@@ -530,9 +468,12 @@ class TestGateKeeper2FaAPI:
         assert db_response['user_id'] == self.default_test_user
 
         fake_cookie_value = "fakecredCookie"
-        my_cookie = dict(name='sso_credentials', value=fake_cookie_value)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED",
+            cookie_value=fake_cookie_value
         )
 
         verification_code = self.gk_dao.get_verification_code_by_user_id(
@@ -560,21 +501,10 @@ class TestGateKeeper2FaAPI:
         GATEKEEPER-2FA-API008 - test_no_verifcation_code Verify the behaviour
         when no verification code is provided
         '''
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_cred_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_credentials', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_type="CRED"
         )
 
         # assert against database
