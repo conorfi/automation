@@ -18,6 +18,10 @@ class BaseDAO():
         self.db_conn = create_engine(db_config)
         self.connection = self.db_conn.connect()
 
+    def close(self):
+        self.connection.close()
+        self.db_conn.dispose()
+
     def query(self, query):
         """
         function to run raw select queries

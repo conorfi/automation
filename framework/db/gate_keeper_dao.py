@@ -32,16 +32,16 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
 
-    def get_user_id_by_username(self, db, username):
+    def get_user_by_username(self, db, username):
             """
-            Returns user id based on a specific user id
+            Returns user info based on a specific user name
             @param db: the database connection that will be utilized
             @param session_id: session_id(cookie value) of the session created
             by a post
             @return: dict of session info
 
             """
-            query = """select user_id
+            query = """select *
                         from gatekeeper_user
                          where username='%s'""" % username
             result = db.query(query)
@@ -50,19 +50,16 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
 
-    def get_app_id_by_app_name(self, db, app_name):
+    def get_app_by_app_name(self, db, app_name):
             """
-            Returns app id based on app name
+            Returns app data based on app name
 
             @param db: the database connection that will be utilized
-
-            @param session_id: session_id(cookie value) of the session created
-            by a post
-
+            @param app_name: application name
             @return: dict of app info
 
             """
-            query = """select application_id
+            query = """select *
                         from application
                          where name='%s'""" % app_name
             result = db.query(query)

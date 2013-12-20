@@ -26,10 +26,10 @@ from .utils import requote_uri, get_environ_proxies, get_netrc_auth
 
 from .status_codes import codes
 REDIRECT_STATI = (
-    codes.moved, # 301
-    codes.found, # 302
-    codes.other, # 303
-    codes.temporary_moved, # 307
+    codes.moved,    # 301
+    codes.found,    # 302
+    codes.other,    # 303
+    codes.temporary_moved,    # 307
 )
 DEFAULT_REDIRECT_LIMIT = 30
 
@@ -81,7 +81,7 @@ class SessionRedirectMixin(object):
         # ((resp.status_code is codes.see_other))
         while (('location' in resp.headers and resp.status_code in REDIRECT_STATI)):
 
-            resp.content  # Consume socket so it can be released
+            resp.content    # Consume socket so it can be released
 
             if i >= self.max_redirects:
                 raise TooManyRedirects('Exceeded %s redirects.' % self.max_redirects)
@@ -170,42 +170,42 @@ class Session(SessionRedirectMixin):
 
     def __init__(self):
 
-        #: A case-insensitive dictionary of headers to be sent on each
-        #: :class:`Request <Request>` sent from this
-        #: :class:`Session <Session>`.
+        # : A case-insensitive dictionary of headers to be sent on each
+        # : :class:`Request <Request>` sent from this
+        # : :class:`Session <Session>`.
         self.headers = default_headers()
 
-        #: Default Authentication tuple or object to attach to
-        #: :class:`Request <Request>`.
+        # : Default Authentication tuple or object to attach to
+        # : :class:`Request <Request>`.
         self.auth = None
 
-        #: Dictionary mapping protocol to the URL of the proxy (e.g.
-        #: {'http': 'foo.bar:3128'}) to be used on each
-        #: :class:`Request <Request>`.
+        # : Dictionary mapping protocol to the URL of the proxy (e.g.
+        # : {'http': 'foo.bar:3128'}) to be used on each
+        # : :class:`Request <Request>`.
         self.proxies = {}
 
-        #: Event-handling hooks.
+        # : Event-handling hooks.
         self.hooks = default_hooks()
 
-        #: Dictionary of querystring data to attach to each
-        #: :class:`Request <Request>`. The dictionary values may be lists for
-        #: representing multivalued query parameters.
+        # : Dictionary of querystring data to attach to each
+        # : :class:`Request <Request>`. The dictionary values may be lists for
+        # : representing multivalued query parameters.
         self.params = {}
 
-        #: Stream response content default.
+        # : Stream response content default.
         self.stream = False
 
-        #: SSL Verification default.
+        # : SSL Verification default.
         self.verify = True
 
-        #: SSL certificate default.
+        # : SSL certificate default.
         self.cert = None
 
-        #: Maximum number of redirects allowed. If the request exceeds this
-        #: limit, a :class:`TooManyRedirects` exception is raised.
+        # : Maximum number of redirects allowed. If the request exceeds this
+        # : limit, a :class:`TooManyRedirects` exception is raised.
         self.max_redirects = DEFAULT_REDIRECT_LIMIT
 
-        #: Should we trust the environment?
+        # : Should we trust the environment?
         self.trust_env = True
 
         # Set up a CookieJar to be used by default
@@ -394,7 +394,7 @@ class Session(SessionRedirectMixin):
         :param \*\*kwargs: Optional arguments that ``request`` takes.
         """
 
-        return self.request('PATCH', url,  data=data, **kwargs)
+        return self.request('PATCH', url, data=data, **kwargs)
 
     def delete(self, url, **kwargs):
         """Sends a DELETE request. Returns :class:`Response` object.
