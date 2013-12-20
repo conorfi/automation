@@ -97,17 +97,10 @@ class TestGateKeeperAPI:
         through a POST to the login API using urlencoded body.
         Specified redirect
         """
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             redirect_url=config['gatekeeper']['redirect']
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
         )
 
         # assert against database
@@ -131,16 +124,12 @@ class TestGateKeeperAPI:
         creates a session through a POST to the login API using urlencoded
         body. Default redirect
         """
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
+
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
         assert db_response['cookie_id'] == cookie_id
@@ -150,6 +139,7 @@ class TestGateKeeperAPI:
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=True
         )
+
         # 200 response
         assert response.status_code == requests.codes.ok
 
@@ -161,24 +151,14 @@ class TestGateKeeperAPI:
         validates the user_id and session_id(cookie value)
         """
 
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
 
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
         response = self.gk_service.validate_session(
             cookie_id=cookie_id,
-            session=self.gk_service.create_requests_session_with_cookie(
-                my_cookie)
+            session=session
         )
 
         assert response.status_code == requests.codes.ok
@@ -197,26 +177,15 @@ class TestGateKeeperAPI:
         that a user can access an url using a session with a valid cookie.
         Specified redirect
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             redirect_url=config['gatekeeper']['redirect']
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
-
-        # convert Set_Cookie response header to simple cookie object
-        cookie_value_sso = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_value_sso)
 
         response = self.gk_service.validate_url_with_cookie(
-            self.gk_service.create_requests_session_with_cookie(
-                my_cookie
-            ),
+            session=session,
             redirect_url=config['gatekeeper']['redirect']
         )
         assert response.status_code == requests.codes.ok
@@ -230,24 +199,14 @@ class TestGateKeeperAPI:
         the  user_id and session_id(cookie value)  and applciation filter
         """
 
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
         )
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
         response = self.gk_service.validate_session(
             cookie_id=cookie_id,
-            session=self.gk_service.create_requests_session_with_cookie(
-                my_cookie
-            ),
+            session=session,
             application=DEFAULT_TEST_APP
         )
 
@@ -267,27 +226,19 @@ class TestGateKeeperAPI:
         that a user cannot access an url using a session with
         invalid cookie id/session id.
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
 
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
         # set cookie to invalid value
         cookie_value = "fake"
 
         my_cookie = dict(name='sso_cookie', value=cookie_id)
         response = self.gk_service.validate_session(
             cookie_id=cookie_value,
-            session=self.gk_service.create_requests_session_with_cookie(
-                my_cookie
-            )
+            session=session
         )
 
         assert response.status_code == requests.codes.not_found
@@ -300,27 +251,18 @@ class TestGateKeeperAPI:
         session through a POST to the login API and then verifies that a user
         cannot access an url using a session with no cookieid/session id.
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
         )
 
         # set cookie to empty value
         cookie_value = ''
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
         response = self.gk_service.validate_session(
             cookie_id=cookie_value,
-            session=self.gk_service.create_requests_session_with_cookie(
-                my_cookie
-            )
+            session=session
         )
 
         assert response.status_code == requests.codes.not_found
@@ -333,17 +275,10 @@ class TestGateKeeperAPI:
         session through a POST to the login API and then verifies that a user
         cannot access an url using an invalid session
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
 
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
         )
 
         # set the cookie dict being passed to the session as invalid value
@@ -369,27 +304,17 @@ class TestGateKeeperAPI:
         provided it as treated as if the application filter is not applied
         """
 
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
         )
 
         # set application to none
         application = ''
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
         response = self.gk_service.validate_session(
             cookie_id=cookie_id,
-            session=self.gk_service.create_requests_session_with_cookie(
-                my_cookie
-            ),
+            session=session,
             application=application
         )
 
@@ -410,17 +335,9 @@ class TestGateKeeperAPI:
         the session by providing an invalid application name to the
         application filter
         """
-
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
         )
 
         # set application to none
@@ -429,9 +346,7 @@ class TestGateKeeperAPI:
         my_cookie = dict(name='sso_cookie', value=cookie_id)
         response = self.gk_service.validate_session(
             cookie_id=cookie_id,
-            session=self.gk_service.create_requests_session_with_cookie(
-                my_cookie
-            ),
+            session=session,
             application=application
         )
 
@@ -449,25 +364,13 @@ class TestGateKeeperAPI:
         that a user can access an url using a session with a valid cookie.
         Default redirect
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
+        response = self.gk_service.validate_url_with_cookie(session)
 
-        response = self.gk_service.validate_url_with_cookie(
-            self.gk_service.create_requests_session_with_cookie(
-                my_cookie
-            )
-        )
         assert response.status_code == requests.codes.ok
         assert "/logout/" in response.text
 
@@ -480,25 +383,17 @@ class TestGateKeeperAPI:
         As the session cookie is invalid the user will be prompted
         for a username and password
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
+        # create fake cookie value
         cookie_value = "fakecookie"
 
-        my_cookie = dict(name='sso_cookie', value=cookie_value)
-        response = self.gk_service.validate_url_with_cookie(
-            self.gk_service.create_requests_session_with_cookie(
-                my_cookie
-            )
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            cookie_value=cookie_value
         )
+
+        response = self.gk_service.validate_url_with_cookie(session)
+
         assert response.status_code == requests.codes.ok
         assert GATEKEEPER_TITLE in response.text
 
@@ -538,16 +433,9 @@ class TestGateKeeperAPI:
         through a POST to the login API and then verifies that a user
         cannot access an url using an expired cookie on the server side
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+         # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
         )
 
         # update cookie in the database so thats its expired
@@ -558,21 +446,17 @@ class TestGateKeeperAPI:
             )
         )
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        response = self.gk_service.validate_url_with_cookie(
-            self.gk_service.create_requests_session_with_cookie(
-                my_cookie
-            )
-        )
+        response = self.gk_service.validate_url_with_cookie(session)
+
         assert response.status_code == requests.codes.ok
         assert GATEKEEPER_TITLE in response.text
 
-        # User login causes expired coookie to be deleted
+        # User login causes expired cookie to be deleted
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=False
         )
 
-        # assert againist the database - ensure it no longer exists
+        # assert against the database - ensure it no longer exists
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
             cookie_id
@@ -610,22 +494,11 @@ class TestGateKeeperAPI:
         using POST
         Specified redirect on logout
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+         # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             redirect_url=config['gatekeeper']['redirect']
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         response = self.gk_service.validate_url_with_cookie(
@@ -658,20 +531,10 @@ class TestGateKeeperAPI:
         using a POST
         Default redirect on logout
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         response = self.gk_service.validate_url_with_cookie(session)
@@ -701,21 +564,10 @@ class TestGateKeeperAPI:
         Note: the python-request library can not be sued for web based tests
         so cannot click the confirmation button
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
         )
 
         response = self.gk_service.validate_url_with_cookie(session)
@@ -773,21 +625,11 @@ class TestGateKeeperAPI:
 
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
-        # create a session - do not allow redirects - urlencoded post
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             credentials=credentials_payload
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # Verify the user API
@@ -855,21 +697,11 @@ class TestGateKeeperAPI:
 
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
-        # create a session - do not allow redirects - urlencoded post
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             credentials=credentials_payload
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # verify the end point cannot be accessed
@@ -941,22 +773,11 @@ class TestGateKeeperAPI:
 
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
-        # create a session - do not allow redirects - urlencoded post
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             credentials=credentials_payload
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # set the user permissions for the app
@@ -1119,22 +940,11 @@ class TestGateKeeperAPI:
         # create a session for the user
 
         credentials_payload = {'username': username, 'password': 'test'}
-        # create a session - do not allow redirects - urlencoded post
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             credentials=credentials_payload
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # set the group permissions for the app
@@ -1262,24 +1072,16 @@ class TestGateKeeperAPI:
         Ensures user info CANNOT be return from the user api when a invalid
         session is provided
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect']
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
+
         cookie_value = "fakecookie"
 
-        my_cookie = dict(name='sso_cookie', value=cookie_value)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            redirect_url=config['gatekeeper']['redirect'],
+            cookie_value=cookie_value
         )
+
         response = self.gk_service.user_info(
             session,
             self.default_test_user,
@@ -1297,22 +1099,13 @@ class TestGateKeeperAPI:
         Ensures user info CANNOT be return from the user api when a invalid
         application is provided
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             redirect_url=config['gatekeeper']['redirect']
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
-        )
+
         fake_application = "fake"
         response = self.gk_service.user_info(
             session,
@@ -1333,22 +1126,10 @@ class TestGateKeeperAPI:
         Ensures user info CANNOT be return from the user api when a invalid
         user id is provided
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             redirect_url=config['gatekeeper']['redirect']
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # add one to the user id to create a random element to userid
@@ -1374,24 +1155,12 @@ class TestGateKeeperAPI:
         Ensures user info CANNOT be return from the user api when no
         user id or application name is provided
         '''
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             redirect_url=config['gatekeeper']['redirect']
         )
-        # 303 response
 
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
-        )
         response = self.gk_service.user_info(session, '', '')
 
         # a 404 will alwasy be returend
@@ -1449,21 +1218,11 @@ class TestGateKeeperAPI:
 
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
-        # create a session - do not allow redirects - urlencoded post
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             credentials=credentials_payload
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a defaul url for gatekeeper app
@@ -1582,22 +1341,11 @@ class TestGateKeeperAPI:
         # create a session for the user
 
         credentials_payload = {'username': username, 'password': 'test'}
-        # create a session - do not allow redirects - urlencoded post
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             credentials=credentials_payload
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a defaul url for gatekeeper app
@@ -1657,21 +1405,9 @@ class TestGateKeeperAPI:
         create a new application using the application api,
         clean up the data (implictly tests DELETE and GET)
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a new application
@@ -1723,26 +1459,15 @@ class TestGateKeeperAPI:
         then attempt to create an application with the same name
         clean up the data (implictly tests DELETE and GET)
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+         # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
         )
 
         new_app = self.util.random_str(5)
         name_dict = {'name': new_app}
         app_data = self.gk_service.create_app_data(name_dict)
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
-        )
 
         # create the new application
         response = self.gk_service.application(
@@ -1780,21 +1505,9 @@ class TestGateKeeperAPI:
         GATEKEEPER-API029 test_application_api_create_no_data
         attempt to create a new application missing paramters
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # list of dicts with missing data
@@ -1823,21 +1536,10 @@ class TestGateKeeperAPI:
         verify the repposne with the read function
         clean up the data (implictly tests DELETE and GET)
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
         )
 
         # create a new application
@@ -1900,21 +1602,9 @@ class TestGateKeeperAPI:
         verify the repposne with the read function
         clean up the data (implictly tests DELETE and GET)
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a new application
@@ -1982,21 +1672,10 @@ class TestGateKeeperAPI:
         the app name should not be unique
         clean up the data (implictly tests DELETE and GET)
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
         )
 
         app_one = self.util.random_str(5)
@@ -2049,21 +1728,9 @@ class TestGateKeeperAPI:
         read an application data using the application api
         clean up the data (implictly tests DELETE and GET)
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a new application
@@ -2124,27 +1791,14 @@ class TestGateKeeperAPI:
         GATEKEEPER-API033A test_application_api_invalid_app_id
         attempt to update an application with an app_id that dosen't exist
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
         )
 
         update_app = self.util.random_str(5)
         update_url = self.util.random_url(5)
-
         app_data = {'name': update_app, 'default_url': update_url}
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
-        )
 
         # create random integer for the application id
         app_id = self.util.random_int()
@@ -2165,21 +1819,9 @@ class TestGateKeeperAPI:
         GATEKEEPER-API034 test_application_api_invalid_app_id
         attempt to read an application with an app_id that dosen't exist
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create random integer for the application id
@@ -2203,25 +1845,14 @@ class TestGateKeeperAPI:
         This test case is to have a test case that explictly
         tests the delete functioanlity
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
+
         new_app = self.util.random_str(5)
         new_url = self.util.random_url(5)
         app_data = {'name': new_app, 'default_url': new_url}
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
-        )
 
         # create a new application
         create_response = self.gk_service.application(
@@ -2260,20 +1891,9 @@ class TestGateKeeperAPI:
         GATEKEEPER-API036 test_application_api_invalid_app_id
         attempt to delete an application with an app_id that dosen't exist
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create random integer for the application id
@@ -2296,21 +1916,9 @@ class TestGateKeeperAPI:
         create a new user using the user api,
         clean up the data (implictly tests DELETE and GET)
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a new application
@@ -2358,20 +1966,9 @@ class TestGateKeeperAPI:
         GATEKEEPER-API038 test_user_api_create_missing_params
         attempt to create a new user using the user api with missing params
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # list of dicts with missing data
@@ -2399,20 +1996,9 @@ class TestGateKeeperAPI:
         attempt to create a new user using the user api with same params
         """
 
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         user_data = self.gk_service.create_user_data()
@@ -2437,20 +2023,10 @@ class TestGateKeeperAPI:
         GATEKEEPER-API040 test_user_api_update
         update all the user data using the user api
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a new application
@@ -2506,21 +2082,10 @@ class TestGateKeeperAPI:
         the username should not be unique
         clean up the data (implictly tests DELETE and GET)
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
         )
 
         rand_username = self.util.random_str(5)
@@ -2568,20 +2133,9 @@ class TestGateKeeperAPI:
         GATEKEEPER-API041  test_user_api_update_individually
         update fields individually
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a new application
@@ -2648,20 +2202,9 @@ class TestGateKeeperAPI:
         GATEKEEPER-API042  test_user_api_update_non_existant_user_id
         attempt to update a non existant user id
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         user_id = self.util.random_int()
@@ -2680,20 +2223,10 @@ class TestGateKeeperAPI:
         GATEKEEPER-API043 test_user_api_read
         verify the read(GET) response
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a new application
@@ -2746,20 +2279,9 @@ class TestGateKeeperAPI:
         GATEKEEPER-API044  test_user_api_get_non_existant_user_id
         attempt to get a non existant user id
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         user_id = self.util.random_int()
@@ -2778,20 +2300,10 @@ class TestGateKeeperAPI:
         GATEKEEPER-API045 test_user_api_delete
         explicit test case for delete functionality
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # create a new application
@@ -2825,20 +2337,9 @@ class TestGateKeeperAPI:
         GATEKEEPER-API046  test_user_api_get_non_existant_user_id
         attempt to get a non existant user id
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         user_id = self.util.random_int()
@@ -2852,6 +2353,81 @@ class TestGateKeeperAPI:
         assert NO_DATA_ERROR in update_response.json()['error']
 
     @attr(env=['test'], priority=1)
+    def test_user_api_user_login(self):
+        """
+        GATEKEEPER-API046A test_user_api_user_login
+        login as newly created,updated and deleted user
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # create username and apssword
+        rand_str = self.util.random_str()
+        credentials = {
+            'username': rand_str,
+            'password': rand_str
+        }
+        user_data = self.gk_service.create_user_data(user_dict=credentials)
+
+        # create a new user
+        create_response = self.gk_service.user(
+            session, method='POST', user_data=user_data
+        )
+        # ensure a 201 is returned
+        assert create_response.status_code == requests.codes.created
+
+        # login in as new user
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False, credentials=credentials
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+
+        # set user_id
+        user_id = create_response.json()['user_id']
+
+        # update username and password
+        rand_str = self.util.random_str()
+        credentials = {
+            'username': rand_str,
+            'password': rand_str
+        }
+        user_data = self.gk_service.create_user_data(user_dict=credentials)
+
+        # update application
+        update_response = self.gk_service.user(
+            session, method='PUT', user_id=user_id, user_data=user_data
+        )
+
+        # login in as updated user
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False, credentials=credentials
+        )
+        # 303 response
+        assert response.status_code == requests.codes.other
+
+        # clean up - delete the application
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
+        )
+        # ensure a 204 is returned
+        assert del_response.status_code == requests.codes.no_content
+
+        # TODO: readd verifcation when 500 status issue is resolved
+        # defect https://www.pivotaltracker.com/story/show/62791020
+        # login in as new user
+        """
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False, credentials=credentials
+        )
+        # 40X
+        assert response.status_code == requests.codes
+        """
+
+    @attr(env=['test'], priority=1)
     def test_session_concurrency(self):
 
         """
@@ -2861,21 +2437,9 @@ class TestGateKeeperAPI:
         defect: https://www.pivotaltracker.com/story/show/62219660
         """
 
-        # login in as admin
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # initial setup - create arbitrary number of users via REST API
@@ -2958,22 +2522,9 @@ class TestGateKeeperAPI:
         this behaviour. We reply with redirection to browsers and JSON
         package to AJAX calls
         """
-        # urlencoded post
-        # create a session - do not allow redirects
-        response = self.gk_service.create_session_urlencoded(
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         response = self.gk_service.validate_end_point(
@@ -3066,21 +2617,11 @@ class TestGateKeeperAPI:
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
         # create a session - do not allow redirects - urlencoded post
-        response = self.gk_service.create_session_urlencoded(
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             credentials=credentials_payload
-        )
-        # 303 response
-        assert response.status_code == requests.codes.other
-        # convert Set_Cookie response header to simple cookie object
-        cookie_id = self.gk_service.extract_sso_cookie_value(
-            response.headers
-        )
-
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
-
-        session = self.gk_service.create_requests_session_with_cookie(
-            my_cookie
         )
 
         # Part A)
@@ -3133,3 +2674,35 @@ class TestGateKeeperAPI:
 
         # delete user - cascade delete by default
         assert (self.gk_dao.del_gk_user(self.db, user_id))
+
+    @attr(env=['test'], priority=1)
+    def test_invalid_endpoint(self):
+        """
+        GATEKEEPER-API050- test_invalid_endpoint
+        - test an invalid endpoint on gatekeeper
+        - test an invlaid endpoint on the dummy app
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # create a fake endpoint for the gk app
+        gk_url = self.gk_service._create_url('fake')
+
+        # validate a fake gatekeeper endpoint
+        response = self.gk_service.validate_end_point(
+            session,
+            url=gk_url
+        )
+        # 404
+        assert response.status_code == requests.codes.not_found
+
+        # validate a fake dummy app endpoint
+        response = self.gk_service.validate_end_point(
+            session,
+            end_point="fake"
+        )
+        # 404
+        assert response.status_code == requests.codes.not_found

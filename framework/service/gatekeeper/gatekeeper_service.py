@@ -487,3 +487,44 @@ class GateKeeperService(object):
             response = session.get(url, verify=False)
             assert response.status_code == requests.codes.ok
             time.sleep(wait_time)
+
+    def login_create_session(
+            self,
+            cookie_type="SSO",
+            cookie_value=None,
+            **kwargs
+            ):
+
+        """
+        login user and create session
+        @param cookie_type: sso or credentials cookie
+        @param cookie_value: cookie value to be set
+        @param **kwargs: arguments for create_session_urlencoded
+        @return: session, cookie_id, response
+
+        """
+
+        # login user
+        response = self.create_session_urlencoded(**kwargs)
+        # 303
+        assert response.status_code == requests.codes.other
+
+        # SSO cookie
+        if(cookie_type == "SSO"):
+            cookie_id = self.extract_sso_cookie_value(response.headers)
+
+            if(cookie_value is not None):
+                cookie_id = cookie_value
+
+            my_cookie = dict(name='sso_cookie', value=cookie_id)
+
+        elif(cookie_type == "CRED"):
+            cookie_id = self.extract_cred_cookie_value(response.headers)
+
+            if(cookie_value is not None):
+                cookie_id = cookie_value
+
+            my_cookie = dict(name='sso_credentials', value=cookie_id)
+
+        session = self.create_requests_session_with_cookie(my_cookie)
+        return session, cookie_id, response

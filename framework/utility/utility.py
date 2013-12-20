@@ -12,7 +12,7 @@ import string
 
 class Utility(object):
 
-    def random_str(self, n):
+    def random_str(self, n=5):
         return "".join(random.choice(
             string.ascii_lowercase) for x in xrange(n)
         )
