@@ -15,7 +15,49 @@ import Cookie
 import time
 
 
-class GateKeeperService(object):
+class GateKeeperService:
+
+    def __init__(self):
+        # adfuser is the default test dummy application
+        self.DEFAULT_TEST_APP = "adfuser"
+        # another test dummy app
+        self.ANOTHER_TEST_APP = "anotherapp"
+        # gatekeeper app
+        self.GK_APP = "gatekeeper"
+        # admin user is 'admin' and is used as the default user
+        self.ADMIN_USER = 'admin'
+        # default user permission configured for adfuser in the dummy app
+        self.DEFAULT_ADFUSER_USER = 'ADFUSER_USER'
+        # default admin permission configured for adfuser in the dummy app
+        self.DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
+        # special permission that allows acess to the gk admin end point
+        self.GK_ALL_PERMISSION = "gatekeeper_all"
+
+        # hash of the password test - using this rather than implementing the
+        # gatekeeper hashing function if the hashing function ever change sit
+        # will break a number of these functions
+        self.HASH_PASSWORD_TEST = "pbkdf2_sha256$12000$m5uwpzIW9qaO$88p"\
+            "IM25AqnXu4Fgt/Xgtpp3AInYgk5sxaxJmxxpcR8A="
+
+        self.GATEKEEPER_TITLE = "<title>Gatekeeper /"\
+            " Arts Alliance Media</title>"
+
+        # Error messages
+        self.USER_ERROR = (
+            "User is either not logged in or not the same"
+            " user as the user described in the resource URI"
+        )
+        self.SESSION_FORBIDDEN = "Forbidden session with cookie %s"\
+            " for application fake"
+        self.SESSION_NOT_ALLOWED = 'User not allowed access this session!'
+        self.MISSING_PARAMETERS = "Missing parameters: "\
+            "application_name,user_id"
+        self.CONFIRM_LOGOUT = "Please confirm logout"
+        self.NO_DATA_ERROR = "No data for ID"
+        self.DUPLICATE_KEY = "duplicate key value violates unique constraint"
+        self.MISSING_PARAM = "Missing parameter(s)"
+        self.NOT_LOGGED_IN = "Not logged in"
+        self.INVALID_VERIFCATION_CODE = "Verification+code+not+valid"
 
     def _create_url(self,
                     path,

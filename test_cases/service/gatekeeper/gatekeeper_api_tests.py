@@ -25,49 +25,12 @@ from framework.utility.utility import Utility
 import Cookie
 from multiprocessing import Process
 import time
-
-# adfuser is the defaut test application
-DEFAULT_TEST_APP = "adfuser"
-ANOTHER_TEST_APP = "anotherapp"
-GK_APP = "gatekeeper"
-
-# admin user is 'admin' and is used as the default user
-ADMIN_USER = 'admin'
-
-# default user permission configured for adfuser in the dummy app
-DEFAULT_ADFUSER_USER = 'ADFUSER_USER'
-# default admin permission configured for adfuser in the dummy app
-DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
-# special permission that allows acess to the gk admin end point
-GK_ALL_PERMISSION = "gatekeeper_all"
+import unittest
 
 USER_TOTAL = 5
 
-"""
-hash of the password test - using this rather than implementing the
-gatekeeper hashing function if the hashing function ever change sit will
-break a number of these functions
-"""
-HASH_PASSWORD_TEST = (
-    "pbkdf2_sha256$12000$m5uwpzIW9qaO$88p"
-    "IM25AqnXu4Fgt/Xgtpp3AInYgk5sxaxJmxxpcR8A="
-)
-GATEKEEPER_TITLE = "<title>Gatekeeper / Arts Alliance Media</title>"
-USER_ERROR = (
-    "User is either not logged in or not the same"
-    " user as the user described in the resource URI"
-)
-SESSION_FORBIDDEN = 'Forbidden session with cookie %s for application fake'
-SESSION_NOT_ALLOWED = 'User not allowed access this session!'
-MISSING_PARAMETERS = "Missing parameters: application_name,user_id"
-CONFIRM_LOGOUT = "Please confirm logout"
-NO_DATA_ERROR = "No data for ID"
-DUPLICATE_KEY = "duplicate key value violates unique constraint"
-MISSING_PARAM = "Missing parameter(s)"
-NOT_LOGGED_IN = "Not logged in"
 
-
-class TestGateKeeperAPI:
+class TestGateKeeperAPI(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -79,14 +42,14 @@ class TestGateKeeperAPI:
         # Things that need to be done once.
         cls.db.close()
 
-    def setup(self):
+    def setUp(self):
         # Things to run before each test.
 
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
         self.default_test_user = self.gk_dao.get_user_by_username(
             self.db,
-            ADMIN_USER
+            self.gk_service.ADMIN_USER
         )['user_id']
         self.util = Utility()
 
@@ -105,8 +68,8 @@ class TestGateKeeperAPI:
 
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
-        assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.default_test_user
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], self.default_test_user)
 
         # create a session - allow redirects
         response = self.gk_service.create_session_urlencoded(
@@ -114,8 +77,8 @@ class TestGateKeeperAPI:
             redirect_url=config['gatekeeper']['redirect']
         )
         # 200 response
-        assert response.status_code == requests.codes.ok
-        assert 'Example Domain' in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue('Example Domain' in response.text)
 
     @attr(env=['test'], priority=1)
     def test_can_login_default_redirect(self):
@@ -132,8 +95,8 @@ class TestGateKeeperAPI:
 
         # assert against database
         db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
-        assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.default_test_user
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], self.default_test_user)
 
         # create a session - allow redirects
         response = self.gk_service.create_session_urlencoded(
@@ -141,7 +104,7 @@ class TestGateKeeperAPI:
         )
 
         # 200 response
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
     @attr(env=['test'], priority=1)
     def test_validate_session_with_cookie_default_redirect(self):
@@ -161,13 +124,15 @@ class TestGateKeeperAPI:
             session=session
         )
 
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
         # obtain session id and user id from database
         db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
 
         # assert against database
-        assert response.json()['user_id'] == db_response['user_id']
-        assert response.json()['session_id'] == db_response['session_id']
+        self.assertEquals(response.json()['user_id'], db_response['user_id'])
+        self.assertEquals(
+            response.json()['session_id'], db_response['session_id']
+        )
 
     @attr(env=['test'], priority=1)
     def test_validate_session_with_valid_cookie_with_redirect(self):
@@ -188,8 +153,8 @@ class TestGateKeeperAPI:
             session=session,
             redirect_url=config['gatekeeper']['redirect']
         )
-        assert response.status_code == requests.codes.ok
-        assert 'Example Domain' in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue('Example Domain' in response.text)
 
     @attr(env=['test'], priority=1)
     def test_validate_session_with_application_filter(self):
@@ -207,16 +172,18 @@ class TestGateKeeperAPI:
         response = self.gk_service.validate_session(
             cookie_id=cookie_id,
             session=session,
-            application=DEFAULT_TEST_APP
+            application=self.gk_service.DEFAULT_TEST_APP
         )
 
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
         # obtain session id and user id from database
         db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
 
         # assert against database
-        assert response.json()['user_id'] == db_response['user_id']
-        assert response.json()['session_id'] == db_response['session_id']
+        self.assertEquals(response.json()['user_id'], db_response['user_id'])
+        self.assertEquals(
+            response.json()['session_id'], db_response['session_id']
+        )
 
     @attr(env=['test'], priority=1)
     def test_validate_session_with_invalid_cookie_id(self):
@@ -241,8 +208,8 @@ class TestGateKeeperAPI:
             session=session
         )
 
-        assert response.status_code == requests.codes.not_found
-        assert "Cookie does not exist" in response.json()['error']
+        self.assertEquals(response.status_code, requests.codes.not_found)
+        self.assertTrue("Cookie does not exist" in response.json()['error'])
 
     @attr(env=['test'], priority=1)
     def test_validate_session_with_no_cookie_id(self):
@@ -265,8 +232,10 @@ class TestGateKeeperAPI:
             session=session
         )
 
-        assert response.status_code == requests.codes.not_found
-        assert "Missing parameters: cookie" in response.json()['error']
+        self.assertEquals(response.status_code, requests.codes.not_found)
+        self.assertTrue(
+            "Missing parameters: cookie" in response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_validate_session_with_invalid_session(self):
@@ -291,8 +260,10 @@ class TestGateKeeperAPI:
                 my_cookie
             )
         )
-        assert response.status_code == requests.codes.forbidden
-        assert SESSION_NOT_ALLOWED in response.json()['error']
+        self.assertEquals(response.status_code, requests.codes.forbidden)
+        self.assertTrue(
+            self.gk_service.SESSION_NOT_ALLOWED in response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_validate_session_with_app_filter_with_no_app(self):
@@ -318,14 +289,16 @@ class TestGateKeeperAPI:
             application=application
         )
 
-        #
-        assert response.status_code == requests.codes.ok
+        # 200
+        self.assertEquals(response.status_code, requests.codes.ok)
         # obtain session id and user id from database
         db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
 
         # assert against database
-        assert response.json()['user_id'] == db_response['user_id']
-        assert response.json()['session_id'] == db_response['session_id']
+        self.assertEquals(response.json()['user_id'], db_response['user_id'])
+        self.assertEquals(
+            response.json()['session_id'], db_response['session_id']
+        )
 
     @attr(env=['test'], priority=1)
     def test_validate_session_app_filter_with_invalid_app(self):
@@ -351,10 +324,10 @@ class TestGateKeeperAPI:
         )
 
         # ensure that the request is forbidden (403)
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
         # ensure the correct message is returned
-        error_message = SESSION_FORBIDDEN % (cookie_id)
-        assert error_message in response.json()['error']
+        error_message = self.gk_service.SESSION_FORBIDDEN % (cookie_id)
+        self.assertTrue(error_message in response.json()['error'])
 
     @attr(env=['test'], priority=1)
     def test_can_access_url_with_cookie_default_redirect(self):
@@ -371,8 +344,8 @@ class TestGateKeeperAPI:
 
         response = self.gk_service.validate_url_with_cookie(session)
 
-        assert response.status_code == requests.codes.ok
-        assert "/logout/" in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue("/logout/" in response.text)
 
     @attr(env=['test'], priority=1)
     def test_access_url_with_invalid_cookie(self):
@@ -394,8 +367,8 @@ class TestGateKeeperAPI:
 
         response = self.gk_service.validate_url_with_cookie(session)
 
-        assert response.status_code == requests.codes.ok
-        assert GATEKEEPER_TITLE in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
 
     @attr(env=['test'], priority=1)
     def test_expired_client_cookie(self):
@@ -410,7 +383,8 @@ class TestGateKeeperAPI:
             allow_redirects=False
         )
         # 303 response
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
+
         # convert Set_Cookie response header to simple cookie object
         cookie_id = self.gk_service.extract_sso_cookie_value(
             response.headers
@@ -423,8 +397,8 @@ class TestGateKeeperAPI:
             )
         )
 
-        assert response.status_code == requests.codes.ok
-        assert GATEKEEPER_TITLE in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
 
     @attr(env=['test'], priority=1)
     def test_expired_server_cookie(self):
@@ -439,7 +413,7 @@ class TestGateKeeperAPI:
         )
 
         # update cookie in the database so thats its expired
-        assert(
+        self.assertTrue(
             self.gk_dao.set_session_to_expire_by_session_id(
                 self.db,
                 cookie_id
@@ -448,8 +422,8 @@ class TestGateKeeperAPI:
 
         response = self.gk_service.validate_url_with_cookie(session)
 
-        assert response.status_code == requests.codes.ok
-        assert GATEKEEPER_TITLE in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
 
         # User login causes expired cookie to be deleted
         response = self.gk_service.create_session_urlencoded(
@@ -461,7 +435,7 @@ class TestGateKeeperAPI:
             self.db,
             cookie_id
         )
-        assert db_response is None
+        self.assertEquals(db_response, None)
 
     @attr(env=['test'], priority=1)
     def test_header_verification_urlencoded_session(self):
@@ -477,7 +451,7 @@ class TestGateKeeperAPI:
             allow_redirects=False
         )
         # 303 response
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
 
         headers = response.headers['Set-Cookie']
         # assert that the header httponly is present
@@ -505,23 +479,23 @@ class TestGateKeeperAPI:
             session,
             redirect_url=config['gatekeeper']['redirect']
         )
-        assert response.status_code == requests.codes.ok
-        assert 'Example Domain' in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue('Example Domain' in response.text)
 
         # logout with POST
         response = self.gk_service.logout_user_session(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         response = self.gk_service.validate_url_with_cookie(session)
-        assert response.status_code == requests.codes.ok
-        assert GATEKEEPER_TITLE in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
 
         # assert againist the database - ensure it no longer exists
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
             cookie_id
         )
-        assert db_response is None
+        self.assertEquals(db_response, None)
 
     @attr(env=['test'], priority=1)
     def test_can_logout_default_redirect(self):
@@ -538,22 +512,22 @@ class TestGateKeeperAPI:
         )
 
         response = self.gk_service.validate_url_with_cookie(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # logout with a post
         response = self.gk_service.logout_user_session(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         response = self.gk_service.validate_url_with_cookie(session)
-        assert response.status_code == requests.codes.ok
-        assert GATEKEEPER_TITLE in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
 
         # assert againist the database - ensure it no longer exists
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
             cookie_id
         )
-        assert db_response is None
+        self.assertEquals(db_response, None)
 
     @attr(env=['test'], priority=1)
     def test_can_logout_get(self):
@@ -571,12 +545,12 @@ class TestGateKeeperAPI:
         )
 
         response = self.gk_service.validate_url_with_cookie(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # logout using GET call
         response = self.gk_service.logout_user_session_get(session)
-        assert response.status_code == requests.codes.ok
-        assert CONFIRM_LOGOUT in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(self.gk_service.CONFIRM_LOGOUT in response.text)
 
     @attr(env=['test'], priority=1)
     def test_validate_user_app_api_and_auth_app_permissions(self):
@@ -592,16 +566,16 @@ class TestGateKeeperAPI:
         # create a user and associate user with relevant
         # pre confiured application for dummy app
         username = 'automation_' + self.util.random_str(5)
-        appname = ANOTHER_TEST_APP
+        appname = self.gk_service.ANOTHER_TEST_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
 
         # create basic user - no permisssions
-        assert (
+        self.assertTrue(
             self.gk_dao.set_gk_user(
                 self.db,
                 username,
-                HASH_PASSWORD_TEST,
+                self.gk_service.HASH_PASSWORD_TEST,
                 email,
                 fullname,
                 '123-456-789123456'
@@ -621,7 +595,7 @@ class TestGateKeeperAPI:
         )['application_id']
 
         # associate user with app
-        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
 
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
@@ -634,22 +608,22 @@ class TestGateKeeperAPI:
 
         # Verify the user API
         response = self.gk_service.user_info(session, user_id, appname)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
-        assert username in response.json()['username']
-        assert [] == response.json()['organizations']
-        assert str(user_id) in response.json()['user_id']
-        assert [] == response.json()['groups']
-        assert fullname in response.json()['fullname']
-        assert email in response.json()['email']
-        assert [] == response.json()['permissions']
+        self.assertTrue(username in response.json()['username'])
+        self.assertEquals([], response.json()['organizations'])
+        self.assertTrue(str(user_id) in response.json()['user_id'])
+        self.assertEquals([], response.json()['groups'])
+        self.assertTrue(fullname in response.json()['fullname'])
+        self.assertTrue(email in response.json()['email'])
+        self.assertEquals([], response.json()['permissions'])
 
         # Using the dummy application verify the permissions
         # the user is authorized for
 
         # verify the dummy applcation can be accessed
         response = self.gk_service.validate_end_point(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the user end point cannot be accessed
         response = self.gk_service.validate_end_point(
@@ -657,22 +631,22 @@ class TestGateKeeperAPI:
             end_point=config['gatekeeper']['dummy']['user_endpoint']
         )
 
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
 
         # verify the admin end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
             end_point=config['gatekeeper']['dummy']['admin_endpoint']
         )
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
 
         # delete user - cascade delete by default
-        assert (self.gk_dao.del_gk_user(self.db, user_id))
+        self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
     @attr(env=['test'], priority=1)
     def test_validate_user_with_no_access_for_application(self):
         """
-        GATEKEEPER-API018A
+        GATEKEEPER-API018A - test_validate_user_with_no_access_for_application
         Ensure that user returns 403 when it tries to access an application
         that it has assosation with
         """
@@ -684,11 +658,11 @@ class TestGateKeeperAPI:
         email = self.util.random_email(5)
 
         # create basic user - no permisssions
-        assert (
+        self.assertTrue(
             self.gk_dao.set_gk_user(
                 self.db,
                 username,
-                HASH_PASSWORD_TEST,
+                self.gk_service.HASH_PASSWORD_TEST,
                 email,
                 fullname,
                 '123-456-789123456'
@@ -709,12 +683,12 @@ class TestGateKeeperAPI:
             session,
             end_point=config['gatekeeper']['dummy']['user_endpoint']
         )
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
         response = self.gk_service.validate_end_point(
             session,
             end_point=config['gatekeeper']['dummy']['admin_endpoint']
         )
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
 
     @attr(env=['test'], priority=1)
     def test_validate_user_app_api_and_auth_user_permissions(self):
@@ -732,15 +706,15 @@ class TestGateKeeperAPI:
         # pre confiured application for dummy app
 
         username = 'automation_' + self.util.random_str(5)
-        appname = ANOTHER_TEST_APP
+        appname = self.gk_service.ANOTHER_TEST_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
 
         # create basic user - no permisssions
-        assert (
+        self.assertTrue(
             self.gk_dao.set_gk_user(
                 self.db, username,
-                HASH_PASSWORD_TEST,
+                self.gk_service.HASH_PASSWORD_TEST,
                 email,
                 fullname,
                 '123-456-789123456')
@@ -761,15 +735,15 @@ class TestGateKeeperAPI:
         # get permissions
         user_permission = self.gk_dao.get_permission_id_by_name(
             self.db,
-            DEFAULT_ADFUSER_USER, app_id
+            self.gk_service.DEFAULT_ADFUSER_USER, app_id
         )['permission_id']
         admin_permission = self.gk_dao.get_permission_id_by_name(
             self.db,
-            DEFAULT_ADFUSER_ADMIN, app_id
+            self.gk_service.DEFAULT_ADFUSER_ADMIN, app_id
         )['permission_id']
 
         # associate user with app
-        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
 
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
@@ -783,7 +757,7 @@ class TestGateKeeperAPI:
         # set the user permissions for the app
         # i.e user can only access the dummy application and user end point
 
-        assert (
+        self.assertTrue(
             self.gk_dao.set_user_permissions_id(
                 self.db,
                 user_id,
@@ -795,26 +769,26 @@ class TestGateKeeperAPI:
 
         # verify the dummy applcation can be accessed
         response = self.gk_service.validate_end_point(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
             end_point=config['gatekeeper']['dummy']['user_endpoint']
         )
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the admin end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
             end_point=config['gatekeeper']['dummy']['admin_endpoint']
         )
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
 
         # set the admin permissions for the app
         # i.e user can access admin end point
 
-        assert (
+        self.assertTrue(
             self.gk_dao.set_user_permissions_id(
                 self.db, user_id,
                 admin_permission
@@ -827,7 +801,7 @@ class TestGateKeeperAPI:
         # verify the dummy applcation can be accessed
         response = self.gk_service.validate_end_point(session,
                                                       parameters=parameters)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
@@ -835,7 +809,7 @@ class TestGateKeeperAPI:
             end_point=config['gatekeeper']['dummy']['user_endpoint'],
             parameters=parameters
         )
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the admin end point can be accessed
         response = self.gk_service.validate_end_point(
@@ -843,22 +817,28 @@ class TestGateKeeperAPI:
             end_point=config['gatekeeper']['dummy']['admin_endpoint'],
             parameters=parameters
         )
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # Verify the user API
         response = self.gk_service.user_info(session, user_id, appname)
-        assert response.status_code == requests.codes.ok
-        assert username in response.json()['username']
-        assert [] == response.json()['organizations']
-        assert str(user_id) in response.json()['user_id']
-        assert [] == response.json()['groups']
-        assert fullname in response.json()['fullname']
-        assert email in response.json()['email']
-        assert DEFAULT_ADFUSER_ADMIN == response.json()['permissions'][0]
-        assert DEFAULT_ADFUSER_USER == response.json()['permissions'][1]
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(username in response.json()['username'])
+        self.assertEquals([], response.json()['organizations'])
+        self.assertTrue(str(user_id) in response.json()['user_id'])
+        self.assertEquals([], response.json()['groups'])
+        self.assertTrue(fullname in response.json()['fullname'])
+        self.assertTrue(email in response.json()['email'])
+        self.assertEquals(
+            self.gk_service.DEFAULT_ADFUSER_ADMIN,
+            response.json()['permissions'][0]
+        )
+        self.assertEquals(
+            self.gk_service.DEFAULT_ADFUSER_USER,
+            response.json()['permissions'][1]
+        )
 
         # delete user - cascade delete by default
-        assert (self.gk_dao.del_gk_user(self.db, user_id))
+        self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
     @attr(env=['test'], priority=1)
     def test_validate_user_app_api_and_auth_group_permissions(self):
@@ -877,18 +857,18 @@ class TestGateKeeperAPI:
         # pre confiured application for dummy app
 
         username = 'automation_' + self.util.random_str(5)
-        appname = ANOTHER_TEST_APP
+        appname = self.gk_service.ANOTHER_TEST_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
         grp_name = 'automation_' + self.util.random_str(5)
         grp_name_2 = 'automation_' + self.util.random_str(5)
 
         # create basic user - no permisssions
-        assert (
+        self.assertTrue(
             self.gk_dao.set_gk_user(
                 self.db,
                 username,
-                HASH_PASSWORD_TEST,
+                self.gk_service.HASH_PASSWORD_TEST,
                 email,
                 fullname,
                 '123-456-789123456'
@@ -910,21 +890,21 @@ class TestGateKeeperAPI:
         # get permissions
         user_permission = self.gk_dao.get_permission_id_by_name(
             self.db,
-            DEFAULT_ADFUSER_USER,
+            self.gk_service.DEFAULT_ADFUSER_USER,
             app_id
         )['permission_id']
 
         admin_permission = self.gk_dao.get_permission_id_by_name(
             self.db,
-            DEFAULT_ADFUSER_ADMIN,
+            self.gk_service.DEFAULT_ADFUSER_ADMIN,
             app_id
         )['permission_id']
 
         # associate user with app
-        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
 
         # creat gatekeeper group
-        assert (self.gk_dao.set_gk_group(self.db, grp_name))
+        self.assertTrue(self.gk_dao.set_gk_group(self.db, grp_name))
         # get group id
         group_id = self.gk_dao.get_gk_group_id_by_name(
             self.db,
@@ -932,10 +912,12 @@ class TestGateKeeperAPI:
         )['group_id']
 
         # associate user with group
-        assert(self.gk_dao.set_user_group(self.db, user_id, group_id))
+        self.assertTrue(self.gk_dao.set_user_group(self.db, user_id, group_id))
 
         # associate group with application
-        assert(self.gk_dao.set_group_app_id(self.db, app_id, group_id))
+        self.assertTrue(
+            self.gk_dao.set_group_app_id(self.db, app_id, group_id)
+        )
 
         # create a session for the user
 
@@ -951,7 +933,7 @@ class TestGateKeeperAPI:
         # i.e user can only access the dummy application and user end point
 
         # set group permission for user access
-        assert(
+        self.assertTrue(
             self.gk_dao.set_group_permission(
                 self.db,
                 group_id,
@@ -963,27 +945,27 @@ class TestGateKeeperAPI:
 
         # verify the dummy applcation can be accessed
         response = self.gk_service.validate_end_point(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
             end_point=config['gatekeeper']['dummy']['user_endpoint']
         )
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the admin end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
             end_point=config['gatekeeper']['dummy']['admin_endpoint']
         )
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
 
         # set the group permissions for the app
         # i.e user can access the admin endpoint
 
         # set group permission for admin access
-        assert(
+        self.assertTrue(
             self.gk_dao.set_group_permission(
                 self.db,
                 group_id,
@@ -998,7 +980,7 @@ class TestGateKeeperAPI:
         # verify the dummy application can be accessed
         response = self.gk_service.validate_end_point(session,
                                                       parameters=parameters)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
@@ -1006,7 +988,7 @@ class TestGateKeeperAPI:
             end_point=config['gatekeeper']['dummy']['user_endpoint'],
             parameters=parameters
         )
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the admin end point cannot be accessed
         response = self.gk_service.validate_end_point(
@@ -1014,7 +996,7 @@ class TestGateKeeperAPI:
             end_point=config['gatekeeper']['dummy']['admin_endpoint'],
             parameters=parameters
         )
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # Verify the user API
         response = self.gk_service.user_info(
@@ -1022,22 +1004,28 @@ class TestGateKeeperAPI:
             user_id,
             appname
         )
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
-        assert username in response.json()['username']
-        assert [] == response.json()['organizations']
-        assert str(user_id) in response.json()['user_id']
-        assert grp_name in response.json()['groups'][0]
-        assert fullname in response.json()['fullname']
-        assert email in response.json()['email']
-        assert DEFAULT_ADFUSER_ADMIN == response.json()['permissions'][0]
-        assert DEFAULT_ADFUSER_USER == response.json()['permissions'][1]
+        self.assertTrue(username in response.json()['username'])
+        self.assertEquals([], response.json()['organizations'])
+        self.assertTrue(str(user_id) in response.json()['user_id'])
+        self.assertTrue(grp_name in response.json()['groups'][0])
+        self.assertTrue(fullname in response.json()['fullname'])
+        self.assertTrue(email in response.json()['email'])
+        self.assertEquals(
+            self.gk_service.DEFAULT_ADFUSER_ADMIN,
+            response.json()['permissions'][0]
+        )
+        self.assertEquals(
+            self.gk_service.DEFAULT_ADFUSER_USER,
+            response.json()['permissions'][1]
+        )
 
         # create another group, associate with the user but not the application
         # this group should NOT be retured by the API
 
         # create gatekeeper group
-        assert(
+        self.assertTrue(
             self.gk_dao.set_gk_group(
                 self.db,
                 grp_name_2
@@ -1050,20 +1038,22 @@ class TestGateKeeperAPI:
         )['group_id']
 
         # associate user with group
-        assert(self.gk_dao.set_user_group(self.db, user_id, group_id_2))
+        self.assertTrue(
+            self.gk_dao.set_user_group(self.db, user_id, group_id_2)
+        )
 
         # user API response
         response = self.gk_service.user_info(session, user_id, appname)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
         # ensure that only 1 group is associate with the application/user
-        assert 1 == len(response.json()['groups'])
+        self.assertEquals(1, len(response.json()['groups']))
 
         # delete the group and user
         # delete the group
-        assert (self.gk_dao.del_gk_group(self.db, group_id))
+        self.assertTrue(self.gk_dao.del_gk_group(self.db, group_id))
 
         # delete user - cascade delete by default
-        assert (self.gk_dao.del_gk_user(self.db, user_id))
+        self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
     @attr(env=['test'], priority=1)
     def test_user_info_with_invalid_cookie_session(self):
@@ -1085,12 +1075,12 @@ class TestGateKeeperAPI:
         response = self.gk_service.user_info(
             session,
             self.default_test_user,
-            DEFAULT_TEST_APP
+            self.gk_service.DEFAULT_TEST_APP
         )
         # ensure that the request is forbidden(403)
         # without a valid session cookie
-        assert response.status_code == requests.codes.forbidden
-        assert USER_ERROR in response.json()['error']
+        self.assertEquals(response.status_code, requests.codes.forbidden)
+        self.assertTrue(self.gk_service.USER_ERROR in response.json()['error'])
 
     @attr(env=['test'], priority=1)
     def test_return_user_info_with_invalid_application(self):
@@ -1114,10 +1104,10 @@ class TestGateKeeperAPI:
         )
 
         # ensure it returns a 404 not found
-        assert response.status_code == requests.codes.not_found
+        self.assertEquals(response.status_code, requests.codes.not_found)
 
-        assert "No user with id" in response.json()['error']
-        assert "found for application" in response.json()['error']
+        self.assertTrue("No user with id" in response.json()['error'])
+        self.assertTrue("found for application" in response.json()['error'])
 
     @attr(env=['test'], priority=1)
     def test_return_user_info_with_invalid_user_id(self):
@@ -1135,18 +1125,18 @@ class TestGateKeeperAPI:
         # add one to the user id to create a random element to userid
         random_user_id = self.gk_dao.get_user_by_username(
             self.db,
-            ADMIN_USER
+            self.gk_service.ADMIN_USER
         )['user_id'] + 1
 
         response = self.gk_service.user_info(
             session,
             random_user_id,
-            DEFAULT_TEST_APP
+            self.gk_service.DEFAULT_TEST_APP
         )
         # ensure that the request is forbidden(403)
         # without a valid session cookie
-        assert response.status_code == requests.codes.forbidden
-        assert USER_ERROR in response.json()['error']
+        self.assertEquals(response.status_code, requests.codes.forbidden)
+        self.assertTrue(self.gk_service.USER_ERROR in response.json()['error'])
 
     @attr(env=['test'], priority=1)
     def test_return_user_info_with_no_args(self):
@@ -1164,8 +1154,10 @@ class TestGateKeeperAPI:
         response = self.gk_service.user_info(session, '', '')
 
         # a 404 will alwasy be returend
-        assert response.status_code == requests.codes.not_found
-        assert MISSING_PARAMETERS in response.json()['error']
+        self.assertEquals(response.status_code, requests.codes.not_found)
+        self.assertTrue(
+            self.gk_service.MISSING_PARAMETERS in response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_validate_user_access_gk_route(self):
@@ -1181,15 +1173,15 @@ class TestGateKeeperAPI:
         # pre confiured application for dummy app
 
         username = 'automation_' + self.util.random_str(5)
-        appname = GK_APP
+        appname = self.gk_service.GK_APP
         fullname = 'automation_' + self.util.random_str(5)
         email = self.util.random_email(5)
 
         # create basic user - no permisssions
-        assert (
+        self.assertTrue(
             self.gk_dao.set_gk_user(
                 self.db, username,
-                HASH_PASSWORD_TEST,
+                self.gk_service.HASH_PASSWORD_TEST,
                 email,
                 fullname,
                 '123-456-789123456')
@@ -1208,13 +1200,13 @@ class TestGateKeeperAPI:
         )['application_id']
 
         # get permissions
-        gk_all_permission = self.gk_dao.get_permission_id_by_name(
+        permissions = self.gk_dao.get_permission_id_by_name(
             self.db,
-            GK_ALL_PERMISSION, app_id
+            self.gk_service.GK_ALL_PERMISSION, app_id
         )['permission_id']
 
         # associate user with app
-        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
 
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
@@ -1236,14 +1228,14 @@ class TestGateKeeperAPI:
         )
 
         # ensure that the request is forbidden (403)
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
 
         # set the user permission for the gatekeeper admin endpoint
-        assert (
+        self.assertTrue(
             self.gk_dao.set_user_permissions_id(
                 self.db,
                 user_id,
-                gk_all_permission
+                permissions
             )
         )
 
@@ -1255,21 +1247,24 @@ class TestGateKeeperAPI:
         )
 
         # ensure that the request is ok(200)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # Verify the user API
         response = self.gk_service.user_info(session, user_id, appname)
-        assert response.status_code == requests.codes.ok
-        assert username in response.json()['username']
-        assert [] == response.json()['organizations']
-        assert str(user_id) in response.json()['user_id']
-        assert [] == response.json()['groups']
-        assert fullname in response.json()['fullname']
-        assert email in response.json()['email']
-        assert GK_ALL_PERMISSION == response.json()['permissions'][0]
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(username in response.json()['username'])
+        self.assertEquals([], response.json()['organizations'])
+        self.assertTrue(str(user_id) in response.json()['user_id'])
+        self.assertEquals([], response.json()['groups'])
+        self.assertTrue(fullname in response.json()['fullname'])
+        self.assertTrue(email in response.json()['email'])
+        self.assertEquals(
+            self.gk_service.GK_ALL_PERMISSION,
+            response.json()['permissions'][0]
+        )
 
         # delete user - cascade delete by default
-        assert (self.gk_dao.del_gk_user(self.db, user_id))
+        self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
     @attr(env=['test'], priority=1)
     def test_validate_group_access_gk_route(self):
@@ -1285,17 +1280,17 @@ class TestGateKeeperAPI:
         # pre confiured application for dummy app
 
         username = 'automation_' + self.util.random_str(5)
-        appname = GK_APP
+        appname = self.gk_service.GK_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
         grp_name = 'automation_' + self.util.random_str(5)
 
         # create basic user - no permisssions
-        assert (
+        self.assertTrue(
             self.gk_dao.set_gk_user(
                 self.db,
                 username,
-                HASH_PASSWORD_TEST,
+                self.gk_service.HASH_PASSWORD_TEST,
                 email,
                 fullname,
                 '123-456-789123456'
@@ -1315,17 +1310,17 @@ class TestGateKeeperAPI:
         )['application_id']
 
         # get permissions
-        gk_all_permission = self.gk_dao.get_permission_id_by_name(
+        permissions = self.gk_dao.get_permission_id_by_name(
             self.db,
-            GK_ALL_PERMISSION,
+            self.gk_service.GK_ALL_PERMISSION,
             app_id
         )['permission_id']
 
         # associate user with app
-        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
 
         # creat gatekeeper group
-        assert (self.gk_dao.set_gk_group(self.db, grp_name))
+        self.assertTrue(self.gk_dao.set_gk_group(self.db, grp_name))
         # get group id
         group_id = self.gk_dao.get_gk_group_id_by_name(
             self.db,
@@ -1333,13 +1328,14 @@ class TestGateKeeperAPI:
         )['group_id']
 
         # associate user with group
-        assert(self.gk_dao.set_user_group(self.db, user_id, group_id))
+        self.assertTrue(self.gk_dao.set_user_group(self.db, user_id, group_id))
 
         # associate group with application
-        assert(self.gk_dao.set_group_app_id(self.db, app_id, group_id))
+        self.assertTrue(
+            self.gk_dao.set_group_app_id(self.db, app_id, group_id)
+        )
 
         # create a session for the user
-
         credentials_payload = {'username': username, 'password': 'test'}
 
         # login and create session
@@ -1359,14 +1355,14 @@ class TestGateKeeperAPI:
         )
 
         # ensure that the request is forbidden (403)
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
 
         # set the group permission for the gatekeeper admin endpoint
-        assert(
+        self.assertTrue(
             self.gk_dao.set_group_permission(
                 self.db,
                 group_id,
-                gk_all_permission)
+                permissions)
         )
 
         # verify the admin endpoint can be accessed
@@ -1377,26 +1373,28 @@ class TestGateKeeperAPI:
         )
 
         # ensure that the request is ok(200)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # Verify the user API
         response = self.gk_service.user_info(session, user_id, appname)
 
-        assert response.status_code == requests.codes.ok
-        assert username in response.json()['username']
-        assert [] == response.json()['organizations']
-        assert str(user_id) in response.json()['user_id']
-        assert grp_name in response.json()['groups'][0]
-        assert fullname in response.json()['fullname']
-        assert email in response.json()['email']
-        assert GK_ALL_PERMISSION == response.json()['permissions'][0]
-
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(username in response.json()['username'])
+        self.assertEquals([], response.json()['organizations'])
+        self.assertTrue(str(user_id) in response.json()['user_id'])
+        self.assertTrue(grp_name in response.json()['groups'][0])
+        self.assertTrue(fullname in response.json()['fullname'])
+        self.assertTrue(email in response.json()['email'])
+        self.assertEquals(
+            self.gk_service.GK_ALL_PERMISSION,
+            response.json()['permissions'][0]
+        )
         # delete the group and user
 
         # delete the group
-        assert (self.gk_dao.del_gk_group(self.db, group_id))
+        self.assertTrue(self.gk_dao.del_gk_group(self.db, group_id))
         # delete user - cascade delete by default
-        assert (self.gk_dao.del_gk_user(self.db, user_id))
+        self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
     @attr(env=['test'], priority=1)
     def test_application_api_create(self):
@@ -1415,7 +1413,7 @@ class TestGateKeeperAPI:
             session, method='POST'
         )
         # ensure correct status code is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
 
         app_id = create_response.json()['application_id']
         appname = create_response.json()['name']
@@ -1425,17 +1423,17 @@ class TestGateKeeperAPI:
             appname
         )
         # verify the post data againist the db data
-        assert (
-            create_response.json()['application_id']
-            == app_data['application_id']
+        self.assertEquals(
+            create_response.json()['application_id'],
+            app_data['application_id']
         )
-        assert (
-            create_response.json()['name']
-            == app_data['name']
+        self.assertEquals(
+            create_response.json()['name'],
+            app_data['name']
         )
-        assert (
-            create_response.json()['default_url']
-            == app_data['default_url']
+        self.assertEquals(
+            create_response.json()['default_url'],
+            app_data['default_url']
         )
 
         # clean up - delete the application
@@ -1443,13 +1441,15 @@ class TestGateKeeperAPI:
             session, method='DELETE', app_id=app_id
         )
         # ensure correct status code is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the data
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_create_duplicate_name(self):
@@ -1476,31 +1476,35 @@ class TestGateKeeperAPI:
         # capture the application id
         app_id = response.json()['application_id']
         # ensure correct status code is returned
-        assert response.status_code == requests.codes.created
+        self.assertEquals(response.status_code, requests.codes.created)
 
         # attempt to use the same data with the same app name again
         response = self.gk_service.application(
             session, method='POST', app_data=app_data
         )
         # ensure correct status code is returned
-        assert response.status_code == requests.codes.conflict
-        assert DUPLICATE_KEY in response.json()['error']
+        self.assertEquals(response.status_code, requests.codes.conflict)
+        self.assertTrue(
+            self.gk_service.DUPLICATE_KEY in response.json()['error']
+        )
 
         # clean up - delete the application
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id
         )
         # ensure correct status code is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
-    def test_application_api_create_missing_params(self):
+    def test_application_api_create_no_data(self):
         """
         GATEKEEPER-API029 test_application_api_create_no_data
         attempt to create a new application missing paramters
@@ -1522,11 +1526,14 @@ class TestGateKeeperAPI:
             create_response = self.gk_service.application(
                 session, method='POST', app_data=app_data
             )
-            assert (
-                create_response.status_code ==
+            self.assertEquals(
+                create_response.status_code,
                 requests.codes.bad_request
             )
-            assert MISSING_PARAM in create_response.json()['error']
+            self.assertTrue(
+                self.gk_service.MISSING_PARAM
+                in create_response.json()['error']
+            )
 
     @attr(env=['test'], priority=1)
     def test_application_api_update(self):
@@ -1547,7 +1554,7 @@ class TestGateKeeperAPI:
             session, method='POST'
         )
         # ensure a 200 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
         app_id = create_response.json()['application_id']
 
         # update the application
@@ -1557,7 +1564,7 @@ class TestGateKeeperAPI:
         )
 
         # ensure a 202 is returned
-        assert update_response.status_code == requests.codes.accepted
+        self.assertEquals(update_response.status_code, requests.codes.accepted)
 
         app_id = update_response.json()['application_id']
         appname = update_response.json()['name']
@@ -1568,17 +1575,17 @@ class TestGateKeeperAPI:
         )
 
         # verify the post data againist the db data
-        assert (
-            update_response.json()['application_id']
-            == app_data['application_id']
+        self.assertEquals(
+            update_response.json()['application_id'],
+            app_data['application_id']
         )
-        assert (
-            update_response.json()['name']
-            == app_data['name']
+        self.assertEquals(
+            update_response.json()['name'],
+            app_data['name']
         )
-        assert (
-            update_response.json()['default_url']
-            == app_data['default_url']
+        self.assertEquals(
+            update_response.json()['default_url'],
+            app_data['default_url']
         )
 
         # clean up - delete the application
@@ -1586,13 +1593,15 @@ class TestGateKeeperAPI:
             session, method='DELETE', app_id=app_id
         )
         # ensure a 204 is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_update_individually(self):
@@ -1612,7 +1621,7 @@ class TestGateKeeperAPI:
             session, method='POST'
         )
         # ensure a 201 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
         app_id = create_response.json()['application_id']
 
         # update the application
@@ -1628,7 +1637,10 @@ class TestGateKeeperAPI:
                 session, method='PUT', app_data=app_data, app_id=app_id
             )
             # ensure a 202 is returned
-            assert update_response.status_code == requests.codes.accepted
+            self.assertEquals(
+                update_response.status_code,
+                requests.codes.accepted
+            )
 
         appname = update_response.json()['name']
         # get app data from db
@@ -1638,17 +1650,17 @@ class TestGateKeeperAPI:
         )
 
         # verify the update data againist the db data
-        assert (
-            update_response.json()['application_id']
-            == app_data['application_id']
+        self.assertEquals(
+            update_response.json()['application_id'],
+            app_data['application_id']
         )
-        assert (
-            update_response.json()['name']
-            == app_data['name']
+        self.assertEquals(
+            update_response.json()['name'],
+            app_data['name']
         )
-        assert (
-            update_response.json()['default_url']
-            == app_data['default_url']
+        self.assertEquals(
+            update_response.json()['default_url'],
+            app_data['default_url']
         )
 
         # clean up - delete the application
@@ -1656,13 +1668,15 @@ class TestGateKeeperAPI:
             session, method='DELETE', app_id=app_id
         )
         # ensure correct status code is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_update_duplicate_name(self):
@@ -1690,7 +1704,7 @@ class TestGateKeeperAPI:
             session, method='POST', app_data=app_one_data
         )
         # ensure correct status code is returned
-        assert app_one_response.status_code == requests.codes.created
+        self.assertEquals(app_one_response.status_code, requests.codes.created)
         app_id_one = app_one_response.json()['application_id']
 
         # create  application two
@@ -1698,7 +1712,7 @@ class TestGateKeeperAPI:
             session, method='POST', app_data=app_two_data
         )
         # ensure correct status code is returned
-        assert app_two_response.status_code == requests.codes.created
+        self.assertEquals(app_two_response.status_code, requests.codes.created)
 
         # update the application one with application two data
         update_response = self.gk_service.application(
@@ -1706,20 +1720,24 @@ class TestGateKeeperAPI:
         )
 
         # ensure correct status code is returned
-        assert update_response.status_code == requests.codes.conflict
-        assert DUPLICATE_KEY in update_response.json()['error']
+        self.assertEquals(update_response.status_code, requests.codes.conflict)
+        self.assertTrue(
+            self.gk_service.DUPLICATE_KEY in update_response.json()['error']
+        )
         # clean up - delete the application
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id_one
         )
         # ensure correct status code is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id_one
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_read(self):
@@ -1738,7 +1756,7 @@ class TestGateKeeperAPI:
             session, method='POST'
         )
         # ensure a 201 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
         app_id = create_response.json()['application_id']
 
         # update the application
@@ -1748,7 +1766,7 @@ class TestGateKeeperAPI:
         )
 
         # ensure a 200 is returned
-        assert read_response.status_code == requests.codes.ok
+        self.assertEquals(read_response.status_code, requests.codes.ok)
 
         app_id = read_response.json()['application_id']
         appname = read_response.json()['name']
@@ -1759,17 +1777,17 @@ class TestGateKeeperAPI:
         )
 
         # verify the post data againist the db data
-        assert (
-            read_response.json()['application_id']
-            == app_data['application_id']
+        self.assertEquals(
+            read_response.json()['application_id'],
+            app_data['application_id']
         )
-        assert (
-            read_response.json()['name']
-            == app_data['name']
+        self.assertEquals(
+            read_response.json()['name'],
+            app_data['name']
         )
-        assert (
-            read_response.json()['default_url']
-            == app_data['default_url']
+        self.assertEquals(
+            read_response.json()['default_url'],
+            app_data['default_url']
         )
 
         # clean up - delete the application
@@ -1777,13 +1795,15 @@ class TestGateKeeperAPI:
             session, method='DELETE', app_id=app_id
         )
         # ensure a 204 is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_update_not_existant_app_id(self):
@@ -1809,9 +1829,13 @@ class TestGateKeeperAPI:
         )
 
         # 404 response
-        assert update_response.status_code == requests.codes.not_found
+        self.assertEquals(
+            update_response.status_code, requests.codes.not_found
+        )
         # verify that the error message is correct
-        assert NO_DATA_ERROR in update_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in update_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_read_not_existant_app_id(self):
@@ -1833,9 +1857,11 @@ class TestGateKeeperAPI:
         )
 
         # 404 response
-        assert read_response.status_code == requests.codes.not_found
+        self.assertEquals(read_response.status_code, requests.codes.not_found)
         # verify that the error message is correct
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_delete(self):
@@ -1859,7 +1885,7 @@ class TestGateKeeperAPI:
             session, method='POST', app_data=app_data
         )
         # ensure correct status code is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
 
         app_id = create_response.json()['application_id']
 
@@ -1868,22 +1894,24 @@ class TestGateKeeperAPI:
             session, method='GET', app_id=app_id
         )
         # ensure correct status code is returned
-        assert read_response.status_code == requests.codes.ok
+        self.assertEquals(read_response.status_code, requests.codes.ok)
 
         # clean up - delete the application
         del_response = self.gk_service.application(
             session, method='DELETE', app_id=app_id
         )
         # ensure correct status code is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
         # ensure no response is returned
-        assert len(del_response.content) == 0
+        self.assertEquals(len(del_response.content), 0)
 
         # read the new application data
         read_response = self.gk_service.application(
             session, method='GET', app_id=app_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_delete_not_existant_app_id(self):
@@ -1905,9 +1933,11 @@ class TestGateKeeperAPI:
         )
 
         # 404 response
-        assert read_response.status_code == requests.codes.not_found
+        self.assertEquals(read_response.status_code, requests.codes.not_found)
         # verify that the error message is correct
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_create(self):
@@ -1927,7 +1957,7 @@ class TestGateKeeperAPI:
         )
 
         # ensure a 201 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # set username
         username = create_response.json()['username']
@@ -1935,14 +1965,18 @@ class TestGateKeeperAPI:
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # verify the creation of the user POST action
-        assert create_response.json()['username'] == user_info['username']
-        assert create_response.json()['user_id'] == user_info['user_id']
-        assert create_response.json()['name'] == user_info['name']
-        assert create_response.json()['phone'] == user_info['phone']
-        assert create_response.json()['email'] == user_info['email']
-        assert (
-            create_response.json()['last_logged_in']
-            == user_info['last_logged_in']
+        self.assertEquals(
+            create_response.json()['username'], user_info['username']
+        )
+        self.assertEquals(
+            create_response.json()['user_id'], user_info['user_id']
+        )
+        self.assertEquals(create_response.json()['name'], user_info['name'])
+        self.assertEquals(create_response.json()['phone'], user_info['phone'])
+        self.assertEquals(create_response.json()['email'], user_info['email'])
+        self.assertEquals(
+            create_response.json()['last_logged_in'],
+            user_info['last_logged_in']
         )
 
         # set user_id
@@ -1952,18 +1986,20 @@ class TestGateKeeperAPI:
             session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.user(
             session, method='GET', user_id=user_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
-    def test_user_api_create_missing_params(self):
+    def test_user_api_create_no_data(self):
         """
-        GATEKEEPER-API038 test_user_api_create_missing_params
+        GATEKEEPER-API038 test_user_api_create_no_data
         attempt to create a new user using the user api with missing params
         """
         # login and create session
@@ -1986,8 +2022,13 @@ class TestGateKeeperAPI:
             create_response = self.gk_service.user(
                 session, method='POST', user_data=user_data
             )
-            assert create_response.status_code == requests.codes.bad_request
-            assert MISSING_PARAM in create_response.json()['error']
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+            self.assertTrue(
+                self.gk_service.MISSING_PARAM
+                in create_response.json()['error']
+            )
 
     @attr(env=['test'], priority=1)
     def test_user_api_create_duplicate_username(self):
@@ -2008,14 +2049,18 @@ class TestGateKeeperAPI:
         )
 
         # ensure a 201 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
 
         create_response = self.gk_service.user(
             session, method='POST', user_data=user_data
         )
 
-        assert create_response.status_code == requests.codes.conflict
-        assert DUPLICATE_KEY in create_response.json()['error']
+        self.assertEquals(
+            create_response.status_code, requests.codes.conflict
+        )
+        self.assertTrue(
+            self.gk_service.DUPLICATE_KEY in create_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_update(self):
@@ -2035,7 +2080,7 @@ class TestGateKeeperAPI:
         )
 
         # ensure a 201 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
         # set user_id
         user_id = create_response.json()['user_id']
 
@@ -2051,14 +2096,24 @@ class TestGateKeeperAPI:
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # verify the creation of the user POST action
-        assert update_response.json()['username'] == user_info['username']
-        assert update_response.json()['user_id'] == user_info['user_id']
-        assert update_response.json()['name'] == user_info['name']
-        assert update_response.json()['phone'] == user_info['phone']
-        assert update_response.json()['email'] == user_info['email']
-        assert (
-            update_response.json()['last_logged_in']
-            == user_info['last_logged_in']
+        self.assertEquals(
+            update_response.json()['username'], user_info['username']
+        )
+        self.assertEquals(
+            update_response.json()['user_id'], user_info['user_id']
+        )
+        self.assertEquals(
+            update_response.json()['name'], user_info['name']
+        )
+        self.assertEquals(
+            update_response.json()['phone'], user_info['phone']
+        )
+        self.assertEquals(
+            update_response.json()['email'], user_info['email']
+        )
+        self.assertEquals(
+            update_response.json()['last_logged_in'],
+            user_info['last_logged_in']
         )
 
         # clean up - delete the application
@@ -2066,13 +2121,15 @@ class TestGateKeeperAPI:
             session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.user(
             session, method='GET', user_id=user_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_update_duplicate_name(self):
@@ -2096,7 +2153,9 @@ class TestGateKeeperAPI:
             session, method='POST', user_data=user_one_data
         )
         # ensure correct status code is returned
-        assert user_one_response.status_code == requests.codes.created
+        self.assertEquals(
+            user_one_response.status_code, requests.codes.created
+        )
         user_id_one = user_one_response.json()['user_id']
 
         # create user two
@@ -2104,28 +2163,33 @@ class TestGateKeeperAPI:
             session, method='POST', user_data=user_two_data
         )
         # ensure correct status code is returned
-        assert user_two_response.status_code == requests.codes.created
-
+        self.assertEquals(
+            user_two_response.status_code, requests.codes.created
+        )
         # update the application one with application two data
         update_response = self.gk_service.user(
             session, method='PUT', user_data=user_two_data, user_id=user_id_one
         )
 
         # ensure correct status code is returned
-        assert update_response.status_code == requests.codes.conflict
-        assert DUPLICATE_KEY in update_response.json()['error']
+        self.assertEquals(update_response.status_code, requests.codes.conflict)
+        self.assertTrue(
+            self.gk_service.DUPLICATE_KEY in update_response.json()['error']
+        )
         # clean up - delete the application
         del_response = self.gk_service.user(
             session, method='DELETE', user_id=user_id_one
         )
         # ensure correct status code is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.user(
             session, method='GET', user_id=user_id_one
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_update_individually(self):
@@ -2144,7 +2208,7 @@ class TestGateKeeperAPI:
         )
 
         # ensure a 201 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
         # set user_id
         user_id = create_response.json()['user_id']
 
@@ -2173,14 +2237,22 @@ class TestGateKeeperAPI:
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # verify the creation of the user POST action
-        assert update_response.json()['username'] == user_info['username']
-        assert update_response.json()['user_id'] == user_info['user_id']
-        assert update_response.json()['name'] == user_info['name']
-        assert update_response.json()['phone'] == user_info['phone']
-        assert update_response.json()['email'] == user_info['email']
-        assert (
-            update_response.json()['last_logged_in']
-            == user_info['last_logged_in']
+        self.assertEquals(
+            update_response.json()['username'], user_info['username']
+        )
+        self.assertEquals(
+            update_response.json()['user_id'], user_info['user_id']
+        )
+        self.assertEquals(
+            update_response.json()['name'], user_info['name']
+        )
+        self.assertEquals(
+            update_response.json()['phone'], user_info['phone']
+        )
+        self.assertEquals(update_response.json()['email'], user_info['email'])
+        self.assertEquals(
+            update_response.json()['last_logged_in'],
+            user_info['last_logged_in']
         )
 
         # clean up - delete the application
@@ -2188,13 +2260,15 @@ class TestGateKeeperAPI:
             session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.user(
             session, method='GET', user_id=user_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_update_non_existant_user_id(self):
@@ -2213,9 +2287,13 @@ class TestGateKeeperAPI:
         )
 
         # 404 response
-        assert update_response.status_code == requests.codes.not_found
+        self.assertEquals(
+            update_response.status_code, requests.codes.not_found
+        )
         # verify that the error message is correct
-        assert NO_DATA_ERROR in update_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in update_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_read(self):
@@ -2235,7 +2313,7 @@ class TestGateKeeperAPI:
         )
 
         # ensure a 201 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # set user_id
         user_id = create_response.json()['user_id']
@@ -2250,14 +2328,18 @@ class TestGateKeeperAPI:
         )
 
         # verify the creation of the user POST action
-        assert read_response.json()['username'] == user_info['username']
-        assert read_response.json()['user_id'] == user_info['user_id']
-        assert read_response.json()['name'] == user_info['name']
-        assert read_response.json()['phone'] == user_info['phone']
-        assert read_response.json()['email'] == user_info['email']
-        assert (
-            create_response.json()['last_logged_in']
-            == user_info['last_logged_in']
+        self.assertEquals(
+            read_response.json()['username'], user_info['username']
+        )
+        self.assertEquals(
+            read_response.json()['user_id'], user_info['user_id']
+        )
+        self.assertEquals(read_response.json()['name'], user_info['name'])
+        self.assertEquals(read_response.json()['phone'], user_info['phone'])
+        self.assertEquals(read_response.json()['email'], user_info['email'])
+        self.assertEquals(
+            create_response.json()['last_logged_in'],
+            user_info['last_logged_in']
         )
 
         # clean up - delete the application
@@ -2265,13 +2347,15 @@ class TestGateKeeperAPI:
             session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
         read_response = self.gk_service.user(
             session, method='GET', user_id=user_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_read_non_existant_user_id(self):
@@ -2290,9 +2374,13 @@ class TestGateKeeperAPI:
         )
 
         # 404 response
-        assert update_response.status_code == requests.codes.not_found
+        self.assertEquals(
+            update_response.status_code, requests.codes.not_found
+        )
         # verify that the error message is correct
-        assert NO_DATA_ERROR in update_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in update_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_delete(self):
@@ -2312,7 +2400,7 @@ class TestGateKeeperAPI:
         )
 
         # ensure a 201 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # set user_id
         user_id = create_response.json()['user_id']
@@ -2321,15 +2409,17 @@ class TestGateKeeperAPI:
             session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
         # ensure no response is returned
-        assert len(del_response.content) == 0
+        self.assertEquals(len(del_response.content), 0)
 
         # read the new application data
         read_response = self.gk_service.user(
             session, method='GET', user_id=user_id
         )
-        assert NO_DATA_ERROR in read_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_read_non_existant_user_id(self):
@@ -2348,9 +2438,13 @@ class TestGateKeeperAPI:
         )
 
         # 404 response
-        assert update_response.status_code == requests.codes.not_found
+        self.assertEquals(
+            update_response.status_code, requests.codes.not_found
+        )
         # verify that the error message is correct
-        assert NO_DATA_ERROR in update_response.json()['error']
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in update_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_user_login(self):
@@ -2377,14 +2471,14 @@ class TestGateKeeperAPI:
             session, method='POST', user_data=user_data
         )
         # ensure a 201 is returned
-        assert create_response.status_code == requests.codes.created
+        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # login in as new user
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=False, credentials=credentials
         )
         # 303 response
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
 
         # set user_id
         user_id = create_response.json()['user_id']
@@ -2407,14 +2501,14 @@ class TestGateKeeperAPI:
             allow_redirects=False, credentials=credentials
         )
         # 303 response
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
 
         # clean up - delete the application
         del_response = self.gk_service.user(
             session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
-        assert del_response.status_code == requests.codes.no_content
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # TODO: readd verifcation when 500 status issue is resolved
         # defect https://www.pivotaltracker.com/story/show/62791020
@@ -2424,7 +2518,7 @@ class TestGateKeeperAPI:
             allow_redirects=False, credentials=credentials
         )
         # 40X
-        assert response.status_code == requests.codes
+        assert response.status_code, requests.codes
         """
 
     @attr(env=['test'], priority=1)
@@ -2453,10 +2547,10 @@ class TestGateKeeperAPI:
                 'name': 'automation ' + self.util.random_str(5),
                 'phone': self.util.random_email(5),
                 'email': self.util.random_email(5),
-                'password': HASH_PASSWORD_TEST
+                'password': self.gk_service.HASH_PASSWORD_TEST
             }
             # create basic user - no permissions
-            assert (
+            self.assertTrue(
                 self.gk_dao.set_gk_user(
                     self.db,
                     user_data['username'],
@@ -2475,11 +2569,13 @@ class TestGateKeeperAPI:
             # get app id
             app_id = self.gk_dao.get_app_by_app_name(
                 self.db,
-                ANOTHER_TEST_APP
+                self.gk_service.ANOTHER_TEST_APP
             )['application_id']
 
             # associate user with app
-            assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+            self.assertTrue(
+                self.gk_dao.set_user_app_id(self.db, app_id, user_id)
+            )
 
             created_user_data.append(user_data)
 
@@ -2489,7 +2585,7 @@ class TestGateKeeperAPI:
             response = self.gk_service.create_session_urlencoded(
                 allow_redirects=False, credentials=payload
             )
-            assert response.status_code == requests.codes.see_other
+            self.assertEquals(response.status_code, requests.codes.see_other)
             # extract cookie from response headers
             cookie = Cookie.SimpleCookie()
             cookie.load(response.headers['Set-Cookie'])
@@ -2530,12 +2626,14 @@ class TestGateKeeperAPI:
         response = self.gk_service.validate_end_point(
             session, allow_redirects=False
         )
-        assert response.status_code == requests.codes.ok
-        assert GATEKEEPER_TITLE not in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(
+            self.gk_service.GATEKEEPER_TITLE not in response.text
+        )
 
         # logout
         response = self.gk_service.logout_user_session(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # must disable caching in dummyapp for this check
         parameters = {'sso_cache_enabled': False}
@@ -2544,11 +2642,11 @@ class TestGateKeeperAPI:
         response = self.gk_service.validate_end_point(
             session, allow_redirects=False, parameters=parameters
         )
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
         response = self.gk_service.validate_end_point(
             session, parameters=parameters
         )
-        assert GATEKEEPER_TITLE in response.text
+        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
 
         # set header to emualte ajax call
         session.headers.update({'X-Requested-With': 'XMLHttpRequest'})
@@ -2556,8 +2654,10 @@ class TestGateKeeperAPI:
             session, allow_redirects=False, parameters=parameters
         )
         # ajax call 401
-        assert response.status_code == requests.codes.unauthorized
-        assert NOT_LOGGED_IN in response.json()['error']
+        self.assertEquals(response.status_code, requests.codes.unauthorized)
+        self.assertTrue(
+            self.gk_service.NOT_LOGGED_IN in response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_validate_caching(self):
@@ -2575,15 +2675,15 @@ class TestGateKeeperAPI:
         # create a user and associate user with relevant
         # pre confiured application for dummy app
         username = 'automation_' + self.util.random_str(5)
-        appname = ANOTHER_TEST_APP
+        appname = self.gk_service.ANOTHER_TEST_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
 
         # create basic user - no permisssions
-        assert (
+        self.assertTrue(
             self.gk_dao.set_gk_user(
                 self.db, username,
-                HASH_PASSWORD_TEST,
+                self.gk_service.HASH_PASSWORD_TEST,
                 email,
                 fullname,
                 '123-456-789123456')
@@ -2604,15 +2704,15 @@ class TestGateKeeperAPI:
         # get permissions
         user_permission = self.gk_dao.get_permission_id_by_name(
             self.db,
-            DEFAULT_ADFUSER_USER, app_id
+            self.gk_service.DEFAULT_ADFUSER_USER, app_id
         )['permission_id']
         admin_permission = self.gk_dao.get_permission_id_by_name(
             self.db,
-            DEFAULT_ADFUSER_ADMIN, app_id
+            self.gk_service.DEFAULT_ADFUSER_ADMIN, app_id
         )['permission_id']
 
         # associate user with app
-        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
 
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
@@ -2627,7 +2727,7 @@ class TestGateKeeperAPI:
         # Part A)
         # verify the user end point dummy application cannot be accessed
         response = self.gk_service.validate_end_point(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the user end point cannot be accessed
         response = self.gk_service.validate_end_point(
@@ -2635,12 +2735,12 @@ class TestGateKeeperAPI:
             end_point=config['gatekeeper']['dummy']['user_endpoint']
         )
         # 403
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
 
         # Part B)
         # set the user permissions for the app
         # i.e user can only access the dummy application and user end point
-        assert (
+        self.assertTrue(
             self.gk_dao.set_user_permissions_id(
                 self.db,
                 user_id,
@@ -2655,7 +2755,7 @@ class TestGateKeeperAPI:
             end_point=config['gatekeeper']['dummy']['user_endpoint']
         )
         # 403
-        assert response.status_code == requests.codes.forbidden
+        self.assertEquals(response.status_code, requests.codes.forbidden)
 
         # Part C)
         # must disable caching in dummyapp for this check
@@ -2670,10 +2770,10 @@ class TestGateKeeperAPI:
             parameters=parameters
         )
         # 200
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # delete user - cascade delete by default
-        assert (self.gk_dao.del_gk_user(self.db, user_id))
+        self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
     @attr(env=['test'], priority=1)
     def test_invalid_endpoint(self):
@@ -2697,7 +2797,7 @@ class TestGateKeeperAPI:
             url=gk_url
         )
         # 404
-        assert response.status_code == requests.codes.not_found
+        self.assertEquals(response.status_code, requests.codes.not_found)
 
         # validate a fake dummy app endpoint
         response = self.gk_service.validate_end_point(
@@ -2705,4 +2805,4 @@ class TestGateKeeperAPI:
             end_point="fake"
         )
         # 404
-        assert response.status_code == requests.codes.not_found
+        self.assertEquals(response.status_code, requests.codes.not_found)
