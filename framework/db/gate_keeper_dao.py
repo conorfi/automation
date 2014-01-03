@@ -50,6 +50,38 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
 
+    def get_user_count(self, db):
+            """
+            Returns user info based on a specific user name
+            @param db: the database connection that will be utilized
+            @param session_id: session_id(cookie value) of the session created
+            by a post
+            @return: dict of session info
+
+            """
+            query = """select count(*) from gatekeeper_user"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_app_count(self, db):
+            """
+            Returns user info based on a specific user name
+            @param db: the database connection that will be utilized
+            @param session_id: session_id(cookie value) of the session created
+            by a post
+            @return: dict of session info
+
+            """
+            query = """select count(*) from application"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
     def get_app_by_app_name(self, db, app_name):
             """
             Returns app data based on app name

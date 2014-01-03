@@ -82,7 +82,7 @@ class GateKeeperService:
         """
         if url is None:
             url = self._create_url(
-                config['api']['user']['session']['create_v1'])
+                config['api']['gk']['session']['create_v1'])
 
         # requests is url-encoded by default
         if credentials is None:
@@ -109,7 +109,7 @@ class GateKeeperService:
         )
         return response
 
-    def validate_session(self, cookie_id, session, url=None, application=None):
+    def user_session(self, cookie_id, session, url=None, application=None):
 
         """
         validates a session_id
@@ -122,7 +122,7 @@ class GateKeeperService:
 
         """
         url = self._create_url(
-            config['api']['user']['session']['validate_v1'])
+            config['api']['gk']['session']['validate_v1'])
 
         request_url = url + '/%s'
         request_url = request_url % (cookie_id)
@@ -176,7 +176,7 @@ class GateKeeperService:
             parameters = {}
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['create_v1'])
+                config['api']['gk']['session']['create_v1'])
         if(redirect_url is not None):
             url = url + redirect_url
         if(verify is None):
@@ -206,7 +206,7 @@ class GateKeeperService:
 
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['logout_v1'])
+                config['api']['gk']['session']['logout_v1'])
         response = session.post(url, verify=False)
         return response
 
@@ -225,14 +225,14 @@ class GateKeeperService:
 
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['logout_v1'])
+                config['api']['gk']['session']['logout_v1'])
         response = session.get(url, verify=False)
         return response
 
-    def user_info(self, session, user_id, application, url=None, verify=None):
+    def user_app(self, session, user_id, application, url=None, verify=None):
 
         """
-        Returns user info for a valid user id and session cookie
+        Returns user info for a valid user id,application and session cookie
 
         @param session:  session object and associated cookie
 
@@ -247,7 +247,7 @@ class GateKeeperService:
 
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['user_info_v1'])
+                config['api']['gk']['session']['user_info_v1'])
         request_url = url % (user_id, application)
         if(verify is None):
             verify = False
@@ -326,7 +326,7 @@ class GateKeeperService:
         """
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['submit_verification_v1'])
+                config['api']['gk']['session']['submit_verification_v1'])
         if(redirect_url is not None):
             url = url + redirect_url
 
@@ -368,12 +368,12 @@ class GateKeeperService:
 
         """
 
-        url = self._create_url(config['api']['user']['application_v1']['post'])
+        url = self._create_url(config['api']['gk']['application_v1']['post'])
 
         if(app_id is not None):
 
             request_url = self._create_url(
-                config['api']['user']['application_v1']['id']
+                config['api']['gk']['application_v1']['id']
             )
             request_url = request_url % (app_id)
 
@@ -416,11 +416,11 @@ class GateKeeperService:
 
         """
 
-        url = self._create_url(config['api']['user']['user_v1']['post'])
+        url = self._create_url(config['api']['gk']['user_v1']['post'])
 
         if(user_id is not None):
             request_url = self._create_url(
-                config['api']['user']['user_v1']['id']
+                config['api']['gk']['user_v1']['id']
             )
             request_url = request_url % (user_id)
 
@@ -570,3 +570,60 @@ class GateKeeperService:
 
         session = self.create_requests_session_with_cookie(my_cookie)
         return session, cookie_id, response
+
+    def users(
+            self,
+            session,
+            name=None,
+            verify=None
+            ):
+        """
+        Users API for CRUD operations
+        @param session:  session object and associated cookie
+        @param name: username
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the user info
+
+        """
+
+        request_url = self._create_url(config['api']['gk']['users_v1'])
+
+        if (name is not None):
+            request_url = request_url + '/?name=%s'
+            request_url = request_url % (name)
+
+        if(verify is None):
+            verify = False
+
+        response = session.get(url=request_url, verify=verify)
+
+        return response
+
+    def applications(
+            self,
+            session,
+            name=None,
+            verify=None
+            ):
+        """
+        applications API for CRUD operations
+        @param session:  session object and associated cookie
+        @param name: application name
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the user info
+
+        """
+        request_url = self._create_url(
+            config['api']['gk']['applications_v1']
+        )
+
+        if (name is not None):
+            request_url = request_url + '/?name=%s'
+            request_url = request_url % (name)
+
+        if(verify is None):
+            verify = False
+
+        response = session.get(url=request_url, verify=verify)
+
+        return response

@@ -42,7 +42,7 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
     def test_can_login_two_factor(self):
         '''
         GATEKEEPER-2FA-API001 test_can_login_two_factor
-        - verify basic 2FA functionality from gatekeeper application
+        verify basic 2FA functionality from gatekeeper application
         '''
 
         # login and create session
@@ -198,8 +198,8 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_attempt_bypass_verifcation_code(self):
         """
-        GATEKEEPER-2FA-API003 - test_attempt_bypass_verifcation_code
-        - attempt to access gatekeeper or dummy app without
+        GATEKEEPER-2FA-API003 test_attempt_bypass_verifcation_code
+        Attempt to access gatekeeper or dummy app without
         entering verification code
         """
 
@@ -248,8 +248,8 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_invalid_verification_code(self):
         """
-        GATEKEEPER-2FA-API004 - test_invalid_verifcation_code -
-        ensure that an invalid verification is not accepted,
+        GATEKEEPER-2FA-API004 test_invalid_verifcation_code -
+        Ensure that an invalid verification is not accepted,
         but a valid verification code can still be entered after
         an invalid code is entered
         """
@@ -319,8 +319,8 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_expired_verification_code(self):
         """
-        GATEKEEPER-2FA-API005 test_expired_verification_code,
-        ensure than an expired verification code is not accepted
+        GATEKEEPER-2FA-API005 test_expired_verification_code
+        Ensure than an expired verification code is not accepted
         """
          # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
@@ -365,7 +365,7 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_only_latest_verification_code_is_valid(self):
         """
-        GATEKEEPER-2FA-API006 - test_only_latest_verification_code_is_valid
+        GATEKEEPER-2FA-API006 test_only_latest_verification_code_is_valid
         Test to ensure that if multiple verifications are created,
         that only the most recent verification code is accepted
         """
@@ -433,7 +433,7 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_invalid_credientials_cookie_value_in_session(self):
         """
-        GATEKEEPER-2FA-API007  test_invalid_credientials_cook_value_in_session,
+        GATEKEEPER-2FA-API007  test_invalid_credientials_cook_value_in_session
         verify that a verification code cannot be posted when the session
         contains an incorrect cookie value
         """
