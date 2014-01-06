@@ -13,32 +13,11 @@ from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
 import Cookie
-
-# adfuser is the defaut test application
-DEFAULT_TEST_APP = "adfuser"
-ANOTHER_TEST_APP = "anotherapp"
-
-# admin user is 'admin' and is used as the default user
-ADMIN_USER = 'admin'
-
-# default user permission configured for adfuser in the dummy app
-DEFAULT_ADFUSER_USER = 'ADFUSER_USER'
-# default admin permission configured for adfuser in the dummy app
-DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
-"""
-hash of the password test - using this rather than implementing the
-gatekeeper hashing function if the hashing function ever change sit will
-break a number of these functions
-"""
-HASH_PASSWORD_TEST = (
-    "pbkdf2_sha256$12000$m5uwpzIW9qaO$88p"
-    "IM25AqnXu4Fgt/Xgtpp3AInYgk5sxaxJmxxpcR8A="
-)
-GATEKEEPER_TITLE = "<title>Gatekeeper / Arts Alliance Media</title>"
-INVALID_VERIFCATION_CODE = "Verification+code+not+valid"
+import unittest
 
 
-class TestGateKeeper2FaAPI:
+class TestGateKeeper2FaAPI(unittest.TestCase):
+
     @classmethod
     def setUpClass(cls):
         '''Things that need to be done once.'''
@@ -49,14 +28,13 @@ class TestGateKeeper2FaAPI:
         '''Things that need to be done once.'''
         cls.db.close()
 
-    def setup(self):
-
+    def setUp(self):
         # Things to run before each test
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
         self.default_test_user = self.gk_dao.get_user_by_username(
             self.db,
-            ADMIN_USER
+            self.gk_service.ADMIN_USER
         )['user_id']
         self.util = Utility()
 
@@ -64,7 +42,7 @@ class TestGateKeeper2FaAPI:
     def test_can_login_two_factor(self):
         '''
         GATEKEEPER-2FA-API001 test_can_login_two_factor
-        - verify basic 2FA functionality from gatekeeper application
+        verify basic 2FA functionality from gatekeeper application
         '''
 
         # login and create session
@@ -78,9 +56,8 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id
         )
-        assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.default_test_user
-
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], self.default_test_user)
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
             self.default_test_user
@@ -93,7 +70,7 @@ class TestGateKeeper2FaAPI:
             payload,
             allow_redirects=False
         )
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -105,13 +82,13 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id_verf
         )
-        assert db_response['cookie_id'] == cookie_id_verf
+        self.assertEquals(db_response['cookie_id'], cookie_id_verf)
 
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
             cookie_id_sso
         )
-        assert db_response['cookie_id'] == cookie_id_sso
+        self.assertEquals(db_response['cookie_id'], cookie_id_sso)
 
     @attr(env=['test'], priority=1)
     def test_can_login_two_factor_from_dummy_app(self):
@@ -124,16 +101,16 @@ class TestGateKeeper2FaAPI:
         # pre-configured application for dummy app
 
         username = 'automation_' + self.util.random_str(5)
-        appname = ANOTHER_TEST_APP
+        appname = self.gk_service.ANOTHER_TEST_APP
         fullname = 'automation ' + self.util.random_str(5)
         email = self.util.random_email(5)
 
         # create basic user - no permissions
-        assert (
+        self.assertTrue(
             self.gk_dao.set_gk_user(
                 self.db,
                 username,
-                HASH_PASSWORD_TEST,
+                self.gk_service.HASH_PASSWORD_TEST,
                 email,
                 fullname,
                 '123-456-789123456'
@@ -153,8 +130,7 @@ class TestGateKeeper2FaAPI:
         )['application_id']
 
         # associate user with app
-        assert(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
-
+        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
         # create a session - do not allow redirects - urlencoded post
@@ -171,8 +147,8 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id
         )
-        assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == user_id
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], user_id)
 
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
@@ -186,7 +162,7 @@ class TestGateKeeper2FaAPI:
             payload,
             allow_redirects=False
         )
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -198,13 +174,13 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id_verf
         )
-        assert db_response['cookie_id'] == cookie_id_verf
+        self.assertEquals(db_response['cookie_id'], cookie_id_verf)
 
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
             cookie_id_sso
         )
-        assert db_response['cookie_id'] == cookie_id_sso
+        self.assertEquals(db_response['cookie_id'], cookie_id_sso)
 
         my_cookie = dict(name='sso_cookie', value=cookie_id_sso)
         session = self.gk_service.create_requests_session_with_cookie(
@@ -213,17 +189,17 @@ class TestGateKeeper2FaAPI:
 
         # verify the dummy application can be accessed
         response = self.gk_service.validate_end_point(session)
-        assert response.status_code == requests.codes.ok
+        self.assertEquals(response.status_code, requests.codes.ok)
 
         # print response.text
         # delete user - cascade delete by default
-        assert (self.gk_dao.del_gk_user(self.db, user_id))
+        self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
     @attr(env=['test'], priority=1)
     def test_attempt_bypass_verifcation_code(self):
         """
-        GATEKEEPER-2FA-API003 - test_attempt_bypass_verifcation_code
-        - attempt to access gatekeeper or dummy app without
+        GATEKEEPER-2FA-API003 test_attempt_bypass_verifcation_code
+        Attempt to access gatekeeper or dummy app without
         entering verification code
         """
 
@@ -238,8 +214,8 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id
         )
-        assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.default_test_user
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], self.default_test_user)
 
         # redirected to login page if it tries to access other pages
 
@@ -253,8 +229,8 @@ class TestGateKeeper2FaAPI:
             session,
             url=gk_url
         )
-        assert response.status_code == requests.codes.ok
-        assert GATEKEEPER_TITLE in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
 
         # attempt to access dummy app
         gk_url = '{0}://{1}:{2}/'.format(
@@ -266,14 +242,14 @@ class TestGateKeeper2FaAPI:
             session,
             url=gk_url
         )
-        assert response.status_code == requests.codes.ok
-        assert GATEKEEPER_TITLE in response.text
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
 
     @attr(env=['test'], priority=1)
     def test_invalid_verification_code(self):
         """
-        GATEKEEPER-2FA-API004 - test_invalid_verifcation_code -
-        ensure that an invalid verification is not accepted,
+        GATEKEEPER-2FA-API004 test_invalid_verifcation_code -
+        Ensure that an invalid verification is not accepted,
         but a valid verification code can still be entered after
         an invalid code is entered
         """
@@ -288,8 +264,9 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id
         )
-        assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.default_test_user
+
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], self.default_test_user)
 
         # fake verificaton code
         verification_code = 123456
@@ -302,8 +279,10 @@ class TestGateKeeper2FaAPI:
         )
         # 303 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        assert response.status_code == requests.codes.other
-        assert INVALID_VERIFCATION_CODE in response.text
+        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertTrue(
+            self.gk_service.INVALID_VERIFCATION_CODE in response.text
+        )
 
         # ensure we can still use the correct verification code
         verification_code = self.gk_dao.get_verification_code_by_user_id(
@@ -318,7 +297,7 @@ class TestGateKeeper2FaAPI:
             payload,
             allow_redirects=False
         )
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -330,18 +309,18 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id_verf
         )
-        assert db_response['cookie_id'] == cookie_id_verf
+        self.assertEquals(db_response['cookie_id'], cookie_id_verf)
 
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
             cookie_id_sso)
-        assert db_response['cookie_id'] == cookie_id_sso
+        self.assertEquals(db_response['cookie_id'], cookie_id_sso)
 
     @attr(env=['test'], priority=1)
     def test_expired_verification_code(self):
         """
-        GATEKEEPER-2FA-API005 test_expired_verification_code,
-        ensure than an expired verification code is not accepted
+        GATEKEEPER-2FA-API005 test_expired_verification_code
+        Ensure than an expired verification code is not accepted
         """
          # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
@@ -354,8 +333,8 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id
         )
-        assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.default_test_user
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], self.default_test_user)
 
         verification_code = self.gk_dao.get_verification_code_by_user_id(
             self.db,
@@ -363,7 +342,7 @@ class TestGateKeeper2FaAPI:
         )['verification_code']
 
         # expire the verification code
-        assert(
+        self.assertTrue(
             self.gk_dao.set_verification_code_to_expire_by_verification_code(
                 self.db,
                 verification_code
@@ -378,13 +357,15 @@ class TestGateKeeper2FaAPI:
         )
         # 303 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        assert response.status_code == requests.codes.other
-        assert INVALID_VERIFCATION_CODE in response.text
+        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertTrue(
+            self.gk_service.INVALID_VERIFCATION_CODE in response.text
+        )
 
     @attr(env=['test'], priority=1)
     def test_only_latest_verification_code_is_valid(self):
         """
-        GATEKEEPER-2FA-API006 - test_only_latest_verification_code_is_valid
+        GATEKEEPER-2FA-API006 test_only_latest_verification_code_is_valid
         Test to ensure that if multiple verifications are created,
         that only the most recent verification code is accepted
         """
@@ -418,8 +399,10 @@ class TestGateKeeper2FaAPI:
         )
         # 303 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        assert response.status_code == requests.codes.other
-        assert INVALID_VERIFCATION_CODE in response.text
+        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertTrue(
+            self.gk_service.INVALID_VERIFCATION_CODE in response.text
+        )
 
         payload = {'verification_code': verification_code_two}
         response = self.gk_service.submit_verification_code(
@@ -427,7 +410,7 @@ class TestGateKeeper2FaAPI:
             payload,
             allow_redirects=False
         )
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -439,18 +422,18 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id_verf
         )
-        assert db_response['cookie_id'] == cookie_id_verf
+        self.assertEquals(db_response['cookie_id'], cookie_id_verf)
 
         db_response = self.gk_dao.get_session_by_cookie_id(
             self.db,
             cookie_id_sso
         )
-        assert db_response['cookie_id'] == cookie_id_sso
+        self.assertEquals(db_response['cookie_id'], cookie_id_sso)
 
     @attr(env=['test'], priority=1)
     def test_invalid_credientials_cookie_value_in_session(self):
         """
-        GATEKEEPER-2FA-API007  test_invalid_credientials_cook_value_in_session,
+        GATEKEEPER-2FA-API007  test_invalid_credientials_cook_value_in_session
         verify that a verification code cannot be posted when the session
         contains an incorrect cookie value
         """
@@ -464,8 +447,8 @@ class TestGateKeeper2FaAPI:
             self.db,
             cookie_id
         )
-        assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.default_test_user
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], self.default_test_user)
 
         fake_cookie_value = "fakecredCookie"
 
@@ -490,10 +473,10 @@ class TestGateKeeper2FaAPI:
 
         # 303 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        assert response.status_code == requests.codes.other
+        self.assertEquals(response.status_code, requests.codes.other)
         no_cookie_found = \
             "No+session+with+cookie+%s+found" % (fake_cookie_value)
-        assert no_cookie_found in response.text
+        self.assertTrue(no_cookie_found in response.text)
 
     @attr(env=['test'], priority=1)
     def test_no_verifcation_code(self):
@@ -513,8 +496,8 @@ class TestGateKeeper2FaAPI:
             cookie_id
         )
 
-        assert db_response['cookie_id'] == cookie_id
-        assert db_response['user_id'] == self.default_test_user
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], self.default_test_user)
 
         verification_code_blank = ''
         # print    verification_code
@@ -526,5 +509,7 @@ class TestGateKeeper2FaAPI:
         )
         # 303 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        assert response.status_code == requests.codes.other
-        assert INVALID_VERIFCATION_CODE in response.text
+        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertTrue(
+            self.gk_service.INVALID_VERIFCATION_CODE in response.text
+        )

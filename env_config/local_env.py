@@ -51,20 +51,22 @@ config['api']['core']['pack']['last_modified'] = 'core/pack/last_modified'
 config['api']['core']['pack']['pack_name_exists'] = \
     'core/pack/pack_name_exists'
 config['api']['core']['pack']['add_pack_xml'] = 'core/pack/add_pack_xml'
-config['api']['user'] = {}
-config['api']['user']['session'] = {}
+config['api']['gk'] = {}
+config['api']['gk']['session'] = {}
 # trailing / required for login
-config['api']['user']['session']['create_v1'] = 'login/'
-config['api']['user']['session']['validate_v1'] = 'api/v1/user/session'
+config['api']['gk']['session']['create_v1'] = 'login/'
+config['api']['gk']['session']['validate_v1'] = 'api/v1/user/session'
 # trailing / required for logout
-config['api']['user']['session']['logout_v1'] = 'logout/'
-config['api']['user']['session']['user_info_v1'] = \
+config['api']['gk']['session']['logout_v1'] = 'logout/'
+config['api']['gk']['session']['user_info_v1'] = \
     'api/v1/user/%s/application/%s'
-config['api']['user']['session']['submit_verification_v1'] = \
+config['api']['gk']['session']['submit_verification_v1'] = \
     'login/?step=verification_code'
-config['api']['user']['application_v1'] = {}
-config['api']['user']['application_v1']['post'] = 'api/v1/application/'
-config['api']['user']['application_v1']['id'] = 'api/v1/application/%s'
-config['api']['user']['user_v1'] = {}
-config['api']['user']['user_v1']['post'] = 'api/v1/user/'
-config['api']['user']['user_v1']['id'] = 'api/v1/user/%s'
+config['api']['gk']['application_v1'] = {}
+config['api']['gk']['application_v1']['post'] = 'api/v1/application/'
+config['api']['gk']['application_v1']['id'] = 'api/v1/application/%s'
+config['api']['gk']['user_v1'] = {}
+config['api']['gk']['user_v1']['post'] = 'api/v1/user/'
+config['api']['gk']['user_v1']['id'] = 'api/v1/user/%s'
+config['api']['gk']['users_v1'] = 'api/v1/users/'
+config['api']['gk']['applications_v1'] = 'api/v1/applications/'

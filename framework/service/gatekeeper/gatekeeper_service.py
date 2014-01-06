@@ -15,7 +15,49 @@ import Cookie
 import time
 
 
-class GateKeeperService(object):
+class GateKeeperService:
+
+    def __init__(self):
+        # adfuser is the default test dummy application
+        self.DEFAULT_TEST_APP = "adfuser"
+        # another test dummy app
+        self.ANOTHER_TEST_APP = "anotherapp"
+        # gatekeeper app
+        self.GK_APP = "gatekeeper"
+        # admin user is 'admin' and is used as the default user
+        self.ADMIN_USER = 'admin'
+        # default user permission configured for adfuser in the dummy app
+        self.DEFAULT_ADFUSER_USER = 'ADFUSER_USER'
+        # default admin permission configured for adfuser in the dummy app
+        self.DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
+        # special permission that allows acess to the gk admin end point
+        self.GK_ALL_PERMISSION = "gatekeeper_all"
+
+        # hash of the password test - using this rather than implementing the
+        # gatekeeper hashing function if the hashing function ever change sit
+        # will break a number of these functions
+        self.HASH_PASSWORD_TEST = "pbkdf2_sha256$12000$m5uwpzIW9qaO$88p"\
+            "IM25AqnXu4Fgt/Xgtpp3AInYgk5sxaxJmxxpcR8A="
+
+        self.GATEKEEPER_TITLE = "<title>Gatekeeper /"\
+            " Arts Alliance Media</title>"
+
+        # Error messages
+        self.USER_ERROR = (
+            "User is either not logged in or not the same"
+            " user as the user described in the resource URI"
+        )
+        self.SESSION_FORBIDDEN = "Forbidden session with cookie %s"\
+            " for application fake"
+        self.SESSION_NOT_ALLOWED = 'User not allowed access this session!'
+        self.MISSING_PARAMETERS = "Missing parameters: "\
+            "application_name,user_id"
+        self.CONFIRM_LOGOUT = "Please confirm logout"
+        self.NO_DATA_ERROR = "No data for ID"
+        self.DUPLICATE_KEY = "duplicate key value violates unique constraint"
+        self.MISSING_PARAM = "Missing parameter(s)"
+        self.NOT_LOGGED_IN = "Not logged in"
+        self.INVALID_VERIFCATION_CODE = "Verification+code+not+valid"
 
     def _create_url(self,
                     path,
@@ -40,7 +82,7 @@ class GateKeeperService(object):
         """
         if url is None:
             url = self._create_url(
-                config['api']['user']['session']['create_v1'])
+                config['api']['gk']['session']['create_v1'])
 
         # requests is url-encoded by default
         if credentials is None:
@@ -67,7 +109,7 @@ class GateKeeperService(object):
         )
         return response
 
-    def validate_session(self, cookie_id, session, url=None, application=None):
+    def user_session(self, cookie_id, session, url=None, application=None):
 
         """
         validates a session_id
@@ -80,7 +122,7 @@ class GateKeeperService(object):
 
         """
         url = self._create_url(
-            config['api']['user']['session']['validate_v1'])
+            config['api']['gk']['session']['validate_v1'])
 
         request_url = url + '/%s'
         request_url = request_url % (cookie_id)
@@ -134,7 +176,7 @@ class GateKeeperService(object):
             parameters = {}
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['create_v1'])
+                config['api']['gk']['session']['create_v1'])
         if(redirect_url is not None):
             url = url + redirect_url
         if(verify is None):
@@ -164,7 +206,7 @@ class GateKeeperService(object):
 
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['logout_v1'])
+                config['api']['gk']['session']['logout_v1'])
         response = session.post(url, verify=False)
         return response
 
@@ -183,14 +225,14 @@ class GateKeeperService(object):
 
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['logout_v1'])
+                config['api']['gk']['session']['logout_v1'])
         response = session.get(url, verify=False)
         return response
 
-    def user_info(self, session, user_id, application, url=None, verify=None):
+    def user_app(self, session, user_id, application, url=None, verify=None):
 
         """
-        Returns user info for a valid user id and session cookie
+        Returns user info for a valid user id,application and session cookie
 
         @param session:  session object and associated cookie
 
@@ -205,7 +247,7 @@ class GateKeeperService(object):
 
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['user_info_v1'])
+                config['api']['gk']['session']['user_info_v1'])
         request_url = url % (user_id, application)
         if(verify is None):
             verify = False
@@ -284,7 +326,7 @@ class GateKeeperService(object):
         """
         if(url is None):
             url = self._create_url(
-                config['api']['user']['session']['submit_verification_v1'])
+                config['api']['gk']['session']['submit_verification_v1'])
         if(redirect_url is not None):
             url = url + redirect_url
 
@@ -326,12 +368,12 @@ class GateKeeperService(object):
 
         """
 
-        url = self._create_url(config['api']['user']['application_v1']['post'])
+        url = self._create_url(config['api']['gk']['application_v1']['post'])
 
         if(app_id is not None):
 
             request_url = self._create_url(
-                config['api']['user']['application_v1']['id']
+                config['api']['gk']['application_v1']['id']
             )
             request_url = request_url % (app_id)
 
@@ -374,11 +416,11 @@ class GateKeeperService(object):
 
         """
 
-        url = self._create_url(config['api']['user']['user_v1']['post'])
+        url = self._create_url(config['api']['gk']['user_v1']['post'])
 
         if(user_id is not None):
             request_url = self._create_url(
-                config['api']['user']['user_v1']['id']
+                config['api']['gk']['user_v1']['id']
             )
             request_url = request_url % (user_id)
 
@@ -528,3 +570,60 @@ class GateKeeperService(object):
 
         session = self.create_requests_session_with_cookie(my_cookie)
         return session, cookie_id, response
+
+    def users(
+            self,
+            session,
+            name=None,
+            verify=None
+            ):
+        """
+        Users API for CRUD operations
+        @param session:  session object and associated cookie
+        @param name: username
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the user info
+
+        """
+
+        request_url = self._create_url(config['api']['gk']['users_v1'])
+
+        if (name is not None):
+            request_url = request_url + '/?name=%s'
+            request_url = request_url % (name)
+
+        if(verify is None):
+            verify = False
+
+        response = session.get(url=request_url, verify=verify)
+
+        return response
+
+    def applications(
+            self,
+            session,
+            name=None,
+            verify=None
+            ):
+        """
+        applications API for CRUD operations
+        @param session:  session object and associated cookie
+        @param name: application name
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the user info
+
+        """
+        request_url = self._create_url(
+            config['api']['gk']['applications_v1']
+        )
+
+        if (name is not None):
+            request_url = request_url + '/?name=%s'
+            request_url = request_url % (name)
+
+        if(verify is None):
+            verify = False
+
+        response = session.get(url=request_url, verify=verify)
+
+        return response
