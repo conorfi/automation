@@ -18,6 +18,8 @@ import time
 class GateKeeperService:
 
     def __init__(self):
+        # initialize utility class
+        self.util = Utility()
         # adfuser is the default test dummy application
         self.DEFAULT_TEST_APP = "adfuser"
         # another test dummy app
@@ -627,3 +629,123 @@ class GateKeeperService:
         response = session.get(url=request_url, verify=verify)
 
         return response
+
+    def org(
+            self,
+            session,
+            method,
+            org_id=None,
+            org_data=None,
+            verify=None
+            ):
+        """
+        Organisation API for CRUD operations
+        @param session:  session object and associated cookie
+        @param: method: i.e GET,POST,PUT or DELETE
+        @param org_id: org id
+        @param org_data: data for PUT and DELETE
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the organisation info
+
+        """
+
+        url = self._create_url(config['api']['gk']['org_v1']['post'])
+
+        if(org_id is not None):
+            request_url = self._create_url(
+                config['api']['gk']['org_v1']['id']
+            )
+            request_url = request_url % (org_id)
+
+        if((method == 'POST' or method == 'PUT') and org_data is None):
+            org_data = self.create_org_data()
+
+        if(verify is None):
+            verify = False
+
+        if method == 'GET':
+            response = session.get(url=request_url, verify=verify)
+        if method == 'POST':
+            response = session.post(url=url, data=org_data, verify=verify)
+        if method == 'PUT':
+            response = session.put(
+                url=request_url, data=org_data, verify=verify
+                )
+        if method == 'DELETE':
+            response = session.delete(url=request_url, verify=verify)
+
+        return response
+
+    def create_org_data(self):
+
+        """
+        Creation of a organisation dict
+        @return: an org data dict
+
+        """
+        rand_str = self.util.random_str(5)
+        org_data = {
+            'name': rand_str
+        }
+
+        return org_data
+
+    def group(
+            self,
+            session,
+            method,
+            group_id=None,
+            group_data=None,
+            verify=None
+            ):
+        """
+        Group API for CRUD operations
+        @param session:  session object and associated cookie
+        @param: method: i.e GET,POST,PUT or DELETE
+        @param group_id: group id
+        @param group_data: data for PUT and DELETE
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the group info
+
+        """
+
+        url = self._create_url(config['api']['gk']['group_v1']['post'])
+
+        if(group_id is not None):
+            request_url = self._create_url(
+                config['api']['gk']['group_v1']['id']
+            )
+            request_url = request_url % (group_id)
+
+        if((method == 'POST' or method == 'PUT') and group_data is None):
+            group_data = self.create_group_data()
+
+        if(verify is None):
+            verify = False
+
+        if method == 'GET':
+            response = session.get(url=request_url, verify=verify)
+        if method == 'POST':
+            response = session.post(url=url, data=group_data, verify=verify)
+        if method == 'PUT':
+            response = session.put(
+                url=request_url, data=group_data, verify=verify
+                )
+        if method == 'DELETE':
+            response = session.delete(url=request_url, verify=verify)
+
+        return response
+
+    def create_group_data(self):
+
+        """
+        Creation of a organisation dict
+        @return: an org data dict
+
+        """
+        rand_str = self.util.random_str(5)
+        group_data = {
+            'name': rand_str
+        }
+
+        return group_data

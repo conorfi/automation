@@ -26,7 +26,7 @@ import time
 import unittest
 
 
-class TestGateKeeperLoginURI(unittest.TestCase):
+class TestGateKeeperLogoutURI(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
