@@ -121,7 +121,7 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
 
-    def get_gk_group_id_by_name(self, db, grp_name):
+    def get_group_by_name(self, db, grp_name):
             """
             Returns group id based on group name
 
@@ -132,7 +132,7 @@ class GateKeeperDAO(object):
             @return: group id
 
             """
-            query = """select group_id
+            query = """select *
                         from gatekeeper_group
                         where name='%s'""" % grp_name
             result = db.query(query)
@@ -157,6 +157,24 @@ class GateKeeperDAO(object):
             where user_id=%d
             order by verification_id desc""" % (user_id)
 
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_org_by_orgname(self, db, orgname):
+            """
+            Returns user info based on a specific user name
+            @param db: the database connection that will be utilized
+            @param session_id: session_id(cookie value) of the session created
+            by a post
+            @return: dict of session info
+
+            """
+            query = """select *
+                        from organization
+                        where name='%s'""" % orgname
             result = db.query(query)
             if (not result):
                 return None
