@@ -568,7 +568,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         # creat gatekeeper group
         self.assertTrue(self.gk_dao.set_gk_group(self.db, grp_name))
         # get group id
-        group_id = self.gk_dao.get_gk_group_id_by_name(
+        group_id = self.gk_dao.get_group_by_name(
             self.db,
             grp_name
         )['group_id']
