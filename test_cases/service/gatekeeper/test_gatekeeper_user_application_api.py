@@ -603,7 +603,8 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         response = self.gk_service.user_app(session, '', '')
 
         # a 404 will always be returned
-        self.assertEquals(response.status_code, requests.codes.not_found)
-        self.assertTrue(
-            self.gk_service.MISSING_PARAMETERS in response.json()['error']
-        )
+        self.assertEquals(response.status_code, requests.codes.bad_request)
+        json_data = response.json()
+        self.assertTrue('error' in json_data)
+        self.assertEqual(json_data['error'],
+                         self.gk_service.MISSING_PARAMETERS)
