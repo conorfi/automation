@@ -74,7 +74,7 @@ class TestGateUsersAPI(unittest.TestCase):
         db_count = self.gk_dao.get_user_count(self.db)['count']
         self.assertEquals(api_count, db_count, "count mismatch")
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_users_api_name_filter(self):
         """
         GATEKEEPER_USERS_API_002 test_users_api_name_filter
@@ -92,6 +92,8 @@ class TestGateUsersAPI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.created)
         # set username
         username = response.json()['username']
+        # set user_id
+        user_id = response.json()['user_id']
         # get user data directly from database
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
@@ -119,8 +121,6 @@ class TestGateUsersAPI(unittest.TestCase):
             response.json()[0]['last_logged_in'], user_info['last_logged_in']
         )
 
-        # set user_id
-        user_id = create_response.json()['user_id']
         # clean up - delete the user
         del_response = self.gk_service.user(
             session, method='DELETE', user_id=user_id
