@@ -151,10 +151,10 @@ class TestGateKeeperUserSessionAPI(unittest.TestCase):
             session=session
         )
 
-        self.assertEquals(response.status_code, requests.codes.not_found)
-        self.assertTrue(
-            "Missing parameters: cookie" in response.json()['error']
-        )
+        self.assertEquals(response.status_code, requests.codes.bad_request)
+        json_data = response.json()
+        self.assertTrue('error' in json_data)
+        self.assertEqual(json_data['error'], "Missing parameters: cookie")
 
     @attr(env=['test'], priority=1)
     def test_user_session_with_invalid_session(self):
