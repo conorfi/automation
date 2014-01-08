@@ -38,6 +38,7 @@ config['gatekeeper']['dummy']['port'] = '8001'
 config['gatekeeper']['dummy']['user_endpoint'] = 'user'
 config['gatekeeper']['dummy']['admin_endpoint'] = 'admin'
 
+config['api'] = {}
 config['api']['gk'] = {}
 config['api']['gk']['session'] = {}
 # trailing / required for login
