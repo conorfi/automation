@@ -35,5 +35,5 @@ class Utility(object):
         return rand_int
 
     def phone_number(self):
-        phone = "123-456-789123456"
+        phone = "+44 123 456 789123"
         return phone

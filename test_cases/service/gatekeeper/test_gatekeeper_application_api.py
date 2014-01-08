@@ -312,9 +312,10 @@ class TestGateApplicationAPI(unittest.TestCase):
 
         # update the application
         rand_str = self.util.random_str(5)
+        rand_url = self.util.random_url(5)
         update_data = [
             {'name': rand_str},
-            {'default_url': rand_str},
+            {'default_url': rand_url},
         ]
 
         for app_dict in update_data:
