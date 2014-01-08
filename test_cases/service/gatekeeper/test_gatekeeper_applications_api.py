@@ -151,6 +151,5 @@ class TestGateUsersAPI(unittest.TestCase):
             name=appname
         )
 
-        # TODO: remove this line when the defect is resolved
-        # defect https://www.pivotaltracker.com/story/show/63208364
+        # BUG: https://www.pivotaltracker.com/story/show/63208364
         self.assertEquals(response.status_code, requests.codes.not_found)
