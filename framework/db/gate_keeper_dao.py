@@ -82,6 +82,38 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
 
+    def get_org_count(self, db):
+            """
+            Returns count of orgnizations
+            @param db: the database connection that will be utilized
+            @param session_id: session_id(cookie value) of the session created
+            by a post
+            @return: dict of session info
+
+            """
+            query = """select count(*) from organization"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_group_count(self, db):
+            """
+            Returns count of groups
+            @param db: the database connection that will be utilized
+            @param session_id: session_id(cookie value) of the session created
+            by a post
+            @return: dict of session info
+
+            """
+            query = """select count(*) from gatekeeper_group"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
     def get_app_by_app_name(self, db, app_name):
             """
             Returns app data based on app name
@@ -100,7 +132,25 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
 
-    def get_permission_id_by_name(self, db, per_name, app_id):
+    def get_org_by_org_name(self, db, org_name):
+            """
+            Returns app data based on app name
+
+            @param db: the database connection that will be utilized
+            @param org_name: organization name
+            @return: dict of app info
+
+            """
+            query = """select *
+                        from organization
+                        where name='%s'""" % org_name
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_permission_by_name(self, db, per_name, app_id):
             """
             Returns permission id based on per name
 
@@ -111,7 +161,7 @@ class GateKeeperDAO(object):
             @return: permission id
 
             """
-            query = """select permission_id
+            query = """select *
                         from permission
                          where name='%s'
                          and application_id=%d""" % (per_name, app_id)

@@ -38,19 +38,6 @@ config['gatekeeper']['dummy']['port'] = '8001'
 config['gatekeeper']['dummy']['user_endpoint'] = 'user'
 config['gatekeeper']['dummy']['admin_endpoint'] = 'admin'
 
-config['api'] = {}
-config['api']['core'] = {}
-config['api']['core']['pack'] = {}
-config['api']['core']['pack']['save'] = 'core/pack/save'
-config['api']['core']['pack']['find_pack'] = 'core/pack/find_pack'
-config['api']['core']['pack']['packs'] = 'core/pack/packs'
-config['api']['core']['pack']['edit'] = 'core/pack/edit'
-config['api']['core']['pack']['delete'] = 'core/pack/delete'
-config['api']['core']['pack']['edit'] = 'core/pack/edit'
-config['api']['core']['pack']['last_modified'] = 'core/pack/last_modified'
-config['api']['core']['pack']['pack_name_exists'] = \
-    'core/pack/pack_name_exists'
-config['api']['core']['pack']['add_pack_xml'] = 'core/pack/add_pack_xml'
 config['api']['gk'] = {}
 config['api']['gk']['session'] = {}
 # trailing / required for login
@@ -58,6 +45,7 @@ config['api']['gk']['session']['create_v1'] = 'login/'
 config['api']['gk']['session']['validate_v1'] = 'api/v1/user/session'
 # trailing / required for logout
 config['api']['gk']['session']['logout_v1'] = 'logout/'
+
 config['api']['gk']['session']['user_info_v1'] = \
     'api/v1/user/%s/application/%s'
 config['api']['gk']['session']['submit_verification_v1'] = \
@@ -65,14 +53,19 @@ config['api']['gk']['session']['submit_verification_v1'] = \
 config['api']['gk']['application_v1'] = {}
 config['api']['gk']['application_v1']['post'] = 'api/v1/application/'
 config['api']['gk']['application_v1']['id'] = 'api/v1/application/%s'
+config['api']['gk']['applications_v1'] = 'api/v1/applications/'
 config['api']['gk']['user_v1'] = {}
 config['api']['gk']['user_v1']['post'] = 'api/v1/user/'
 config['api']['gk']['user_v1']['id'] = 'api/v1/user/%s'
 config['api']['gk']['users_v1'] = 'api/v1/users/'
-config['api']['gk']['applications_v1'] = 'api/v1/applications/'
 config['api']['gk']['org_v1'] = {}
 config['api']['gk']['org_v1']['post'] = 'api/v1/organization/'
 config['api']['gk']['org_v1']['id'] = 'api/v1/organization/%s'
+config['api']['gk']['orgs_v1'] = 'api/v1/organizations/'
 config['api']['gk']['group_v1'] = {}
 config['api']['gk']['group_v1']['post'] = 'api/v1/group/'
 config['api']['gk']['group_v1']['id'] = 'api/v1/group/%s'
+config['api']['gk']['groups_v1'] = 'api/v1/groups/'
+config['api']['gk']['permission_v1'] = {}
+config['api']['gk']['permission_v1']['post'] = 'api/v1/permission/'
+config['api']['gk']['permission_v1']['id'] = 'api/v1/permission/%s'

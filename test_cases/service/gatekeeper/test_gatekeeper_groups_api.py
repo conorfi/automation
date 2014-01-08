@@ -1,14 +1,14 @@
 """
-@summary: Contains a set of test cases for the applications API of the
+@summary: Contains a set of test cases for the groups API of the
 gatekeeper(single sign on) project
 Note: only 1 factor authentication test cases
 
 These test have a number of dependencies
 1. the database update script updates the gatekeepr schema - the script can be
-found at the root of the gatekeeper app
+found at the root of the gatekeeper group
 2. the build script starts the gatekeeper app with ssl enbaled by default
 3. the build script starts the dummy app with ssl enabled
-and application_name is adfuser
+and group_name is adfuser
 @since: Created on 4th January 2014
 @author: Conor Fitzgerald
 """
@@ -43,41 +43,38 @@ class TestGateUsersAPI(unittest.TestCase):
 
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
-        self.default_test_user = self.gk_dao.get_user_by_username(
-            self.db,
-            self.gk_service.ADMIN_USER
-        )['user_id']
         self.util = Utility()
 
     @attr(env=['test'], priority=1)
-    def test_users_api(self):
+    def test_groups_api(self):
         """
-        GATEKEEPER_USERS_API_001 test_users_api
-        Ensure all the user information stored is returned
+        GATEKEEPER_GROUPS_API_001 test_groups_api
+        Ensure all the group information stored is returned
         """
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
 
-        # return list of all applications
-        response = self.gk_service.applications(
+        # return list of all groups
+        response = self.gk_service.groups(
             session
         )
 
         # 200
+        # BUG: https://www.pivotaltracker.com/story/show/63375258
         self.assertEquals(response.status_code, requests.codes.ok)
 
-        # ensure that the count of the applications returned
+        # ensure that the count of the groups returned
         # is matched by the count in the database
         api_count = response.json().__len__()
-        db_count = self.gk_dao.get_app_count(self.db)['count']
+        db_count = self.gk_dao.get_group_count(self.db)['count']
         self.assertEquals(api_count, db_count, "count mismatch")
 
     @attr(env=['test'], priority=1)
-    def test_users_api_name_filter(self):
+    def test_groups_api_name_filter(self):
         """
-        GATEKEEPER_USERS_API_002 test_users_api_name_filter
+        GATEKEEPER_GROUPS_API_002 test_groups_api_name_filter
         Ensure the name filer works correctly
         """
         # login and create session
@@ -85,26 +82,26 @@ class TestGateUsersAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # create a new application
-        create_response = self.gk_service.application(
+        # create a new group
+        create_response = self.gk_service.group(
             session, method='POST'
         )
         # ensure correct status code is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        # set ap_id and app name
-        app_id = create_response.json()['application_id']
-        appname = create_response.json()['name']
-        # get app data from db
-        app_data = self.gk_dao.get_app_by_app_name(
+        # set ap_id and group name
+        group_id = create_response.json()['group_id']
+        group_name = create_response.json()['name']
+        # get group data from db
+        group_data = self.gk_dao.get_group_by_name(
             self.db,
-            appname
+            group_name
         )
 
-        # return just the newly created app from the list of apps
-        response = self.gk_service.applications(
+        # return just the newly created group from the list of groups
+        response = self.gk_service.groups(
             session,
-            name=appname
+            name=group_name
         )
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)
@@ -113,43 +110,44 @@ class TestGateUsersAPI(unittest.TestCase):
         api_count = response.json().__len__()
         self.assertEquals(api_count, 1, "count mismatch")
 
-        # verify the users API against the db data
+        # verify the groups API against the db data
         self.assertEquals(
-            response.json()[0]['application_id'],
-            app_data['application_id']
+            response.json()[0]['group_id'],
+            group_data['group_id']
         )
         self.assertEquals(
             response.json()[0]['name'],
-            app_data['name']
+            group_data['name']
         )
+        # BUG: https://www.pivotaltracker.com/story/show/63208364
         self.assertEquals(
             response.json()[0]['default_url'],
-            app_data['default_url']
+            group_data['default_url']
         )
 
-        # clean up - delete the application
-        del_response = self.gk_service.application(
-            session, method='DELETE', app_id=app_id
+        # clean up - delete the group
+        del_response = self.gk_service.group(
+            session, method='DELETE', group_id=group_id
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
-    def test_users_api_name_filter_invalid_name(self):
+    def test_groups_api_name_filter_invalid_name(self):
         """
-        GATEKEEPER_USERS_API_003 test_users_api_name_filter_invalid_name
+        GATEKEEPER_GROUPS_API_003 test_groups_api_name_filter_invalid_name
         Ensure the name filer works correctly
         """
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
 
-        appname = "sofake"
-        # return just the newly created user from the list of users
-        response = self.gk_service.applications(
+        group_name = "sofake"
+        # return just the newly created group from the list of groups
+        response = self.gk_service.groups(
             session,
-            name=appname
+            name=group_name
         )
 
-        # BUG: https://www.pivotaltracker.com/story/show/63208364
+        # BUG:: https://www.pivotaltracker.com/story/show/63208364
         self.assertEquals(response.status_code, requests.codes.not_found)

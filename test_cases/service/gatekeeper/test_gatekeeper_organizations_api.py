@@ -1,14 +1,14 @@
 """
-@summary: Contains a set of test cases for the applications API of the
+@summary: Contains a set of test cases for the organizations API of the
 gatekeeper(single sign on) project
 Note: only 1 factor authentication test cases
 
 These test have a number of dependencies
 1. the database update script updates the gatekeepr schema - the script can be
-found at the root of the gatekeeper app
+found at the root of the gatekeeper org
 2. the build script starts the gatekeeper app with ssl enbaled by default
 3. the build script starts the dummy app with ssl enabled
-and application_name is adfuser
+and organization_name is adfuser
 @since: Created on 4th January 2014
 @author: Conor Fitzgerald
 """
@@ -43,41 +43,37 @@ class TestGateUsersAPI(unittest.TestCase):
 
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
-        self.default_test_user = self.gk_dao.get_user_by_username(
-            self.db,
-            self.gk_service.ADMIN_USER
-        )['user_id']
         self.util = Utility()
 
     @attr(env=['test'], priority=1)
-    def test_users_api(self):
+    def test_orgs_api(self):
         """
-        GATEKEEPER_USERS_API_001 test_users_api
-        Ensure all the user information stored is returned
+        GATEKEEPER_ORGANIZATIONS_API_001 test_orgs_api
+        Ensure all the organization information stored is returned
         """
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
 
-        # return list of all applications
-        response = self.gk_service.applications(
+        # return list of all organizations
+        response = self.gk_service.orgs(
             session
         )
 
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)
 
-        # ensure that the count of the applications returned
+        # ensure that the count of the organizations returned
         # is matched by the count in the database
         api_count = response.json().__len__()
-        db_count = self.gk_dao.get_app_count(self.db)['count']
+        db_count = self.gk_dao.get_org_count(self.db)['count']
         self.assertEquals(api_count, db_count, "count mismatch")
 
     @attr(env=['test'], priority=1)
-    def test_users_api_name_filter(self):
+    def test_orgs_api_name_filter(self):
         """
-        GATEKEEPER_USERS_API_002 test_users_api_name_filter
+        GATEKEEPER_ORGANIZATIONS_API_002 test_orgs_api_name_filter
         Ensure the name filer works correctly
         """
         # login and create session
@@ -85,26 +81,26 @@ class TestGateUsersAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # create a new application
-        create_response = self.gk_service.application(
+        # create a new organization
+        create_response = self.gk_service.org(
             session, method='POST'
         )
         # ensure correct status code is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        # set ap_id and app name
-        app_id = create_response.json()['application_id']
-        appname = create_response.json()['name']
-        # get app data from db
-        app_data = self.gk_dao.get_app_by_app_name(
+        # set ap_id and org name
+        org_id = create_response.json()['organization_id']
+        org_name = create_response.json()['name']
+        # get org data from db
+        org_data = self.gk_dao.get_org_by_org_name(
             self.db,
-            appname
+            org_name
         )
 
-        # return just the newly created app from the list of apps
-        response = self.gk_service.applications(
+        # return just the newly created org from the list of orgs
+        response = self.gk_service.orgs(
             session,
-            name=appname
+            name=org_name
         )
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)
@@ -113,42 +109,38 @@ class TestGateUsersAPI(unittest.TestCase):
         api_count = response.json().__len__()
         self.assertEquals(api_count, 1, "count mismatch")
 
-        # verify the users API against the db data
+        # verify the organizations API against the db data
         self.assertEquals(
-            response.json()[0]['application_id'],
-            app_data['application_id']
+            response.json()[0]['organization_id'],
+            org_data['organization_id']
         )
         self.assertEquals(
             response.json()[0]['name'],
-            app_data['name']
-        )
-        self.assertEquals(
-            response.json()[0]['default_url'],
-            app_data['default_url']
+            org_data['name']
         )
 
-        # clean up - delete the application
-        del_response = self.gk_service.application(
-            session, method='DELETE', app_id=app_id
+        # clean up - delete the organization
+        del_response = self.gk_service.org(
+            session, method='DELETE', org_id=org_id
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
-    def test_users_api_name_filter_invalid_name(self):
+    def test_orgs_api_name_filter_invalid_name(self):
         """
-        GATEKEEPER_USERS_API_003 test_users_api_name_filter_invalid_name
+        GATEKEEPER_ORGANIZATIONS_API_003 test_orgs_api_name_filter_invalid_name
         Ensure the name filer works correctly
         """
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
 
-        appname = "sofake"
-        # return just the newly created user from the list of users
-        response = self.gk_service.applications(
+        org_name = "sofake"
+        # return just the newly created organization from the list of orgs
+        response = self.gk_service.orgs(
             session,
-            name=appname
+            name=org_name
         )
 
         # BUG: https://www.pivotaltracker.com/story/show/63208364

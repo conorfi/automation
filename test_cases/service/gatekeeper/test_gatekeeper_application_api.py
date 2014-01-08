@@ -157,10 +157,10 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
-    def test_application_api_create_no_data(self):
+    def test_app_api_create_missing_params(self):
         """
-        GATEKEEPER_APPLICATION_API_003 test_application_api_create_no_data
-        attempt to create a new application missing paramters
+        GATEKEEPER_APPLICATION_API_003 test_app_api_create_missing_params
+        attempt to create a new application with missing paramters
         """
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
@@ -168,12 +168,12 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
         # list of dicts with missing data
-        no_data = [
+        missing_data = [
             {'name': None},
             {'default_url': None},
         ]
 
-        for app_dict in no_data:
+        for app_dict in missing_data:
 
             app_data = self.gk_service.create_app_data(app_dict)
             create_response = self.gk_service.application(
@@ -189,9 +189,42 @@ class TestGateApplicationAPI(unittest.TestCase):
             )
 
     @attr(env=['test'], priority=1)
+    def test_application_api_create_no_data(self):
+        """
+        GATEKEEPER_APPLICATION_API_004 test_application_api_create_no_data
+        attempt to create a new application with no data
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # must set content length to zero
+        # otherwise a 411 will be returned i.e no data error
+        # but we want to send up no data to get the relevant error message
+        session.headers.update({'Content-Length': 0})
+
+        # blank dict
+        missing_data = {'name': None}
+
+        app_data = self.gk_service.create_app_data(missing_data)
+        create_response = self.gk_service.application(
+            session, method='POST', app_data=missing_data
+        )
+        # 400
+        self.assertEquals(
+            create_response.status_code,
+            requests.codes.bad_request
+        )
+        self.assertTrue(
+            self.gk_service.NO_PARAM_SUPPLIED
+            in create_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
     def test_application_api_update(self):
         """
-        GATEKEEPER_APPLICATION_API_004 test_application_api_update
+        GATEKEEPER_APPLICATION_API_005 test_application_api_update
         update an application using the application api,
         verify the repposne with the read function
         clean up the data (implictly tests DELETE and GET)
@@ -259,7 +292,7 @@ class TestGateApplicationAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_application_api_update_individually(self):
         """
-        GATEKEEPER_APPLICATION_API_005 test_application_api_update_individually
+        GATEKEEPER_APPLICATION_API_006 test_application_api_update_individually
         update application fields individually using the application api,
         verify the repposne with the read function
         clean up the data (implictly tests DELETE and GET)
@@ -334,7 +367,7 @@ class TestGateApplicationAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_application_api_update_dup_name(self):
         """
-        GATEKEEPER_APPLICATION_API_006 test_application_api_update_dup_name
+        GATEKEEPER_APPLICATION_API_007 test_application_api_update_dup_name
         attempt to update an application using the application api but
         the app name should not be unique
         clean up the data (implictly tests DELETE and GET)
@@ -356,6 +389,7 @@ class TestGateApplicationAPI(unittest.TestCase):
         app_one_response = self.gk_service.application(
             session, method='POST', app_data=app_one_data
         )
+
         # ensure correct status code is returned
         self.assertEquals(app_one_response.status_code, requests.codes.created)
         app_id_one = app_one_response.json()['application_id']
@@ -395,7 +429,7 @@ class TestGateApplicationAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_application_api_read(self):
         """
-        GATEKEEPER_APPLICATION_API_007 test_application_api_read
+        GATEKEEPER_APPLICATION_API_008 test_application_api_read
         read an application data using the application api
         clean up the data (implictly tests DELETE and GET)
         """
@@ -461,7 +495,7 @@ class TestGateApplicationAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_application_api_update_not_existant_app_id(self):
         """
-        GATEKEEPER_APPLICATION_API_008 test_application_api_invalid_app_id
+        GATEKEEPER_APPLICATION_API_009 test_application_api_invalid_app_id
         attempt to update an application with an app_id that dosen't exist
         """
         # login and create session
@@ -493,7 +527,7 @@ class TestGateApplicationAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_application_api_read_not_existant_app_id(self):
         """
-        GATEKEEPER_APPLICATION_API_009 test_application_api_invalid_app_id
+        GATEKEEPER_APPLICATION_API_010 test_application_api_invalid_app_id
         attempt to read an application with an app_id that dosen't exist
         """
         # login and create session
@@ -519,7 +553,7 @@ class TestGateApplicationAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_application_api_delete(self):
         """
-        GATEKEEPER_APPLICATION_API_010 test_application_api_delete
+        GATEKEEPER_APPLICATION_API_011 test_application_api_delete
         delete an application using the application api
         This test case is to have a test case that explictly
         tests the delete functioanlity
@@ -569,7 +603,7 @@ class TestGateApplicationAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_application_api_delete_not_existant_app_id(self):
         """
-        GATEKEEPER_APPLICATION_API_011 test_application_api_invalid_app_id
+        GATEKEEPER_APPLICATION_API_012 test_application_api_invalid_app_id
         attempt to delete an application with an app_id that dosen't exist
         """
         # login and create session

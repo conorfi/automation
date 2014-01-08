@@ -145,6 +145,5 @@ class TestGateUsersAPI(unittest.TestCase):
             name=username
         )
 
-        # TODO: add assertion when defect is resolved
-        # defect https://www.pivotaltracker.com/story/show/63208364
-        # self.assertEquals(response.status_code,requests.codes.not_found)
+        # BUG: https://www.pivotaltracker.com/story/show/63208364
+        self.assertEquals(response.status_code, requests.codes.not_found)

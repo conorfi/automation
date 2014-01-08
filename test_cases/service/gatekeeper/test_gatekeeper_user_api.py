@@ -107,9 +107,9 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
-    def test_user_api_create_no_data(self):
+    def test_user_api_create_missing_params(self):
         """
-        GATEKEEPER_USER_API_002 test_user_api_create_no_data
+        GATEKEEPER_USER_API_002 test_user_api_create_missing_params
         attempt to create a new user using the user api with missing params
         """
         # login and create session
@@ -141,9 +141,42 @@ class TestGateUserAPI(unittest.TestCase):
             )
 
     @attr(env=['test'], priority=1)
+    def test_user_api_create_no_data(self):
+        """
+        GATEKEEPER_USER_API_003 test_user_api_create_no_data
+        attempt to create a new user using the user api with missing params
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # must set content length to zero
+        # otherwise a 411 will be returned i.e no data error
+        # but we want to send up no data to get the relevant error message
+        session.headers.update({'Content-Length': 0})
+
+        # create empty dict
+        no_data = {'username': None}
+
+        create_response = self.gk_service.user(
+            session, method='POST', user_data=no_data
+        )
+
+        # 400
+        self.assertEquals(
+            create_response.status_code,
+            requests.codes.bad_request
+        )
+        self.assertTrue(
+            self.gk_service.NO_PARAM_SUPPLIED
+            in create_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
     def test_user_api_create_duplicate_username(self):
         """
-        GATEKEEPER_USER_API_003 test_user_api_create_duplicate_username
+        GATEKEEPER_USER_API_004 test_user_api_create_duplicate_username
         attempt to create a new user using the user api with same params
         """
 
@@ -175,7 +208,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update(self):
         """
-        GATEKEEPER_USER_API_004 test_user_api_update
+        GATEKEEPER_USER_API_005 test_user_api_update
         update all the user data using the user api
         """
 
@@ -244,7 +277,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update_duplicate_name(self):
         """
-        GATEKEEPER_USER_API_005 test_user_api_update_duplicate_name
+        GATEKEEPER_USER_API_006 test_user_api_update_duplicate_name
         attempt to update an user using the user api but
         the username should not be unique
         clean up the data (implictly tests DELETE and GET)
@@ -304,7 +337,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update_individually(self):
         """
-        GATEKEEPER_USER_API_006 test_user_api_update_individually
+        GATEKEEPER_USER_API_007 test_user_api_update_individually
         update fields individually
         """
         # login and create session
@@ -383,7 +416,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update_non_existant_user_id(self):
         """
-        GATEKEEPER_USER_API_007 test_user_api_update_non_existant_user_id
+        GATEKEEPER_USER_API_008 test_user_api_update_non_existant_user_id
         attempt to update a non existant user id
         """
         # login and create session
@@ -408,7 +441,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_read(self):
         """
-        GATEKEEPER_USER_API_008 test_user_api_read
+        GATEKEEPER_USER_API_009 test_user_api_read
         verify the read(GET) response
         """
 
@@ -470,7 +503,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_read_existant_user_id(self):
         """
-        GATEKEEPER_USER_API_009 test_user_api_read_existant_user_id
+        GATEKEEPER_USER_API_010 test_user_api_read_existant_user_id
         attempt to get a non existant user id
         """
         # login and create session
@@ -495,7 +528,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_delete(self):
         """
-        GATEKEEPER_USER_API_010 test_user_api_delete
+        GATEKEEPER_USER_API_011 test_user_api_delete
         explicit test case for delete functionality
         """
 
@@ -534,7 +567,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_read_non_existant_user_id(self):
         """
-        GATEKEEPER_USER_API_011 test_user_api_get_non_existant_user_id
+        GATEKEEPER_USER_API_012 test_user_api_get_non_existant_user_id
         attempt to get a non existant user id
         """
         # login and create session
@@ -559,7 +592,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_user_login(self):
         """
-        GATEKEEPER_USER_API_012 test_user_api_user_login
+        GATEKEEPER_USER_API_013 test_user_api_user_login
         login as newly created,updated and deleted user
         """
 
@@ -620,13 +653,10 @@ class TestGateUserAPI(unittest.TestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # TODO: readd verifcation when 500 status issue is resolved
-        # defect https://www.pivotaltracker.com/story/show/62791020
+        # BUG: https://www.pivotaltracker.com/story/show/62791020
         # login in as new user
-        """
+
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=False, credentials=credentials
         )
-        # 40X
         assert response.status_code, requests.codes
-        """
