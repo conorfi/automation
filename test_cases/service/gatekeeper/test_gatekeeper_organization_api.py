@@ -182,8 +182,6 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
             session, method='POST', org_data=org_data
         )
 
-        # BUG: https://www.pivotaltracker.com/story/show/63297796
-
         self.assertEquals(
             create_response.status_code, requests.codes.conflict
         )
@@ -289,8 +287,6 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         update_response = self.gk_service.org(
             session, method='PUT', org_data=org_two_data, org_id=org_id_one
         )
-
-        # BUG: https://www.pivotaltracker.com/story/show/63297796
 
         # ensure correct status code is returned
         self.assertEquals(update_response.status_code, requests.codes.conflict)

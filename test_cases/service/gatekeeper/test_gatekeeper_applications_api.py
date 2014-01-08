@@ -151,5 +151,8 @@ class TestGateUsersAPI(unittest.TestCase):
             name=appname
         )
 
-        # BUG: https://www.pivotaltracker.com/story/show/63208364
-        self.assertEquals(response.status_code, requests.codes.not_found)
+        # 200
+        self.assertEquals(response.status_code, requests.codes.ok)
+        # length 2 i.e empty array
+        self.assertEquals(len(response.content), 2)
+
