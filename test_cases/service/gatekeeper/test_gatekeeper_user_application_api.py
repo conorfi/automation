@@ -182,11 +182,11 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         )['application_id']
 
         # get permissions
-        user_permission = self.gk_dao.get_permission_id_by_name(
+        user_permission = self.gk_dao.get_permission_by_name(
             self.db,
             self.gk_service.DEFAULT_ADFUSER_USER, app_id
         )['permission_id']
-        admin_permission = self.gk_dao.get_permission_id_by_name(
+        admin_permission = self.gk_dao.get_permission_by_name(
             self.db,
             self.gk_service.DEFAULT_ADFUSER_ADMIN, app_id
         )['permission_id']
@@ -337,13 +337,13 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         )['application_id']
 
         # get permissions
-        user_permission = self.gk_dao.get_permission_id_by_name(
+        user_permission = self.gk_dao.get_permission_by_name(
             self.db,
             self.gk_service.DEFAULT_ADFUSER_USER,
             app_id
         )['permission_id']
 
-        admin_permission = self.gk_dao.get_permission_id_by_name(
+        admin_permission = self.gk_dao.get_permission_by_name(
             self.db,
             self.gk_service.DEFAULT_ADFUSER_ADMIN,
             app_id
@@ -602,9 +602,56 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
 
         response = self.gk_service.user_app(session, '', '')
 
-        # a 404 will always be returned
         self.assertEquals(response.status_code, requests.codes.bad_request)
         json_data = response.json()
         self.assertTrue('error' in json_data)
         self.assertEqual(json_data['error'],
                          self.gk_service.MISSING_PARAMETERS)
+
+    @attr(env=['test'], priority=1)
+    def test_user_app_with_no_application_name(self):
+        '''
+        GATEKEEPER_USER_SESSION_API_008 test_user_app_with_no_application_name
+        Ensures user info CANNOT be return from the user api when no
+        application name is provided
+        '''
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            redirect_url=config['gatekeeper']['redirect']
+        )
+
+        user_id = self.gk_dao.get_user_by_username(
+            self.db,
+            self.gk_service.ADMIN_USER
+        )['user_id']
+
+        response = self.gk_service.user_app(session, user_id, '')
+
+        self.assertEquals(response.status_code, requests.codes.bad_request)
+        json_data = response.json()
+        self.assertTrue('error' in json_data)
+        self.assertEqual(json_data['error'],
+                         self.gk_service.MISSING_APP_NAME)
+
+    @attr(env=['test'], priority=1)
+    def test_user_app_with_no_user_id(self):
+        '''
+        GATEKEEPER_USER_SESSION_API_009 test_user_app_with_no_user_id
+        Ensures user info CANNOT be return from the user api when no
+        application id is provided
+        '''
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False,
+            redirect_url=config['gatekeeper']['redirect']
+        )
+
+        response = self.gk_service.user_app(
+            session, '', self.gk_service.DEFAULT_TEST_APP
+        )
+        self.assertEquals(response.status_code, requests.codes.bad_request)
+        json_data = response.json()
+        self.assertTrue('error' in json_data)
+        self.assertEqual(json_data['error'],
+                         self.gk_service.MISSING_APP_ID)

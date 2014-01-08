@@ -76,3 +76,6 @@ config['api']['gk']['org_v1']['id'] = 'api/v1/organization/%s'
 config['api']['gk']['group_v1'] = {}
 config['api']['gk']['group_v1']['post'] = 'api/v1/group/'
 config['api']['gk']['group_v1']['id'] = 'api/v1/group/%s'
+config['api']['gk']['permission_v1'] = {}
+config['api']['gk']['permission_v1']['post'] = 'api/v1/permission/'
+config['api']['gk']['permission_v1']['id'] = 'api/v1/permission/%s'

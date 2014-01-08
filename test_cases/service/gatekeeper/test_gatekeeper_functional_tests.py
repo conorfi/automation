@@ -231,11 +231,11 @@ class TestGateKeeperFunctional(unittest.TestCase):
         )['application_id']
 
         # get permissions
-        user_permission = self.gk_dao.get_permission_id_by_name(
+        user_permission = self.gk_dao.get_permission_by_name(
             self.db,
             self.gk_service.DEFAULT_ADFUSER_USER, app_id
         )['permission_id']
-        admin_permission = self.gk_dao.get_permission_id_by_name(
+        admin_permission = self.gk_dao.get_permission_by_name(
             self.db,
             self.gk_service.DEFAULT_ADFUSER_ADMIN, app_id
         )['permission_id']
@@ -446,7 +446,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         )['application_id']
 
         # get permissions
-        permissions = self.gk_dao.get_permission_id_by_name(
+        permissions = self.gk_dao.get_permission_by_name(
             self.db,
             self.gk_service.GK_ALL_PERMISSION, app_id
         )['permission_id']
@@ -556,7 +556,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         )['application_id']
 
         # get permissions
-        permissions = self.gk_dao.get_permission_id_by_name(
+        permissions = self.gk_dao.get_permission_by_name(
             self.db,
             self.gk_service.GK_ALL_PERMISSION,
             app_id

@@ -97,12 +97,17 @@ class TestGateGroupAPI(unittest.TestCase):
     def test_group_api_create_no_data(self):
         """
         GATEKEEPER_GROUP_API_002 test_group_api_create_no_data
-        attempt to create a new group using the group api with missing params
+        attempt to create a new group using the group api with no data
         """
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
+
+        # must set content length to zero
+        # otherwise a 411 will be returned i.e no data error
+        # but we want to send up no data to get the relevant error message
+        session.headers.update({'Content-Length': 0})
 
         # list of dicts with missing data
         no_data = {'name': None}
@@ -111,15 +116,48 @@ class TestGateGroupAPI(unittest.TestCase):
             session, method='POST', group_data=no_data
         )
 
-        # 411 - as no data is to be returned
+        # 400
         self.assertEquals(
-            create_response.status_code, requests.codes.length_required
+            create_response.status_code,
+            requests.codes.bad_request
+        )
+        self.assertTrue(
+            self.gk_service.NO_PARAM_SUPPLIED
+            in create_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
+    def test_group_api_create_invalid_data(self):
+        """
+        GATEKEEPER_GROUP_API_003 test_group_api_create_invalid_data
+        attempt to create a new group using the group api with incorrect params
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        no_data = {'fake': 'fake'}
+
+        create_response = self.gk_service.group(
+            session, method='POST', group_data=no_data
+        )
+
+        # 400
+        self.assertEquals(
+            create_response.status_code,
+            requests.codes.bad_request
+        )
+        self.assertTrue(
+            self.gk_service.PARAM_NOT_ALLOWED
+            in create_response.json()['error']
         )
 
     @attr(env=['test'], priority=1)
     def test_group_api_create_duplicate_group_name(self):
         """
-        GATEKEEPER_GROUP_API_003 test_group_api_create_duplicate_group_name
+        GATEKEEPER_GROUP_API_004 test_group_api_create_duplicate_group_name
         attempt to create a new group using the group api with same params
         """
 
@@ -141,8 +179,7 @@ class TestGateGroupAPI(unittest.TestCase):
             session, method='POST', group_data=group_data
         )
 
-        # TODO: remove this when the defect is resolved
-        # defect https://www.pivotaltracker.com/story/show/63297796
+        # BUG:: https://www.pivotaltracker.com/story/show/63297796
 
         self.assertEquals(
             create_response.status_code, requests.codes.conflict
@@ -154,7 +191,7 @@ class TestGateGroupAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_group_api_update(self):
         """
-        GATEKEEPER_GROUP_API_004 test_group_api_update
+        GATEKEEPER_GROUP_API_005 test_group_api_update
         update all the group data using the group api
         """
 
@@ -211,7 +248,7 @@ class TestGateGroupAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_group_api_update_duplicate_name(self):
         """
-        GATEKEEPER_GROUP_API_005 test_group_api_update_duplicate_name
+        GATEKEEPER_GROUP_API_006 test_group_api_update_duplicate_name
         attempt to update an group using the group api but
         the groupname should not be unique
         clean up the data (implictly tests DELETE and GET)
@@ -252,8 +289,7 @@ class TestGateGroupAPI(unittest.TestCase):
             group_id=group_id_one
         )
 
-        # TODO: remove this when the defect is resolved
-        # defect https://www.pivotaltracker.com/story/show/63297796
+        # BUG:: https://www.pivotaltracker.com/story/show/63297796
 
         # ensure correct status code is returned
         self.assertEquals(update_response.status_code, requests.codes.conflict)
@@ -285,7 +321,7 @@ class TestGateGroupAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_group_api_update_non_existant_group_id(self):
         """
-        GATEKEEPER_GROUP_API_006 test_group_api_update_non_existant_group_id
+        GATEKEEPER_GROUP_API_007 test_group_api_update_non_existant_group_id
         attempt to update a non existant group id
         """
         # login and create session
@@ -310,7 +346,7 @@ class TestGateGroupAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_group_api_read(self):
         """
-        GATEKEEPER_GROUP_API_007 test_group_api_read
+        GATEKEEPER_GROUP_API_008 test_group_api_read
         verify the read(GET) response
         """
 
@@ -364,7 +400,7 @@ class TestGateGroupAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_group_api_read_non_existant_group_id(self):
         """
-        GATEKEEPER_GROUP_API_008 test_group_api_read_existant_group_id
+        GATEKEEPER_GROUP_API_009 test_group_api_read_existant_group_id
         attempt to get a non existant group id
         """
         # login and create session
@@ -389,7 +425,7 @@ class TestGateGroupAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_group_api_delete(self):
         """
-        GATEKEEPER_GROUP_API_009 test_group_api_delete
+        GATEKEEPER_GROUP_API_010 test_group_api_delete
         explicit test case for delete functionality
         """
 

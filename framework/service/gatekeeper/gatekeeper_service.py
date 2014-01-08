@@ -54,12 +54,17 @@ class GateKeeperService:
         self.SESSION_NOT_ALLOWED = 'User not allowed access this session!'
         self.MISSING_PARAMETERS = "Missing parameters: "\
             "application_name,user_id"
+        self.MISSING_APP_NAME = "Missing parameters: application_name"
+        self.MISSING_APP_ID = "Missing parameters: user_id"
         self.CONFIRM_LOGOUT = "Please confirm logout"
         self.NO_DATA_ERROR = "No data for ID"
         self.DUPLICATE_KEY = "duplicate key value violates unique constraint"
         self.MISSING_PARAM = "Missing parameter(s)"
         self.NOT_LOGGED_IN = "Not logged in"
         self.INVALID_VERIFCATION_CODE = "Verification+code+not+valid"
+        self.FK_ERROR = "violates foreign key constraint"
+        self.PARAM_NOT_ALLOWED = "not allowed"
+        self.NO_PARAM_SUPPLIED = "No parameter(s) supplied."
 
     def _create_url(self,
                     path,
@@ -454,7 +459,6 @@ class GateKeeperService:
 
         """
 
-        self.util = Utility()
         rand_str = self.util.random_str(5)
         phone = self.util.phone_number()
         email = self.util.random_email()
@@ -479,7 +483,6 @@ class GateKeeperService:
         @return: a user data dict
 
         """
-        self.util = Utility()
         new_app = self.util.random_str(5)
         new_url = self.util.random_url(5)
         app_data = {'name': new_app, 'default_url': new_url}
@@ -690,6 +693,35 @@ class GateKeeperService:
 
         return org_data
 
+    def orgs(
+            self,
+            session,
+            name=None,
+            verify=None
+            ):
+        """
+        Organizations API for CRUD operations
+        @param session:  session object and associated cookie
+        @param name: organization name
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the user info
+
+        """
+        request_url = self._create_url(
+            config['api']['gk']['orgs_v1']
+        )
+
+        if (name is not None):
+            request_url = request_url + '/?name=%s'
+            request_url = request_url % (name)
+
+        if(verify is None):
+            verify = False
+
+        response = session.get(url=request_url, verify=verify)
+
+        return response
+
     def group(
             self,
             session,
@@ -749,3 +781,100 @@ class GateKeeperService:
         }
 
         return group_data
+
+    def groups(
+            self,
+            session,
+            name=None,
+            verify=None
+            ):
+        """
+        Groups API for CRUD operations
+        @param session:  session object and associated cookie
+        @param name: group name
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the user info
+
+        """
+        request_url = self._create_url(
+            config['api']['gk']['groups_v1']
+        )
+
+        if (name is not None):
+            request_url = request_url + '/?name=%s'
+            request_url = request_url % (name)
+
+        if(verify is None):
+            verify = False
+
+        response = session.get(url=request_url, verify=verify)
+
+        return response
+
+    def permission(
+            self,
+            session,
+            method,
+            permission_id=None,
+            permission_data=None,
+            verify=None
+            ):
+        """
+        permission API for CRUD operations
+        @param session:  session object and associated cookie
+        @param: method: i.e GET,POST,PUT or DELETE
+        @param permission_id: permission id
+        @param permission_data: data for PUT and DELETE
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the permission info
+
+        """
+
+        url = self._create_url(config['api']['gk']['permission_v1']['post'])
+
+        if(permission_id is not None):
+            request_url = self._create_url(
+                config['api']['gk']['permission_v1']['id']
+            )
+            request_url = request_url % (permission_id)
+
+        if((method == 'POST' or method == 'PUT') and permission_data is None):
+            permission_data = self.create_permission_data()
+
+        if(verify is None):
+            verify = False
+
+        if method == 'GET':
+            response = session.get(url=request_url, verify=verify)
+        if method == 'POST':
+            response = session.post(
+                url=url, data=permission_data, verify=verify
+            )
+        if method == 'PUT':
+            response = session.put(
+                url=request_url, data=permission_data, verify=verify
+                )
+        if method == 'DELETE':
+            response = session.delete(url=request_url, verify=verify)
+
+        return response
+
+    def create_permission_data(self, perms_dict=None):
+
+        """
+        Creation of a organisation dict
+        @return: an org data dict
+
+        """
+        # create random permission name
+        rand_str = self.util.random_str(5)
+
+        permission_data = {
+            'name': rand_str,
+            'application_id': None
+        }
+
+        if perms_dict is not None:
+            permission_data.update(perms_dict)
+
+        return permission_data
