@@ -179,8 +179,6 @@ class TestGateGroupAPI(unittest.TestCase):
             session, method='POST', group_data=group_data
         )
 
-        # BUG:: https://www.pivotaltracker.com/story/show/63297796
-
         self.assertEquals(
             create_response.status_code, requests.codes.conflict
         )
@@ -288,8 +286,6 @@ class TestGateGroupAPI(unittest.TestCase):
             group_data=group_two_data,
             group_id=group_id_one
         )
-
-        # BUG:: https://www.pivotaltracker.com/story/show/63297796
 
         # ensure correct status code is returned
         self.assertEquals(update_response.status_code, requests.codes.conflict)

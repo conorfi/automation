@@ -70,3 +70,4 @@ config['api']['gk']['groups_v1'] = 'api/v1/groups/'
 config['api']['gk']['permission_v1'] = {}
 config['api']['gk']['permission_v1']['post'] = 'api/v1/permission/'
 config['api']['gk']['permission_v1']['id'] = 'api/v1/permission/%s'
+config['api']['gk']['permissions_v1'] = 'api/v1/permissions/'

@@ -878,3 +878,32 @@ class GateKeeperService:
             permission_data.update(perms_dict)
 
         return permission_data
+
+    def permissions(
+            self,
+            session,
+            name=None,
+            verify=None
+            ):
+        """
+        Permissions API for CRUD operations
+        @param session:  session object and associated cookie
+        @param name: permission name
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the user info
+
+        """
+        request_url = self._create_url(
+            config['api']['gk']['permissions_v1']
+        )
+
+        if (name is not None):
+            request_url = request_url + '/?name=%s'
+            request_url = request_url % (name)
+
+        if(verify is None):
+            verify = False
+
+        response = session.get(url=request_url, verify=verify)
+
+        return response
