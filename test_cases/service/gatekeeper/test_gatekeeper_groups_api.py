@@ -62,7 +62,6 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # 200
-        # BUG: https://www.pivotaltracker.com/story/show/63375258
         self.assertEquals(response.status_code, requests.codes.ok)
 
         # ensure that the count of the groups returned
@@ -119,11 +118,6 @@ class TestGateUsersAPI(unittest.TestCase):
             response.json()[0]['name'],
             group_data['name']
         )
-        # BUG: https://www.pivotaltracker.com/story/show/63208364
-        self.assertEquals(
-            response.json()[0]['default_url'],
-            group_data['default_url']
-        )
 
         # clean up - delete the group
         del_response = self.gk_service.group(
@@ -149,5 +143,7 @@ class TestGateUsersAPI(unittest.TestCase):
             name=group_name
         )
 
-        # BUG:: https://www.pivotaltracker.com/story/show/63208364
-        self.assertEquals(response.status_code, requests.codes.not_found)
+        # 200
+        self.assertEquals(response.status_code, requests.codes.ok)
+        # length 2 i.e empty array
+        self.assertEquals(len(response.content), 2)
