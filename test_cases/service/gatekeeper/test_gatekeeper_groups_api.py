@@ -62,7 +62,6 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # 200
-        # BUG: https://www.pivotaltracker.com/story/show/63375258
         self.assertEquals(response.status_code, requests.codes.ok)
 
         # ensure that the count of the groups returned
@@ -118,11 +117,6 @@ class TestGateUsersAPI(unittest.TestCase):
         self.assertEquals(
             response.json()[0]['name'],
             group_data['name']
-        )
-        # BUG: https://www.pivotaltracker.com/story/show/63208364
-        self.assertEquals(
-            response.json()[0]['default_url'],
-            group_data['default_url']
         )
 
         # clean up - delete the group
