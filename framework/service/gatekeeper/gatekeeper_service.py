@@ -554,7 +554,7 @@ class GateKeeperService:
         # login user
         response = self.create_session_urlencoded(**kwargs)
         # 303
-        assert response.status_code == requests.codes.other
+        assert response.status_code == requests.codes.found
 
         # SSO cookie
         if(cookie_type == "SSO"):

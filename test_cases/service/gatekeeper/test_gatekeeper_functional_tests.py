@@ -86,7 +86,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         response = self.gk_service.validate_end_point(
             session, allow_redirects=False, parameters=parameters
         )
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
         response = self.gk_service.validate_end_point(
             session, parameters=parameters
         )
@@ -167,7 +167,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
             response = self.gk_service.create_session_urlencoded(
                 allow_redirects=False, credentials=payload
             )
-            self.assertEquals(response.status_code, requests.codes.see_other)
+            self.assertEquals(response.status_code, requests.codes.found)
             # extract cookie from response headers
             cookie = Cookie.SimpleCookie()
             cookie.load(response.headers['Set-Cookie'])
@@ -350,7 +350,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
             allow_redirects=False
         )
         # 303 response
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
 
         # convert Set_Cookie response header to simple cookie object
         cookie_id = self.gk_service.extract_sso_cookie_value(
@@ -744,7 +744,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
             allow_redirects=False
         )
         # 303 response
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
 
         headers = response.headers['Set-Cookie']
         # assert that the header httponly is present
