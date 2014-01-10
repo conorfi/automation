@@ -572,8 +572,8 @@ class TestGatePermissionAPI(unittest.TestCase):
             permission_id=permission_id_one
         )
 
-        # ensure correct status code is returned i.e 202 rather than 409
-        self.assertEquals(update_response.status_code, requests.codes.accepted)
+        # ensure correct status code is returned i.e 409 rather than 202
+        self.assertEquals(update_response.status_code, requests.codes.conflict)
 
         # clean up - delete the permission
         del_response = self.gk_service.permission(
