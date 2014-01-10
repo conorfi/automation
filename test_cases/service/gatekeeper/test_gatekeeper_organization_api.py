@@ -58,8 +58,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         )
 
         # create a new org
-        create_response = self.gk_service.org(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization"
         )
 
         # ensure a 201 is returned
@@ -82,15 +82,15 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         )
 
         # clean up - delete the org
-        del_response = self.gk_service.org(
-            session, method='DELETE', org_id=org_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="organization", id=org_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new org data
-        read_response = self.gk_service.org(
-            session, method='GET', org_id=org_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="organization", id=org_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -115,8 +115,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         # list of dicts with missing data
         no_data = {'name': None}
 
-        create_response = self.gk_service.org(
-            session, method='POST', org_data=no_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization", data=no_data
         )
 
         # 400
@@ -143,8 +143,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         # list of dicts with missing data
         no_data = {'fake': 'fake'}
 
-        create_response = self.gk_service.org(
-            session, method='POST', org_data=no_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization", data=no_data
         )
 
         # 400
@@ -171,15 +171,15 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
 
         org_data = self.gk_service.create_org_data()
         # create a new org
-        create_response = self.gk_service.org(
-            session, method='POST', org_data=org_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization", data=org_data
         )
 
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        create_response = self.gk_service.org(
-            session, method='POST', org_data=org_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization", data=org_data
         )
 
         self.assertEquals(
@@ -202,8 +202,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         )
 
         # create a new org
-        create_response = self.gk_service.org(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization"
         )
 
         # ensure a 201 is returned
@@ -212,8 +212,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         org_id = create_response.json()['organization_id']
 
         # update org
-        update_response = self.gk_service.org(
-            session, method='PUT', org_id=org_id
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="organization", id=org_id
         )
 
         # set orgname
@@ -232,15 +232,15 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         )
 
         # clean up - delete the org
-        del_response = self.gk_service.org(
-            session, method='DELETE', org_id=org_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="organization", id=org_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new org data
-        read_response = self.gk_service.org(
-            session, method='GET', org_id=org_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="organization", id=org_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -264,8 +264,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         org_one_data = self.gk_service.create_org_data()
         org_two_data = self.gk_service.create_org_data()
         # create org one
-        org_one_response = self.gk_service.org(
-            session, method='POST', org_data=org_one_data
+        org_one_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization", data=org_one_data
         )
         # ensure correct status code is returned
         self.assertEquals(
@@ -274,8 +274,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         org_id_one = org_one_response.json()['organization_id']
 
         # create org two
-        org_two_response = self.gk_service.org(
-            session, method='POST', org_data=org_two_data
+        org_two_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization", data=org_two_data
         )
         # ensure correct status code is returned
         self.assertEquals(
@@ -284,8 +284,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         org_id_two = org_two_response.json()['organization_id']
 
         # update the org one with org two data
-        update_response = self.gk_service.org(
-            session, method='PUT', org_data=org_two_data, org_id=org_id_one
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="organization", data=org_two_data, id=org_id_one
         )
 
         # ensure correct status code is returned
@@ -294,22 +294,22 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
             self.gk_service.DUPLICATE_KEY in update_response.json()['error']
         )
         # clean up - delete the org
-        del_response = self.gk_service.org(
-            session, method='DELETE', org_id=org_id_one
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="organization", id=org_id_one
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
          # clean up - delete the org
-        del_response = self.gk_service.org(
-            session, method='DELETE', org_id=org_id_two
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="organization", id=org_id_two
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new org data
-        read_response = self.gk_service.org(
-            session, method='GET', org_id=org_id_one
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="organization", id=org_id_one
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -327,8 +327,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         )
 
         org_id = self.util.random_int()
-        update_response = self.gk_service.org(
-            session, method='PUT', org_id=org_id
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="organization", id=org_id
         )
 
         # 404 response
@@ -353,8 +353,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         )
 
         # create a new org
-        create_response = self.gk_service.org(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization"
         )
 
         # ensure a 201 is returned
@@ -368,8 +368,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         org_info = self.gk_dao.get_org_by_orgname(self.db, orgname)
 
         # read(GET) org data
-        read_response = self.gk_service.org(
-            session, method='GET', org_id=org_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="organization", id=org_id
         )
 
         # verify the creation of the org POST action
@@ -380,15 +380,15 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         self.assertEquals(read_response.json()['name'], org_info['name'])
 
         # clean up - delete the org
-        del_response = self.gk_service.org(
-            session, method='DELETE', org_id=org_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="organization", id=org_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new org data
-        read_response = self.gk_service.org(
-            session, method='GET', org_id=org_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="organization", id=org_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -406,8 +406,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         )
 
         org_id = self.util.random_int()
-        update_response = self.gk_service.org(
-            session, method='GET', org_id=org_id
+        update_response = self.gk_service.gk_crud(
+            session, method='GET', resource="organization", id=org_id
         )
 
         # 404 response
@@ -432,8 +432,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         )
 
         # create a new org
-        create_response = self.gk_service.org(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization"
         )
 
         # ensure a 201 is returned
@@ -442,8 +442,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         # set org_id
         org_id = create_response.json()['organization_id']
         # clean up - delete the org
-        del_response = self.gk_service.org(
-            session, method='DELETE', org_id=org_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="organization", id=org_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -451,8 +451,8 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         self.assertEquals(len(del_response.content), 0)
 
         # read the new org data
-        read_response = self.gk_service.org(
-            session, method='GET', org_id=org_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="organization", id=org_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
