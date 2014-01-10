@@ -16,7 +16,7 @@ config['tms']['db_type'] = 'sqlite:///'
 config['tms']['credentials'] = {'username': 'admin', 'password': 'admin'}
 
 config['gatekeeper'] = {}
-config['gatekeeper']['scheme'] = 'http'
+config['gatekeeper']['scheme'] = 'https'
 config['gatekeeper']['host'] = local_host
 config['gatekeeper']['ip'] = local_ip
 config['gatekeeper']['port'] = '8070'

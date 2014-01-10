@@ -620,8 +620,8 @@ class TestGateUserAPI(unittest.TestCase):
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=False, credentials=credentials
         )
-        # 303 response
-        self.assertEquals(response.status_code, requests.codes.other)
+        # 302 response
+        self.assertEquals(response.status_code, requests.codes.found)
 
         # set user_id
         user_id = create_response.json()['user_id']
@@ -644,7 +644,7 @@ class TestGateUserAPI(unittest.TestCase):
             allow_redirects=False, credentials=credentials
         )
         # 303 response
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
 
         # clean up - delete the user
         del_response = self.gk_service.user(
