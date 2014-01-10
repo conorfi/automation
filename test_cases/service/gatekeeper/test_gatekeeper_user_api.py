@@ -62,8 +62,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user"
+        create_response = self.gk_service.user(
+            session, method='POST'
         )
 
         # ensure a 201 is returned
@@ -92,15 +92,15 @@ class TestGateUserAPI(unittest.TestCase):
         # set user_id
         user_id = create_response.json()['user_id']
         # clean up - delete the user
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="user", id=user_id
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -129,8 +129,8 @@ class TestGateUserAPI(unittest.TestCase):
         for user_dict in no_data:
 
             user_data = self.gk_service.create_user_data(user_dict)
-            create_response = self.gk_service.gk_crud(
-                session, method='POST', resource="user", data=user_data
+            create_response = self.gk_service.user(
+                session, method='POST', user_data=user_data
             )
             self.assertEquals(
                 create_response.status_code, requests.codes.bad_request
@@ -159,8 +159,8 @@ class TestGateUserAPI(unittest.TestCase):
         # create empty dict
         no_data = {'username': None}
 
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user", data=no_data
+        create_response = self.gk_service.user(
+            session, method='POST', user_data=no_data
         )
 
         # 400
@@ -187,15 +187,15 @@ class TestGateUserAPI(unittest.TestCase):
 
         user_data = self.gk_service.create_user_data()
         # create a new user
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user", data=user_data
+        create_response = self.gk_service.user(
+            session, method='POST', user_data=user_data
         )
 
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user", data=user_data
+        create_response = self.gk_service.user(
+            session, method='POST', user_data=user_data
         )
 
         self.assertEquals(
@@ -218,8 +218,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user"
+        create_response = self.gk_service.user(
+            session, method='POST'
         )
 
         # ensure a 201 is returned
@@ -228,8 +228,8 @@ class TestGateUserAPI(unittest.TestCase):
         user_id = create_response.json()['user_id']
 
         # update user
-        update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="user", id=user_id
+        update_response = self.gk_service.user(
+            session, method='PUT', user_id=user_id
         )
 
         # set username
@@ -260,15 +260,15 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # clean up - delete the user
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="user", id=user_id
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -292,8 +292,8 @@ class TestGateUserAPI(unittest.TestCase):
         user_one_data = self.gk_service.create_user_data()
         user_two_data = self.gk_service.create_user_data()
         # create user one
-        user_one_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user", data=user_one_data
+        user_one_response = self.gk_service.user(
+            session, method='POST', user_data=user_one_data
         )
         # ensure correct status code is returned
         self.assertEquals(
@@ -302,16 +302,16 @@ class TestGateUserAPI(unittest.TestCase):
         user_id_one = user_one_response.json()['user_id']
 
         # create user two
-        user_two_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user", data=user_two_data
+        user_two_response = self.gk_service.user(
+            session, method='POST', user_data=user_two_data
         )
         # ensure correct status code is returned
         self.assertEquals(
             user_two_response.status_code, requests.codes.created
         )
         # update the user one with user two data
-        update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="user", data=user_two_data, id=user_id_one
+        update_response = self.gk_service.user(
+            session, method='PUT', user_data=user_two_data, user_id=user_id_one
         )
 
         # ensure correct status code is returned
@@ -320,15 +320,15 @@ class TestGateUserAPI(unittest.TestCase):
             self.gk_service.DUPLICATE_KEY in update_response.json()['error']
         )
         # clean up - delete the user
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="user", id=user_id_one
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id_one
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id_one
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id_one
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -346,8 +346,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user"
+        create_response = self.gk_service.user(
+            session, method='POST'
         )
 
         # ensure a 201 is returned
@@ -369,8 +369,8 @@ class TestGateUserAPI(unittest.TestCase):
 
         for data in user_dict:
             user_data = self.gk_service.create_user_data(data)
-            update_response = self.gk_service.gk_crud(
-                session, method='PUT', resource="user", data=user_data, id=user_id
+            update_response = self.gk_service.user(
+                session, method='PUT', user_data=user_data, user_id=user_id
             )
 
         # set username
@@ -399,15 +399,15 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # clean up - delete the user
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="user", id=user_id
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -425,8 +425,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         user_id = self.util.random_int()
-        update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="user", id=user_id
+        update_response = self.gk_service.user(
+            session, method='PUT', user_id=user_id
         )
 
         # 404 response
@@ -451,8 +451,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user"
+        create_response = self.gk_service.user(
+            session, method='POST'
         )
 
         # ensure a 201 is returned
@@ -466,8 +466,8 @@ class TestGateUserAPI(unittest.TestCase):
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # read(GET) user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
         )
 
         # verify the creation of the user POST action
@@ -486,15 +486,15 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # clean up - delete the user
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="user", id=user_id
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -512,8 +512,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         user_id = self.util.random_int()
-        update_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
+        update_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
         )
 
         # 404 response
@@ -538,8 +538,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user"
+        create_response = self.gk_service.user(
+            session, method='POST'
         )
 
         # ensure a 201 is returned
@@ -548,8 +548,8 @@ class TestGateUserAPI(unittest.TestCase):
         # set user_id
         user_id = create_response.json()['user_id']
         # clean up - delete the user
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="user", id=user_id
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -557,8 +557,8 @@ class TestGateUserAPI(unittest.TestCase):
         self.assertEquals(len(del_response.content), 0)
 
         # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
+        read_response = self.gk_service.user(
+            session, method='GET', user_id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -576,8 +576,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         user_id = self.util.random_int()
-        update_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="user", id=user_id
+        update_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
         )
 
         # 404 response
@@ -610,8 +610,8 @@ class TestGateUserAPI(unittest.TestCase):
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
         # create a new user
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user", data=user_data
+        create_response = self.gk_service.user(
+            session, method='POST', user_data=user_data
         )
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -635,8 +635,8 @@ class TestGateUserAPI(unittest.TestCase):
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
         # update user
-        update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="user", id=user_id, data=user_data
+        update_response = self.gk_service.user(
+            session, method='PUT', user_id=user_id, user_data=user_data
         )
 
         # login in as updated user
@@ -647,8 +647,8 @@ class TestGateUserAPI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.found)
 
         # clean up - delete the user
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="user", id=user_id
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)

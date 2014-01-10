@@ -61,10 +61,10 @@ class TestGateApplicationAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource='application'
+        # create a new application
+        create_response = self.gk_service.application(
+            session, method='POST'
         )
-
         # ensure correct status code is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
@@ -90,15 +90,15 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
         # clean up - delete the application
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="application", id=app_id
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -123,8 +123,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         app_data = self.gk_service.create_app_data(name_dict)
 
         # create the new application
-        response = self.gk_service.gk_crud(
-            session, method='POST', resource="application", data=app_data
+        response = self.gk_service.application(
+            session, method='POST', app_data=app_data
         )
         # capture the application id
         app_id = response.json()['application_id']
@@ -132,8 +132,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.created)
 
         # attempt to use the same data with the same app name again
-        response = self.gk_service.gk_crud(
-            session, method='POST', resource="application", data=app_data
+        response = self.gk_service.application(
+            session, method='POST', app_data=app_data
         )
         # ensure correct status code is returned
         self.assertEquals(response.status_code, requests.codes.conflict)
@@ -142,15 +142,15 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
         # clean up - delete the application
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="application", id=app_id
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -176,8 +176,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         for app_dict in missing_data:
 
             app_data = self.gk_service.create_app_data(app_dict)
-            create_response = self.gk_service.gk_crud(
-                session, method='POST', resource="application", data=app_data
+            create_response = self.gk_service.application(
+                session, method='POST', app_data=app_data
             )
             self.assertEquals(
                 create_response.status_code,
@@ -208,8 +208,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         missing_data = {'name': None}
 
         app_data = self.gk_service.create_app_data(missing_data)
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="application", data=missing_data
+        create_response = self.gk_service.application(
+            session, method='POST', app_data=missing_data
         )
         # 400
         self.assertEquals(
@@ -236,8 +236,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
         # create a new application
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="application"
+        create_response = self.gk_service.application(
+            session, method='POST'
         )
         # ensure a 200 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -245,8 +245,8 @@ class TestGateApplicationAPI(unittest.TestCase):
 
         # update the application
 
-        update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="application", id=app_id
+        update_response = self.gk_service.application(
+            session, method='PUT', app_id=app_id
         )
 
         # ensure a 202 is returned
@@ -275,15 +275,15 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
         # clean up - delete the application
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="application", id=app_id
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -303,8 +303,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
         # create a new application
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="application"
+        create_response = self.gk_service.application(
+            session, method='POST'
         )
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -320,8 +320,8 @@ class TestGateApplicationAPI(unittest.TestCase):
 
         for app_dict in update_data:
             app_data = self.gk_service.create_app_data(app_dict)
-            update_response = self.gk_service.gk_crud(
-                session, method='PUT', resource="application", data=app_data, id=app_id
+            update_response = self.gk_service.application(
+                session, method='PUT', app_data=app_data, app_id=app_id
             )
             # ensure a 202 is returned
             self.assertEquals(
@@ -351,15 +351,15 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
         # clean up - delete the application
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="application", id=app_id
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -387,8 +387,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         app_two_data = {'name': app_two, 'default_url': url_two}
 
         # create  application one
-        app_one_response = self.gk_service.gk_crud(
-            session, method='POST', resource="application", data=app_one_data
+        app_one_response = self.gk_service.application(
+            session, method='POST', app_data=app_one_data
         )
 
         # ensure correct status code is returned
@@ -396,15 +396,15 @@ class TestGateApplicationAPI(unittest.TestCase):
         app_id_one = app_one_response.json()['application_id']
 
         # create  application two
-        app_two_response = self.gk_service.gk_crud(
-            session, method='POST', resource="application", data=app_two_data
+        app_two_response = self.gk_service.application(
+            session, method='POST', app_data=app_two_data
         )
         # ensure correct status code is returned
         self.assertEquals(app_two_response.status_code, requests.codes.created)
 
         # update the application one with application two data
-        update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="application", data=app_two_data, id=app_id_one
+        update_response = self.gk_service.application(
+            session, method='PUT', app_data=app_two_data, app_id=app_id_one
         )
 
         # ensure correct status code is returned
@@ -413,15 +413,15 @@ class TestGateApplicationAPI(unittest.TestCase):
             self.gk_service.DUPLICATE_KEY in update_response.json()['error']
         )
         # clean up - delete the application
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="application", id=app_id_one
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id_one
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id_one
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id_one
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -440,8 +440,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
         # create a new application
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="application"
+        create_response = self.gk_service.application(
+            session, method='POST'
         )
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -449,8 +449,8 @@ class TestGateApplicationAPI(unittest.TestCase):
 
         # update the application
 
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
         )
 
         # ensure a 200 is returned
@@ -479,15 +479,15 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
         # clean up - delete the application
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="application", id=app_id
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -512,8 +512,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         app_id = self.util.random_int()
 
         # update the application
-        update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="application", data=app_data, id=app_id
+        update_response = self.gk_service.application(
+            session, method='PUT', app_data=app_data, app_id=app_id
         )
 
         # 404 response
@@ -540,8 +540,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         app_id = self.util.random_int()
 
         # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
         )
 
         # 404 response
@@ -569,8 +569,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         app_data = {'name': new_app, 'default_url': new_url}
 
         # create a new application
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="application", data=app_data
+        create_response = self.gk_service.application(
+            session, method='POST', app_data=app_data
         )
         # ensure correct status code is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -578,15 +578,15 @@ class TestGateApplicationAPI(unittest.TestCase):
         app_id = create_response.json()['application_id']
 
         # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
         )
         # ensure correct status code is returned
         self.assertEquals(read_response.status_code, requests.codes.ok)
 
         # clean up - delete the application
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="application", id=app_id
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -594,8 +594,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         self.assertEquals(len(del_response.content), 0)
 
         # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='GET', app_id=app_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -616,8 +616,8 @@ class TestGateApplicationAPI(unittest.TestCase):
         app_id = self.util.random_int()
 
         # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="application", id=app_id
+        read_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
         )
 
         # 404 response

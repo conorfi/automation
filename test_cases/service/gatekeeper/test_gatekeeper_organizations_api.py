@@ -57,9 +57,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # return list of all organizations
-        response = self.gk_service.gk_listing(
-            session,
-            resource="organization"
+        response = self.gk_service.orgs(
+            session
         )
 
         # 200
@@ -83,8 +82,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # create a new organization
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="organization"
+        create_response = self.gk_service.org(
+            session, method='POST'
         )
         # ensure correct status code is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -99,9 +98,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # return just the newly created org from the list of orgs
-        response = self.gk_service.gk_listing(
+        response = self.gk_service.orgs(
             session,
-            resource="organization",
             name=org_name
         )
         # 200
@@ -122,8 +120,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # clean up - delete the organization
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="organization", id=org_id
+        del_response = self.gk_service.org(
+            session, method='DELETE', org_id=org_id
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -140,9 +138,8 @@ class TestGateUsersAPI(unittest.TestCase):
 
         org_name = "sofake"
         # return just the newly created organization from the list of orgs
-        response = self.gk_service.gk_listing(
+        response = self.gk_service.orgs(
             session,
-            resource="organization",
             name=org_name
         )
 

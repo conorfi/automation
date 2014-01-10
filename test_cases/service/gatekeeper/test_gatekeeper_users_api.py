@@ -61,8 +61,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # return list of all users
-        response = self.gk_service.gk_listing(
-            session, resource="user"
+        response = self.gk_service.users(
+            session
         )
 
         # 200
@@ -85,10 +85,9 @@ class TestGateUsersAPI(unittest.TestCase):
             allow_redirects=False
         )
         # create a new user
-        response = self.gk_service.gk_crud(
-            session, method='POST', resource="user"
+        response = self.gk_service.user(
+            session, method='POST'
         )
-
         # ensure a 201 is returned
         self.assertEquals(response.status_code, requests.codes.created)
         # set username
@@ -99,9 +98,8 @@ class TestGateUsersAPI(unittest.TestCase):
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # return just the newly created user fron the list of users
-        response = self.gk_service.gk_listing(
+        response = self.gk_service.users(
             session,
-            resource="user",
             name=username
         )
         # 200
@@ -124,8 +122,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # clean up - delete the user
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="user", id=user_id
+        del_response = self.gk_service.user(
+            session, method='DELETE', user_id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -142,9 +140,8 @@ class TestGateUsersAPI(unittest.TestCase):
 
         username = "sofake"
         # return just the newly created user from the list of users
-        response = self.gk_service.gk_listing(
+        response = self.gk_service.users(
             session,
-            resource="user",
             name=username
         )
 

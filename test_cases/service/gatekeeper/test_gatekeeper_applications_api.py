@@ -61,9 +61,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # return list of all applications
-        response = self.gk_service.gk_listing(
-            session,
-            resource="application"
+        response = self.gk_service.applications(
+            session
         )
 
         # 200
@@ -87,8 +86,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # create a new application
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource='application'
+        create_response = self.gk_service.application(
+            session, method='POST'
         )
         # ensure correct status code is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -103,9 +102,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # return just the newly created app from the list of apps
-        response = self.gk_service.gk_listing(
+        response = self.gk_service.applications(
             session,
-            resource="application",
             name=appname
         )
         # 200
@@ -130,8 +128,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # clean up - delete the application
-        del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource='application', id=app_id
+        del_response = self.gk_service.application(
+            session, method='DELETE', app_id=app_id
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -148,9 +146,8 @@ class TestGateUsersAPI(unittest.TestCase):
 
         appname = "sofake"
         # return just the newly created user from the list of users
-        response = self.gk_service.gk_listing(
+        response = self.gk_service.applications(
             session,
-            resource="application",
             name=appname
         )
 
