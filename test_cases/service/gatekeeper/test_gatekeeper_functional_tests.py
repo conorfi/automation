@@ -704,7 +704,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
 
         response = self.gk_service.validate_url_with_cookie(session)
 
-        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertEquals(response.status_code, requests.codes.found)
         self.assertTrue("/logout/" in response.text)
 
     @attr(env=['test'], priority=1)
