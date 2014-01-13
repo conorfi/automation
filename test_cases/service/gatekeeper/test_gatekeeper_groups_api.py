@@ -57,8 +57,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # return list of all groups
-        response = self.gk_service.groups(
-            session
+        response = self.gk_service.gk_listing(
+            session, resource="group"
         )
 
         # 200
@@ -82,8 +82,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # create a new group
-        create_response = self.gk_service.group(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group"
         )
         # ensure correct status code is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -98,8 +98,9 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # return just the newly created group from the list of groups
-        response = self.gk_service.groups(
+        response = self.gk_service.gk_listing(
             session,
+            resource="group",
             name=group_name
         )
         # 200
@@ -120,8 +121,8 @@ class TestGateUsersAPI(unittest.TestCase):
         )
 
         # clean up - delete the group
-        del_response = self.gk_service.group(
-            session, method='DELETE', group_id=group_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="group", id=group_id
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -138,8 +139,9 @@ class TestGateUsersAPI(unittest.TestCase):
 
         group_name = "sofake"
         # return just the newly created group from the list of groups
-        response = self.gk_service.groups(
+        response = self.gk_service.gk_listing(
             session,
+            resource="group",
             name=group_name
         )
 
