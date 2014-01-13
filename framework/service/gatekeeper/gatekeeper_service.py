@@ -527,26 +527,6 @@ class GateKeeperService:
 
         return response
 
-    def create_permission_data(self, perms_dict=None):
-
-        """
-        Creation of a organisation dict
-        @return: an org data dict
-
-        """
-        # create random permission name
-        rand_str = self.util.random_str(5)
-
-        permission_data = {
-            'name': rand_str,
-            'application_id': None
-        }
-
-        if perms_dict is not None:
-            permission_data.update(perms_dict)
-
-        return permission_data
-
     def gk_crud(
         self,
         session,
@@ -579,7 +559,7 @@ class GateKeeperService:
         # if data must be created
         if((method == 'POST' or method == 'PUT') and data is None):
             # check the resource so that the data can be set
-            data = self._set_data(resource)
+            data = self._set_data(resource, session)
 
         if(verify is None):
             verify = False
@@ -628,6 +608,18 @@ class GateKeeperService:
             request_url = self._create_url(
                 config['api']['gk']['user_org_v1']['post']
             )
+        elif resource == "grp_perm":
+            request_url = self._create_url(
+                config['api']['gk']['grp_perm_v1']['post']
+            )
+        elif resource == "user_perm":
+            request_url = self._create_url(
+                config['api']['gk']['user_perm_v1']['post']
+            )
+        elif resource == "grp_app":
+            request_url = self._create_url(
+                config['api']['gk']['grp_app_v1']['post']
+            )
         return request_url
 
     def _set_put_del_read_url(self, resource, id, id2):
@@ -636,7 +628,7 @@ class GateKeeperService:
             request_url = self._create_url(
                 config['api']['gk']['application_v1']['id']
             )
-
+            request_url = request_url % (id)
         elif resource == "organization":
             request_url = self._create_url(
                 config['api']['gk']['org_v1']['id']
@@ -672,9 +664,24 @@ class GateKeeperService:
                 config['api']['gk']['user_org_v1']['id']
             )
             request_url = request_url % (id, id2)
+        elif resource == "grp_perm":
+            request_url = self._create_url(
+                config['api']['gk']['grp_perm_v1']['id']
+            )
+            request_url = request_url % (id, id2)
+        elif resource == "user_perm":
+            request_url = self._create_url(
+                config['api']['gk']['user_perm_v1']['id']
+            )
+            request_url = request_url % (id, id2)
+        elif resource == "grp_app":
+            request_url = self._create_url(
+                config['api']['gk']['grp_app_v1']['id']
+            )
+            request_url = request_url % (id, id2)
         return request_url
 
-    def _set_data(self, resource):
+    def _set_data(self, resource, session):
         if resource == "application":
             data = self.create_app_data()
         elif resource == "organization":
@@ -684,13 +691,19 @@ class GateKeeperService:
         elif resource == "group":
             data = self.create_group_data()
         elif resource == "permission":
-            data = self.create_permission_data()
+            data = self.create_permission_data(session)
         elif resource == "user_app":
             data = self.create_user_app_data()
         elif resource == "user_app":
             data = self.create_user_grp_data()
         elif resource == "user_org":
             data = self.create_user_org_data()
+        elif resource == "grp_perm":
+            data = self.create_grp_perm_data()
+        elif resource == "user_perm":
+            data = self.create_user_perm_data()
+        elif resource == "grp_app":
+            data = self.create_grp_app_data()
         return data
 
     def gk_listing(
@@ -754,10 +767,10 @@ class GateKeeperService:
         @return: a user app data dict
 
         """
-        app_id = create_response = self.gk_crud(
+        app_id = self.gk_crud(
             session, method='POST', resource='application'
         ).json()['application_id']
-        user_id = create_response = self.gk_crud(
+        user_id = self.gk_crud(
             session, method='POST', resource='user'
         ).json()['user_id']
 
@@ -776,10 +789,10 @@ class GateKeeperService:
         @return: a user group data dict
 
         """
-        group_id = create_response = self.gk_crud(
+        group_id = self.gk_crud(
             session, method='POST', resource='group'
         ).json()['group_id']
-        user_id = create_response = self.gk_crud(
+        user_id = self.gk_crud(
             session, method='POST', resource='user'
         ).json()['user_id']
 
@@ -797,14 +810,99 @@ class GateKeeperService:
         @return: a user org data dict
 
         """
-        org_id = create_response = self.gk_crud(
+        org_id = self.gk_crud(
             session, method='POST', resource='organization'
         ).json()['organization_id']
-        user_id = create_response = self.gk_crud(
+        user_id = self.gk_crud(
             session, method='POST', resource='user'
         ).json()['user_id']
 
         data = {'user_id': user_id, 'organization_id': org_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_grp_perm_data(self, session, dict=None):
+        """
+        Creation of group app_data
+        @param dict: optional dict - can be merged with a default dict
+        @return: a user org data dict
+
+        """
+        group_id = self.gk_crud(
+            session, method='POST', resource='group'
+        ).json()['group_id']
+        perm_id = self.gk_crud(
+            session, method='POST', resource='permission'
+        ).json()['permission_id']
+
+        data = {'group_id': group_id, 'permission_id': perm_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_user_perm_data(self, session, dict=None):
+        """
+        Creation of user perm data
+        @param dict: optional dict - can be merged with a default dict
+        @return: a user org data dict
+
+        """
+        user_id = self.gk_crud(
+            session, method='POST', resource='user'
+        ).json()['user_id']
+        perm_id = self.gk_crud(
+            session, method='POST', resource='permission'
+        ).json()['permission_id']
+
+        data = {'user_id': user_id, 'permission_id': perm_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_grp_app_data(self, session, dict=None):
+        """
+        Creation of grp application data
+        @param dict: optional dict - can be merged with a default dict
+        @return: a grp app data dict
+
+        """
+        group_id = self.gk_crud(
+            session, method='POST', resource='group'
+        ).json()['group_id']
+        app_id = self.gk_crud(
+            session, method='POST', resource='application'
+        ).json()['application_id']
+
+        data = {'group_id': group_id, 'application_id': app_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_permission_data(self, session, dict=None):
+
+        """
+        Creation of a organisation dict
+        @return: an org data dict
+
+        """
+        app_id = self.gk_crud(
+            session, method='POST', resource='application'
+        ).json()['application_id']
+        rand_str = self.util.random_str(5)
+
+        data = {
+            'name': rand_str,
+            'application_id': app_id
+        }
 
         if dict is not None:
             data.update(dict)

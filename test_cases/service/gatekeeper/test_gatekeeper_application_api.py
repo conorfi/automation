@@ -581,6 +581,7 @@ class TestGateApplicationAPI(unittest.TestCase):
         read_response = self.gk_service.gk_crud(
             session, method='GET', resource="application", id=app_id
         )
+
         # ensure correct status code is returned
         self.assertEquals(read_response.status_code, requests.codes.ok)
 

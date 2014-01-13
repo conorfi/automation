@@ -46,7 +46,7 @@ class TestGateUserAppAssocationAPI(unittest.TestCase):
         self.gk_dao = GateKeeperDAO()
         self.util = Utility()
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_user_org_assoc_api_create(self):
         """
         GATEKEEPER_USER_ORG_ASSOC_API_001 test_user_org_assoc_api_create
