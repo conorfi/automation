@@ -759,6 +759,7 @@ class GateKeeperService:
             )
         return request_url
 
+
     def create_user_app_data(self, session, dict=None):
 
         """
@@ -908,3 +909,56 @@ class GateKeeperService:
             data.update(dict)
 
         return data
+
+    def gk_assocation_listing(
+            self,
+            session,
+            resource,
+            params=None,
+            verify=None
+            ):
+        """
+        Test function for listing results from gk APIs
+        @param session:  session object and associated cookie
+        @param name: name to filter on
+        @param verify: boolean to determine if SSL cert will be verified
+        @return: a request session object containing the user info
+
+        """
+
+        request_url = self._set_assocation_listing_url(resource)
+
+        if(verify is None):
+            verify = False
+
+        response = session.get(url=request_url, verify=verify, params=params)
+
+        return response
+
+    def _set_assocation_listing_url(self, resource):
+
+        if resource == "user_app":
+            request_url = self._create_url(
+                config['api']['gk']['user_apps_v1']
+            )
+        elif resource == "user_org":
+            request_url = self._create_url(
+                config['api']['gk']['user_orgs_v1']
+            )
+        elif resource == "user_perm":
+            request_url = self._create_url(
+                config['api']['gk']['user_perms_v1']
+            )
+        elif resource == "user_grp":
+            request_url = self._create_url(
+                config['api']['gk']['user_grps_v1']
+            )
+        elif resource == "grp_perm":
+            request_url = self._create_url(
+                config['api']['gk']['grp_perms_v1']
+            )
+        elif resource == "grp_app":
+            request_url = self._create_url(
+                config['api']['gk']['grp_apps_v1']
+            )
+        return request_url

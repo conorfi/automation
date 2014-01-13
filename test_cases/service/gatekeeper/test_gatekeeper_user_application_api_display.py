@@ -605,8 +605,9 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.bad_request)
         json_data = response.json()
         self.assertTrue('error' in json_data)
-        self.assertEqual(json_data['error'],
-                         self.gk_service.MISSING_PARAMETERS)
+        self.assertTrue(
+            self.gk_service.MISSING_PARAMETERS in json_data['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_app_with_no_application_name(self):

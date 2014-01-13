@@ -236,22 +236,32 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
 
         # create a new assocation
         create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="grp_app", data=grp_app_data
+            session,
+            method='POST',
+            resource="grp_app",
+            data=grp_app_data
         )
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
         # ensure update is not allowed
         create_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="grp_app", data=grp_app_data
+            session,
+            method='PUT',
+            resource="grp_app",
+            data=grp_app_data,
+            id2=grp_app_data['application_id'],
+            id=grp_app_data['group_id']
         )
+
         # ensure a 405 is returned
         self.assertEquals(
             create_response.status_code, requests.codes.method_not_allowed
         )
 
         self.assertTrue(
-            self.METHOD_NOT_AVAILABLE in create_response.json()['error']
+            self.gk_service.METHOD_NOT_AVAILABLE
+            in create_response.json()['error']
         )
 
         # clean up

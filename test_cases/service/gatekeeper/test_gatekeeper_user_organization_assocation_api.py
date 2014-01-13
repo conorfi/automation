@@ -241,7 +241,12 @@ class TestGateUserAppAssocationAPI(unittest.TestCase):
 
         # ensure update is not allowed
         create_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="user_org", data=user_org_data
+            session,
+            method='PUT',
+            resource="user_org",
+            data=user_org_data,
+            id=user_org_data['user_id'],
+            id2=user_org_data['organization_id']
         )
         # ensure a 405 is returned
         self.assertEquals(
@@ -249,7 +254,8 @@ class TestGateUserAppAssocationAPI(unittest.TestCase):
         )
 
         self.assertTrue(
-            self.METHOD_NOT_AVAILABLE in create_response.json()['error']
+            self.gk_service.METHOD_NOT_AVAILABLE
+            in create_response.json()['error']
         )
 
         # clean up

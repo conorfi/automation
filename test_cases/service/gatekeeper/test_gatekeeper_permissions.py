@@ -92,7 +92,10 @@ class TestGatePermissionsAPI(unittest.TestCase):
 
         # create data
         perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(perms_dict)
+        permission_data = self.gk_service.create_permission_data(
+            session,
+            dict=perms_dict
+        )
 
         # create a new permission
         create_response = self.gk_service.gk_crud(
