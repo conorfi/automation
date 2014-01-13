@@ -58,8 +58,8 @@ class TestGateGroupAPI(unittest.TestCase):
         )
 
         # create a new group
-        create_response = self.gk_service.group(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group"
         )
 
         # ensure a 201 is returned
@@ -79,15 +79,15 @@ class TestGateGroupAPI(unittest.TestCase):
         )
 
         # clean up - delete the group
-        del_response = self.gk_service.group(
-            session, method='DELETE', group_id=group_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="group", id=group_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new group data
-        read_response = self.gk_service.group(
-            session, method='GET', group_id=group_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="group", id=group_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -112,8 +112,8 @@ class TestGateGroupAPI(unittest.TestCase):
         # list of dicts with missing data
         no_data = {'name': None}
 
-        create_response = self.gk_service.group(
-            session, method='POST', group_data=no_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group", data=no_data
         )
 
         # 400
@@ -140,8 +140,8 @@ class TestGateGroupAPI(unittest.TestCase):
         # list of dicts with missing data
         no_data = {'fake': 'fake'}
 
-        create_response = self.gk_service.group(
-            session, method='POST', group_data=no_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group", data=no_data
         )
 
         # 400
@@ -168,15 +168,15 @@ class TestGateGroupAPI(unittest.TestCase):
 
         group_data = self.gk_service.create_group_data()
         # create a new group
-        create_response = self.gk_service.group(
-            session, method='POST', group_data=group_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group", data=group_data
         )
 
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        create_response = self.gk_service.group(
-            session, method='POST', group_data=group_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group", data=group_data
         )
 
         self.assertEquals(
@@ -199,8 +199,8 @@ class TestGateGroupAPI(unittest.TestCase):
         )
 
         # create a new group
-        create_response = self.gk_service.group(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group"
         )
 
         # ensure a 201 is returned
@@ -209,8 +209,8 @@ class TestGateGroupAPI(unittest.TestCase):
         group_id = create_response.json()['group_id']
 
         # update group
-        update_response = self.gk_service.group(
-            session, method='PUT', group_id=group_id
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="group", id=group_id
         )
 
         # set groupname
@@ -229,15 +229,15 @@ class TestGateGroupAPI(unittest.TestCase):
         )
 
         # clean up - delete the group
-        del_response = self.gk_service.group(
-            session, method='DELETE', group_id=group_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="group", id=group_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new group data
-        read_response = self.gk_service.group(
-            session, method='GET', group_id=group_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="group", id=group_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -261,8 +261,8 @@ class TestGateGroupAPI(unittest.TestCase):
         group_one_data = self.gk_service.create_group_data()
         group_two_data = self.gk_service.create_group_data()
         # create group one
-        group_one_response = self.gk_service.group(
-            session, method='POST', group_data=group_one_data
+        group_one_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group", data=group_one_data
         )
         # ensure correct status code is returned
         self.assertEquals(
@@ -271,8 +271,8 @@ class TestGateGroupAPI(unittest.TestCase):
         group_id_one = group_one_response.json()['group_id']
 
         # create group two
-        group_two_response = self.gk_service.group(
-            session, method='POST', group_data=group_two_data
+        group_two_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group", data=group_two_data
         )
         # ensure correct status code is returned
         self.assertEquals(
@@ -281,10 +281,10 @@ class TestGateGroupAPI(unittest.TestCase):
         group_id_two = group_two_response.json()['group_id']
 
         # update the group one with group two data
-        update_response = self.gk_service.group(
-            session, method='PUT',
-            group_data=group_two_data,
-            group_id=group_id_one
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="group",
+            data=group_two_data,
+            id=group_id_one
         )
 
         # ensure correct status code is returned
@@ -293,22 +293,22 @@ class TestGateGroupAPI(unittest.TestCase):
             self.gk_service.DUPLICATE_KEY in update_response.json()['error']
         )
         # clean up - delete the group
-        del_response = self.gk_service.group(
-            session, method='DELETE', group_id=group_id_one
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="group", id=group_id_one
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
          # clean up - delete the group
-        del_response = self.gk_service.group(
-            session, method='DELETE', group_id=group_id_two
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="group", id=group_id_two
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new group data
-        read_response = self.gk_service.group(
-            session, method='GET', group_id=group_id_one
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="group", id=group_id_one
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -326,8 +326,8 @@ class TestGateGroupAPI(unittest.TestCase):
         )
 
         group_id = self.util.random_int()
-        update_response = self.gk_service.group(
-            session, method='PUT', group_id=group_id
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="group", id=group_id
         )
 
         # 404 response
@@ -352,8 +352,8 @@ class TestGateGroupAPI(unittest.TestCase):
         )
 
         # create a new group
-        create_response = self.gk_service.group(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group"
         )
 
         # ensure a 201 is returned
@@ -367,8 +367,8 @@ class TestGateGroupAPI(unittest.TestCase):
         group_info = self.gk_dao.get_group_by_name(self.db, groupname)
 
         # read(GET) group data
-        read_response = self.gk_service.group(
-            session, method='GET', group_id=group_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="group", id=group_id
         )
 
         # verify the creation of the group POST action
@@ -379,15 +379,15 @@ class TestGateGroupAPI(unittest.TestCase):
         self.assertEquals(read_response.json()['name'], group_info['name'])
 
         # clean up - delete the group
-        del_response = self.gk_service.group(
-            session, method='DELETE', group_id=group_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="group", id=group_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new group data
-        read_response = self.gk_service.group(
-            session, method='GET', group_id=group_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="group", id=group_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -405,8 +405,8 @@ class TestGateGroupAPI(unittest.TestCase):
         )
 
         group_id = self.util.random_int()
-        update_response = self.gk_service.group(
-            session, method='GET', group_id=group_id
+        update_response = self.gk_service.gk_crud(
+            session, method='GET', resource="group", id=group_id
         )
 
         # 404 response
@@ -431,8 +431,8 @@ class TestGateGroupAPI(unittest.TestCase):
         )
 
         # create a new group
-        create_response = self.gk_service.group(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group"
         )
 
         # ensure a 201 is returned
@@ -441,8 +441,8 @@ class TestGateGroupAPI(unittest.TestCase):
         # set group_id
         group_id = create_response.json()['group_id']
         # clean up - delete the group
-        del_response = self.gk_service.group(
-            session, method='DELETE', group_id=group_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="group", id=group_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -450,8 +450,8 @@ class TestGateGroupAPI(unittest.TestCase):
         self.assertEquals(len(del_response.content), 0)
 
         # read the new group data
-        read_response = self.gk_service.group(
-            session, method='GET', group_id=group_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="group", id=group_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']

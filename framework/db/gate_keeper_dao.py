@@ -113,6 +113,7 @@ class GateKeeperDAO(object):
                 return None
             else:
                 return result[0]
+
     def get_permission_count(self, db):
             """
             Returns count of permissions
@@ -123,6 +124,90 @@ class GateKeeperDAO(object):
 
             """
             query = """select count(*) from permission"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_user_app_count(self, db):
+            """
+            Returns count of user_app
+            @param db: the database connection that will be utilized
+            @return: count
+
+            """
+            query = """select count(*) from user_application"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_grp_app_count(self, db):
+            """
+            Returns count of grp_app
+            @param db: the database connection that will be utilized
+            @return: count
+
+            """
+            query = """select count(*) from group_application"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_user_grp_count(self, db):
+            """
+            Returns count of grp_app
+            @param db: the database connection that will be utilized
+            @return: count
+
+            """
+            query = """select count(*) from user_group"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_grp_perm_count(self, db):
+            """
+            Returns count of grp_app
+            @param db: the database connection that will be utilized
+            @return: count
+
+            """
+            query = """select count(*) from group_permission"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_user_perm_count(self, db):
+            """
+            Returns count of grp_app
+            @param db: the database connection that will be utilized
+            @return: count
+
+            """
+            query = """select count(*) from user_permission"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_user_org_count(self, db):
+            """
+            Returns count of user_org
+            @param db: the database connection that will be utilized
+            @return: count
+
+            """
+            query = """select count(*) from user_organization"""
             result = db.query(query)
             if (not result):
                 return None
