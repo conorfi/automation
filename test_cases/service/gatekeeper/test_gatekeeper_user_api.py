@@ -311,7 +311,11 @@ class TestGateUserAPI(unittest.TestCase):
         )
         # update the user one with user two data
         update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="user", data=user_two_data, id=user_id_one
+            session,
+            method='PUT',
+            resource="user",
+            data=user_two_data,
+            id=user_id_one
         )
 
         # ensure correct status code is returned
@@ -664,3 +668,169 @@ class TestGateUserAPI(unittest.TestCase):
             allow_redirects=False, credentials=credentials
         )
         assert response.status_code, requests.codes
+
+    @attr(env=['test'], priority=1)
+    def test_user_data_validation_individual(self):
+        """
+        GATEKEEPER_USER_API_014 test_user_api_create_missing_params
+        attempt to create a new user using the user api with missing params
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'username': self.util.random_str(3)},
+            {'username': self.util.random_str(65)},
+            {'username': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            {'name': ''},
+            {'name': self.util.random_str(101)},
+            {'name': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            {'phone': 123},
+            {'password': self.util.random_str(7)},
+            {'password': self.util.random_str(101)},
+            {'password': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            # either side of the email will be 127
+            {'email': self.util.random_email(len=127)},
+            {'email': self.util.random_str()},
+            {'fake': self.util.random_str()},
+        ]
+
+        for dict in bad_data:
+            user_data = self.gk_service.create_user_data(dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="user", data=user_data
+            )
+            # BUG - https://www.pivotaltracker.com/story/show/63796880
+            # email format validation
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            if('username' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.USERNAME_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('name' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('password' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PASSWORD_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('phone' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PHONE_VALIDATION
+                    in create_response.json()['error']
+                )
+
+            elif('email' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.EMAIL_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('fake' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PARAM_NOT_ALLOWED
+                    in create_response.json()['error']
+                )
+
+    @attr(env=['test'], priority=1)
+    def test_user_data_validation_multiple_fields(self):
+        """
+        GATEKEEPER_USER_API_015 test_user_api_create_missing_params
+        attempt to create a new user using the user api with missing params
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'username': self.util.random_str(3), 'name': ''},
+            {'password': self.util.random_str(101),
+                'email': self.util.random_str()},
+            {'username': self.util.random_str(65),
+                'phone': 123,
+                'password': self.util.random_str(7)},
+            {'name': self.util.random_str(101),
+                'email': self.util.random_email(len=127),
+                'password': self.util.random_str(101)}
+        ]
+
+        for dict in bad_data:
+            data = self.gk_service.create_user_data(dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="user", data=data
+            )
+
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            # BUG: https://www.pivotaltracker.com/story/show/63796662
+            # if this defect is resolved this verification
+            # will have to be altered if seperate error message per field
+
+            # BUG - https://www.pivotaltracker.com/story/show/63796880
+            if('username' in dict.keys()
+                    and 'name' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.USERNAME_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+
+            elif ('username' in dict.keys()
+                    and 'phone' in dict.keys()
+                    and 'password' in dict.keys()):
+
+                self.assertTrue(
+                    self.gk_service.USERNAME_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.PHONE_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.PASSWORD_VALIDATION
+                    in create_response.json()['error'])
+
+            elif ('name' in dict.keys()
+                    and 'email' in dict.keys()
+                    and 'password' in dict.keys()):
+
+                self.assertTrue(
+                    self.gk_service.NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.EMAIL_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.PASSWORD_VALIDATION
+                    in create_response.json()['error'])
+
+            # BUG - https://www.pivotaltracker.com/story/show/63796880
+            elif('password' in dict.keys()
+                    and 'email' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PASSWORD_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.EMAIL_VALIDATION
+                    in create_response.json()['error']
+                )

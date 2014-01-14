@@ -456,3 +456,43 @@ class TestGateGroupAPI(unittest.TestCase):
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
+
+    @attr(env=['test'], priority=1)
+    def test_group_api_data_validation(self):
+        """
+        GATEKEEPER_GROUP_API_011 test_group_api_data_validation
+        attempt to create application with invalid data - individual fields
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'name': ''},
+            {'name': self.util.random_str(101)},
+            {'name': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            {'fake': self.util.random_str()}
+        ]
+
+        for dict in bad_data:
+
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="group", data=dict
+            )
+
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            if('name' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('fake' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PARAM_NOT_ALLOWED
+                    in create_response.json()['error']
+                )
