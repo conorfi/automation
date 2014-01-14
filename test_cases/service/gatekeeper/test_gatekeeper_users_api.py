@@ -93,6 +93,7 @@ class TestGateUsersAPI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.created)
         # set username
         username = response.json()['username']
+        name = response.json()['name']
         # set user_id
         user_id = response.json()['user_id']
         # get user data directly from database
@@ -102,11 +103,10 @@ class TestGateUsersAPI(unittest.TestCase):
         response = self.gk_service.gk_listing(
             session,
             resource="user",
-            name=username
+            name=name
         )
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)
-
         # ensure only one result is returned
         api_count = response.json().__len__()
         self.assertEquals(api_count, 1, "count mismatch")

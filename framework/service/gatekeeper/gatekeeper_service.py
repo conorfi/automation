@@ -362,18 +362,17 @@ class GateKeeperService:
         @return: a user data dict
 
         """
-
-        rand_str = self.util.random_str(5)
-        phone = self.util.phone_number()
-        email = self.util.random_email()
+        # create user data
+        # strings set to minimum length
+        # except name which is set to 4 rather than 1-for quality of test data
+        # phone and email set to correct format
         user_data = {
-            'username': rand_str,
-            'name': rand_str,
-            'phone': phone,
-            'email': email,
-            'password': rand_str
+            'username': self.util.random_str(4),
+            'name': self.util.random_str(4),
+            'phone': self.util.phone_number(),
+            'email': self.util.random_email(),
+            'password': self.util.random_str(8)
         }
-
         if user_dict is not None:
             user_data.update(user_dict)
 
@@ -758,7 +757,6 @@ class GateKeeperService:
                 config['api']['gk']['permissions_v1']
             )
         return request_url
-
 
     def create_user_app_data(self, session, dict=None):
 
