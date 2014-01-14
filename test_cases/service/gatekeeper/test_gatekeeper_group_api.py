@@ -457,7 +457,7 @@ class TestGateGroupAPI(unittest.TestCase):
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_group_api_data_validation(self):
         """
         GATEKEEPER_GROUP_API_011 test_group_api_data_validation

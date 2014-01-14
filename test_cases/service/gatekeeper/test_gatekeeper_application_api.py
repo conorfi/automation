@@ -640,7 +640,7 @@ class TestGateApplicationAPI(unittest.TestCase):
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_application_api_data_validation_individual(self):
         """
         GATEKEEPER_USER_API_013 test_application_api_data_validation_individual
@@ -686,7 +686,7 @@ class TestGateApplicationAPI(unittest.TestCase):
                     in create_response.json()['error']
                 )
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_application_api_data_validation_multiple(self):
         """
         GATEKEEPER_USER_API_014 test_application_api_data_validation_multiple

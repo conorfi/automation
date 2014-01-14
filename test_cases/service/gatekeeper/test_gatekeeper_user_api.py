@@ -669,7 +669,7 @@ class TestGateUserAPI(unittest.TestCase):
         )
         assert response.status_code, requests.codes
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_user_data_validation_individual(self):
         """
         GATEKEEPER_USER_API_014 test_user_api_create_missing_params
