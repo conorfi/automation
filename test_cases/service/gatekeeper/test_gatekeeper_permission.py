@@ -273,7 +273,7 @@ class TestGatePermissionAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_permission_api_duplicate_name(self):
         """
-        GATEKEEPER_PERMISSION_API_005 test_permission_api_duplicate_name_app
+        GATEKEEPER_PERMISSION_API_005 test_permission_api_duplicate_name
         attempt to create a new permission using the permission api -
         The permission name may not be unique as long as the app_id
         is unique

@@ -52,7 +52,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_create(self):
         """
-        GATEKEEPER_USER_API_001 test_user_api_create
+        GATEKEEPER_USER_API_002 test_user_api_create
         create a new user using the user api,
         clean up the data (implictly tests DELETE and GET)
         """
@@ -360,17 +360,21 @@ class TestGateUserAPI(unittest.TestCase):
         phone = self.util.phone_number()
         email = self.util.random_email()
         user_dict = [
-            {'username': rand_str},
-            {'name': rand_str},
-            {'phone': phone},
-            {'email': email},
-            {'password': rand_str}
+            {'username': self.util.random_str(4)},
+            {'name': self.util.random_str(1)},
+            {'phone': self.util.phone_number()},
+            {'email': self.util.random_email()},
+            {'password': self.util.random_str(8)}
         ]
 
         for data in user_dict:
             user_data = self.gk_service.create_user_data(data)
             update_response = self.gk_service.gk_crud(
-                session, method='PUT', resource="user", data=user_data, id=user_id
+                session,
+                method='PUT',
+                resource="user",
+                data=user_data,
+                id=user_id
             )
 
         # set username
@@ -604,8 +608,8 @@ class TestGateUserAPI(unittest.TestCase):
         # create username and apssword
         rand_str = self.util.random_str()
         credentials = {
-            'username': rand_str,
-            'password': rand_str
+            'username': self.util.random_str(4),
+            'password': self.util.random_str(8)
         }
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
