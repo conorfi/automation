@@ -891,3 +891,84 @@ class TestGatePermissionAPI(unittest.TestCase):
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
+
+    @attr(env=['test'], priority=2)
+    def test_perms_api_data_validation_individual(self):
+        """
+        GATEKEEPER_PERMISSION_API_014 test_perms_api_data_validation_individual
+        attempt to create application with invalid data - individual fields
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'name': ''},
+            {'name': self.util.random_str(513)},
+            {'name': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            {'application_id':  self.util.random_str()},
+            {'fake': self.util.random_str()}
+        ]
+
+        for dict in bad_data:
+            data = self.gk_service.create_permission_data(session, dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="permission", data=data
+            )
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            if('name' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PERM_NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('application_id' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.APP_ID_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('fake' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PARAM_NOT_ALLOWED
+                    in create_response.json()['error']
+                )
+
+    @attr(env=['test'], priority=2)
+    def test_perms_api_data_validation_multiple(self):
+        """
+        GATEKEEPER_PERMISSION_API_015 test_perms_api_data_validation_multiple
+        attempt to create application with invalid data - multiple fields
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'name': '', 'application_id':  self.util.random_str()}
+        ]
+
+        for dict in bad_data:
+            data = self.gk_service.create_permission_data(session, dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="permission", data=data
+            )
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            if('name' in dict.keys() and 'application_id' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PERM_NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.APP_ID_VALIDATION
+                    in create_response.json()['error']
+                )

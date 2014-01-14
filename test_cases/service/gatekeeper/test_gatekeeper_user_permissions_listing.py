@@ -134,7 +134,64 @@ class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_users_apps_api_filter_invalid_no_data(self):
         """
-        GATEKEEPER_USER_PERMS_API_003 test_users_apps_api_filter_invalid_no_data
+        GATEKEEPER_USER_PERMS_API_003 test_users_apps_api_filter_no_data
+        Ensure the name filer works correctly when no
+        or invalid data is entered
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        user_perm_data = self.gk_service.create_user_perm_data(session)
+
+        # create an association
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user_perm", data=user_perm_data
+        )
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # set user_id
+        user_id = create_response.json()['user_id']
+        # set permission_id
+        permission_id = create_response.json()['permission_id']
+
+        rand_int = self.util.random_int()
+
+        dict_matrix = [
+            {'permission_id': ''},
+            {'user_id': ''},
+            {'permission_id': '', 'user_id': ''}
+        ]
+
+        for params in dict_matrix:
+            # return just the newly created user fron the list of users
+            response = self.gk_service.gk_assocation_listing(
+                session,
+                resource="user_perm",
+                params=params
+            )
+            # BUG: https://www.pivotaltracker.com/story/show/63735728
+            # 200
+            self.assertEquals(response.status_code, requests.codes.ok)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user_perm",
+            id=user_id,
+            id2=permission_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+    @attr(env=['test'], priority=1)
+    def test_users_apps_api_filter_invalid_invalid_data(self):
+        """
+        GATEKEEPER_USER_PERMS_API_004 test_users_apps_api_filter_invalid_data
         Ensure the name filer works correctly when no
         or invalid data is entered
         """
@@ -177,23 +234,6 @@ class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
             self.assertEquals(response.status_code, requests.codes.ok)
             # length 2 i.e empty array
             self.assertEquals(len(response.content), 2)
-
-        dict_matrix = [
-            {'permission_id': ''},
-            {'user_id': ''},
-            {'permission_id': '', 'user_id': ''}
-        ]
-
-        for params in dict_matrix:
-            # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
-                session,
-                resource="user_perm",
-                params=params
-            )
-            # BUG: https://www.pivotaltracker.com/story/show/63735728
-            # 200
-            self.assertEquals(response.status_code, requests.codes.ok)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(

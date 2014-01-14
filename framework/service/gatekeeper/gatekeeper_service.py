@@ -65,6 +65,22 @@ class GateKeeperService:
         self.PARAM_NOT_ALLOWED = "not allowed"
         self.NO_PARAM_SUPPLIED = "No parameter(s) supplied."
         self.METHOD_NOT_AVAILABLE = "not currently available"
+        self.USERNAME_VALIDATION = "Alphanumeric characters required with a"\
+            " minimum length of 4 and maximum length of 64"
+        self.NAME_VALIDATION = "Word characters required with a"\
+            " minimum length of 1 and maximum length of 100"
+        self.PASSWORD_VALIDATION = "Alphanumeric characters required with"\
+            " a minimum length of 8 and maximum length of 100"
+        self.PHONE_VALIDATION = "E.164 formatted number required" \
+            " e.g. +44 20 7751 7500"
+        self.EMAIL_VALIDATION = "Valid email format required, maximum"\
+            " 254 characters in length e.g. test@test.com"
+        self.DEFAULT_URL_VALIDATION = "A valid http/https"\
+            " URL e.g. http://localhost/test"
+        self.PERM_NAME_VALIDATION = "Alphanumeric characters required with"\
+            " a minimum length of 1 and maximum length of 512"
+        self.APP_ID_VALIDATION = "Valid application ID required"
+        self.PARAM_NOT_ALLOWED = "not allowed"
 
     def _create_url(self,
                     path,

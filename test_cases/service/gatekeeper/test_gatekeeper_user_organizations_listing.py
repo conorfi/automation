@@ -132,9 +132,66 @@ class TestGateKeeperUsersOrgsListingAPI(unittest.TestCase):
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
-    def test_user_orgs_api_filter_invalid_no_data(self):
+    def test_user_orgs_api_filter_no_data(self):
         """
-        GATEKEEPER_USER_ORGS_API_003 test_user_orgs_api_filter_invalid_no_data
+        GATEKEEPER_USER_ORGS_API_003 test_user_orgs_api_filter_no_data
+        Ensure the name filer works correctly when no
+        or invalid data is entered
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        user_org_data = self.gk_service.create_user_org_data(session)
+
+        # create an association
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user_org", data=user_org_data
+        )
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # set org_id
+        org_id = create_response.json()['organization_id']
+        # set user_id
+        user_id = create_response.json()['user_id']
+
+        rand_int = self.util.random_int()
+
+        dict_matrix = [
+            {'user_id': ''},
+            {'organization_id': ''},
+            {'user_id': '', 'organization_id': ''}
+        ]
+
+        for params in dict_matrix:
+            # return just the newly created user fron the list of users
+            response = self.gk_service.gk_assocation_listing(
+                session,
+                resource="user_org",
+                params=params
+            )
+            # BUG: https://www.pivotaltracker.com/story/show/63735728
+            # 200
+            self.assertEquals(response.status_code, requests.codes.ok)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user_org",
+            id=user_id,
+            id2=org_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+    @attr(env=['test'], priority=1)
+    def test_user_orgs_api_filter_invalid_data(self):
+        """
+        GATEKEEPER_USER_ORGS_API_004 test_user_orgs_api_filter_invalid_data
         Ensure the name filer works correctly when no
         or invalid data is entered
         """
@@ -177,23 +234,6 @@ class TestGateKeeperUsersOrgsListingAPI(unittest.TestCase):
             self.assertEquals(response.status_code, requests.codes.ok)
             # length 2 i.e empty array
             self.assertEquals(len(response.content), 2)
-
-        dict_matrix = [
-            {'user_id': ''},
-            {'organization_id': ''},
-            {'user_id': '', 'organization_id': ''}
-        ]
-
-        for params in dict_matrix:
-            # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
-                session,
-                resource="user_org",
-                params=params
-            )
-            # BUG: https://www.pivotaltracker.com/story/show/63735728
-            # 200
-            self.assertEquals(response.status_code, requests.codes.ok)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(

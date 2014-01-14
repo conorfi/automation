@@ -321,7 +321,11 @@ class TestGateApplicationAPI(unittest.TestCase):
         for app_dict in update_data:
             app_data = self.gk_service.create_app_data(app_dict)
             update_response = self.gk_service.gk_crud(
-                session, method='PUT', resource="application", data=app_data, id=app_id
+                session,
+                method='PUT',
+                resource="application",
+                data=app_data,
+                id=app_id
             )
             # ensure a 202 is returned
             self.assertEquals(
@@ -404,7 +408,11 @@ class TestGateApplicationAPI(unittest.TestCase):
 
         # update the application one with application two data
         update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="application", data=app_two_data, id=app_id_one
+            session,
+            method='PUT',
+            resource="application",
+            data=app_two_data,
+            id=app_id_one
         )
 
         # ensure correct status code is returned
@@ -513,7 +521,11 @@ class TestGateApplicationAPI(unittest.TestCase):
 
         # update the application
         update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="application", data=app_data, id=app_id
+            session,
+            method='PUT',
+            resource="application",
+            data=app_data,
+            id=app_id
         )
 
         # 404 response
@@ -627,3 +639,85 @@ class TestGateApplicationAPI(unittest.TestCase):
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
+
+    @attr(env=['test'], priority=2)
+    def test_application_api_data_validation_individual(self):
+        """
+        GATEKEEPER_USER_API_013 test_application_api_data_validation_individual
+        attempt to create application with invalid data - individual fields
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'name': ''},
+            {'name': self.util.random_str(101)},
+            {'name': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            {'default_url':  self.util.random_str()},
+            {'fake': self.util.random_str()}
+        ]
+
+        for dict in bad_data:
+            data = self.gk_service.create_app_data(dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="application", data=data
+            )
+
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            if('name' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('default_url' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.DEFAULT_URL_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('fake' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PARAM_NOT_ALLOWED
+                    in create_response.json()['error']
+                )
+
+    @attr(env=['test'], priority=2)
+    def test_application_api_data_validation_multiple(self):
+        """
+        GATEKEEPER_USER_API_014 test_application_api_data_validation_multiple
+        attempt to create application with invalid data - multiple fields
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'name': '', 'default_url':  self.util.random_str()},
+        ]
+
+        for user_dict in bad_data:
+            data = self.gk_service.create_app_data(user_dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="application", data=data
+            )
+
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            self.assertTrue(
+                self.gk_service.NAME_VALIDATION
+                in create_response.json()['error']
+            )
+
+            self.assertTrue(
+                self.gk_service.DEFAULT_URL_VALIDATION
+                in create_response.json()['error']
+            )
