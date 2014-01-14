@@ -478,6 +478,7 @@ class TestGateUserAPI(unittest.TestCase):
             session, method='GET', resource="user", id=user_id
         )
 
+
         # verify the creation of the user POST action
         self.assertEquals(
             read_response.json()['username'], user_info['username']

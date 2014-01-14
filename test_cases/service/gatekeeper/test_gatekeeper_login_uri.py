@@ -55,7 +55,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         Creates a session through a POST to the login API
         using urlencoded body. Specified redirect
         """
-        # login and create session
+        # login and create session - allow_redirects=False
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
             redirect_url=config['gatekeeper']['redirect']
@@ -66,7 +66,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         self.assertEquals(db_response['cookie_id'], cookie_id)
         self.assertEquals(db_response['user_id'], self.default_test_user)
 
-        # create a session - allow redirects
+        # create a session - allow_redirects=True
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=True,
             redirect_url=config['gatekeeper']['redirect']
@@ -150,3 +150,55 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         )
         self.assertEquals(response.status_code, requests.codes.ok)
         self.assertTrue('Example Domain' in response.text)
+
+    @attr(env=['test'], priority=2)
+    def test_login_with_invalid_data(self):
+        """
+        GATEKEEPER_LOGIN_URI_004 test_login_with_invalid_data
+        combinations of fake username and password
+        test for redirects true and false
+        """
+
+        # list of dicts with missing data
+        bad_data = [
+                    {'username': '', 'password': ''},
+                    # {'username': None, 'password': None},
+                    {'username': self.util.random_str(), 'password': ''},
+                    # {'username': self.util.random_str(), 'password': None},
+                    {'username': '', 'password':  self.util.random_str()},
+                    # {'username': None, 'password':  self.util.random_str()},
+                    {'username': self.util.random_str(),
+                        'password': self.util.random_str()}
+        ]
+
+        for dict in bad_data:
+
+            # create a session - allow_redirects=FALSE
+            response = self.gk_service.create_session_urlencoded(
+                allow_redirects=False,
+                redirect_url=config['gatekeeper']['redirect'],
+                credentials=dict
+                )
+
+            self.assertTrue(
+                self.gk_service.INVALID_USERNAME_PASSWORD in response.text
+            )
+            # 302
+            self.assertEquals(response.status_code, requests.codes.found)
+
+             # create a session - allow_redirects=True
+            response = self.gk_service.create_session_urlencoded(
+                allow_redirects=True,
+                redirect_url=config['gatekeeper']['redirect'],
+                credentials=dict
+                )
+
+            self.assertTrue(
+                self.gk_service.INVALID_USERNAME_PASSWORD_HTML
+                in response.text
+            )
+            # 302
+            self.assertEquals(response.status_code, requests.codes.ok)
+
+
+

@@ -287,7 +287,7 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
 
-    @attr(env=['test'], priority=1)
+    @attr(env=['test'], priority=2)
     def test_grp_app_assoc_api_read(self):
         """
         GATEKEEPER_GRP_APP_ASSOC_API_006 test_grp_app_assoc_api_read

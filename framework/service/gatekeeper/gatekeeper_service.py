@@ -61,6 +61,8 @@ class GateKeeperService:
         self.MISSING_PARAM = "Missing parameter(s)"
         self.NOT_LOGGED_IN = "Not logged in"
         self.INVALID_VERIFCATION_CODE = "Verification+code+not+valid"
+        self.INVALID_USERNAME_PASSWORD = "Username+or+password+not+valid"
+        self.INVALID_USERNAME_PASSWORD_HTML = "Username or password not valid"
         self.FK_ERROR = "violates foreign key constraint"
         self.PARAM_NOT_ALLOWED = "not allowed"
         self.NO_PARAM_SUPPLIED = "No parameter(s) supplied."
