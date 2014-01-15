@@ -231,9 +231,9 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
-    def test_user_api_create_duplicate_username(self):
+    def test_user_api_create_duplicate_fields(self):
         """
-        GATEKEEPER_USER_API_005 test_user_api_create_duplicate_username
+        GATEKEEPER_USER_API_005 test_user_api_create_duplicate_fields
         attempt to create a new user using the user api with same params
         """
 
@@ -242,25 +242,33 @@ class TestGateUserAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        user_data = self.gk_service.create_user_data()
         # create a new user
         create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user", data=user_data
+            session, method='POST', resource="user"
         )
 
-        # ensure a 201 is returned
-        self.assertEquals(create_response.status_code, requests.codes.created)
+        user_dict = [
+            {'username': create_response.json()['username']},
+            {'email': create_response.json()['email']}
 
-        create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="user", data=user_data
-        )
+        ]
 
-        self.assertEquals(
-            create_response.status_code, requests.codes.conflict
-        )
-        self.assertTrue(
-            self.gk_service.DUPLICATE_KEY in create_response.json()['error']
-        )
+        for data in user_dict:
+            user_data = self.gk_service.create_user_data(data)
+            create_response = self.gk_service.gk_crud(
+                session,
+                method='POST',
+                resource="user",
+                data=user_data
+            )
+
+            self.assertEquals(
+                create_response.status_code, requests.codes.conflict
+            )
+            self.assertTrue(
+                self.gk_service.DUPLICATE_KEY
+                in create_response.json()['error']
+            )
 
     @attr(env=['test'], priority=1)
     def test_user_api_update(self):
@@ -332,9 +340,9 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
-    def test_user_api_update_duplicate_name(self):
+    def test_user_api_update_duplicate_fields(self):
         """
-        GATEKEEPER_USER_API_007 test_user_api_update_duplicate_name
+        GATEKEEPER_USER_API_007 test_user_api_update_duplicate_fields
         attempt to update an user using the user api but
         the username should not be unique
         clean up the data (implictly tests DELETE and GET)
@@ -366,20 +374,31 @@ class TestGateUserAPI(unittest.TestCase):
         self.assertEquals(
             user_two_response.status_code, requests.codes.created
         )
-        # update the user one with user two data
-        update_response = self.gk_service.gk_crud(
-            session,
-            method='PUT',
-            resource="user",
-            data=user_two_data,
-            id=user_id_one
-        )
 
-        # ensure correct status code is returned
-        self.assertEquals(update_response.status_code, requests.codes.conflict)
-        self.assertTrue(
-            self.gk_service.DUPLICATE_KEY in update_response.json()['error']
-        )
+        user_dict = [
+            {'username': user_two_response.json()['username']},
+            {'email': user_two_response.json()['email']}
+
+        ]
+
+        for data in user_dict:
+            user_data = self.gk_service.create_user_data(data)
+            create_response = self.gk_service.gk_crud(
+                session,
+                method='PUT',
+                resource="user",
+                data=user_data,
+                id=user_id_one
+            )
+
+            self.assertEquals(
+                create_response.status_code, requests.codes.conflict
+            )
+            self.assertTrue(
+                self.gk_service.DUPLICATE_KEY
+                in create_response.json()['error']
+            )
+
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
             session, method='DELETE', resource="user", id=user_id_one
