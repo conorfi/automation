@@ -52,7 +52,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_create(self):
         """
-        GATEKEEPER_USER_API_002 test_user_api_create
+        GATEKEEPER_USER_API_001 test_user_api_create
         create a new user using the user api,
         clean up the data (implictly tests DELETE and GET)
         """
@@ -107,9 +107,66 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
+    def test_user_api_create_json(self):
+        """
+        GATEKEEPER_USER_API_002 test_user_api_create_json
+        create a new user using the user api,
+        clean up the data (implictly tests DELETE and GET)
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # create a new user
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user", type='json'
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # set username
+        username = create_response.json()['username']
+        # get user data directly from database
+        user_info = self.gk_dao.get_user_by_username(self.db, username)
+
+        # verify the creation of the user POST action
+        self.assertEquals(
+            create_response.json()['username'], user_info['username']
+        )
+        self.assertEquals(
+            create_response.json()['user_id'], user_info['user_id']
+        )
+        self.assertEquals(create_response.json()['name'], user_info['name'])
+        self.assertEquals(create_response.json()['phone'], user_info['phone'])
+        self.assertEquals(create_response.json()['email'], user_info['email'])
+        self.assertEquals(
+            create_response.json()['last_logged_in'],
+            user_info['last_logged_in']
+        )
+
+        # set user_id
+        user_id = create_response.json()['user_id']
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # read the new user data
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id
+        )
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
     def test_user_api_create_missing_params(self):
         """
-        GATEKEEPER_USER_API_002 test_user_api_create_missing_params
+        GATEKEEPER_USER_API_003 test_user_api_create_missing_params
         attempt to create a new user using the user api with missing params
         """
         # login and create session
@@ -143,7 +200,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_create_no_data(self):
         """
-        GATEKEEPER_USER_API_003 test_user_api_create_no_data
+        GATEKEEPER_USER_API_004 test_user_api_create_no_data
         attempt to create a new user using the user api with missing params
         """
         # login and create session
@@ -176,7 +233,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_create_duplicate_username(self):
         """
-        GATEKEEPER_USER_API_004 test_user_api_create_duplicate_username
+        GATEKEEPER_USER_API_005 test_user_api_create_duplicate_username
         attempt to create a new user using the user api with same params
         """
 
@@ -208,7 +265,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update(self):
         """
-        GATEKEEPER_USER_API_005 test_user_api_update
+        GATEKEEPER_USER_API_006 test_user_api_update
         update all the user data using the user api
         """
 
@@ -277,7 +334,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update_duplicate_name(self):
         """
-        GATEKEEPER_USER_API_006 test_user_api_update_duplicate_name
+        GATEKEEPER_USER_API_007 test_user_api_update_duplicate_name
         attempt to update an user using the user api but
         the username should not be unique
         clean up the data (implictly tests DELETE and GET)
@@ -341,7 +398,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update_individually(self):
         """
-        GATEKEEPER_USER_API_007 test_user_api_update_individually
+        GATEKEEPER_USER_API_008 test_user_api_update_individually
         update fields individually
         """
         # login and create session
@@ -424,7 +481,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update_non_existant_user_id(self):
         """
-        GATEKEEPER_USER_API_008 test_user_api_update_non_existant_user_id
+        GATEKEEPER_USER_API_009 test_user_api_update_non_existant_user_id
         attempt to update a non existant user id
         """
         # login and create session
@@ -449,7 +506,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_read(self):
         """
-        GATEKEEPER_USER_API_009 test_user_api_read
+        GATEKEEPER_USER_API_010 test_user_api_read
         verify the read(GET) response
         """
 
@@ -477,7 +534,6 @@ class TestGateUserAPI(unittest.TestCase):
         read_response = self.gk_service.gk_crud(
             session, method='GET', resource="user", id=user_id
         )
-
 
         # verify the creation of the user POST action
         self.assertEquals(
@@ -512,7 +568,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_read_existant_user_id(self):
         """
-        GATEKEEPER_USER_API_010 test_user_api_read_existant_user_id
+        GATEKEEPER_USER_API_011 test_user_api_read_existant_user_id
         attempt to get a non existant user id
         """
         # login and create session
@@ -537,7 +593,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_delete(self):
         """
-        GATEKEEPER_USER_API_011 test_user_api_delete
+        GATEKEEPER_USER_API_012 test_user_api_delete
         explicit test case for delete functionality
         """
 
@@ -576,7 +632,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_read_non_existant_user_id(self):
         """
-        GATEKEEPER_USER_API_012 test_user_api_get_non_existant_user_id
+        GATEKEEPER_USER_API_013 test_user_api_get_non_existant_user_id
         attempt to get a non existant user id
         """
         # login and create session
@@ -601,7 +657,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_user_login(self):
         """
-        GATEKEEPER_USER_API_013 test_user_api_user_login
+        GATEKEEPER_USER_API_014 test_user_api_user_login
         login as newly created,updated and deleted user
         """
 
@@ -673,7 +729,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_data_validation_individual(self):
         """
-        GATEKEEPER_USER_API_014 test_user_api_create_missing_params
+        GATEKEEPER_USER_API_015 test_user_api_create_missing_params
         attempt to create a new user using the user api with missing params
         """
         # login and create session
@@ -745,7 +801,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_data_validation_multiple_fields(self):
         """
-        GATEKEEPER_USER_API_015 test_user_api_create_missing_params
+        GATEKEEPER_USER_API_016 test_user_api_create_missing_params
         attempt to create a new user using the user api with missing params
         """
         # login and create session

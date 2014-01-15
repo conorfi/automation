@@ -105,6 +105,62 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
+    def test_application_api_create_json(self):
+        """
+        GATEKEEPER_APPLICATION_API_001A test_application_api_create_json
+        create a new application using the application api,
+        clean up the data (implictly tests DELETE and GET)
+        Use json data for the paylaod
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource='application', type='json'
+        )
+
+        # ensure correct status code is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        app_id = create_response.json()['application_id']
+        appname = create_response.json()['name']
+        # get app data
+        app_data = self.gk_dao.get_app_by_app_name(
+            self.db,
+            appname
+        )
+        # verify the post data againist the db data
+        self.assertEquals(
+            create_response.json()['application_id'],
+            app_data['application_id']
+        )
+        self.assertEquals(
+            create_response.json()['name'],
+            app_data['name']
+        )
+        self.assertEquals(
+            create_response.json()['default_url'],
+            app_data['default_url']
+        )
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="application", id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # read the data
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="application", id=app_id
+        )
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
     def test_application_api_create_dup_name(self):
         """
         GATEKEEPER_APPLICATION_API_002 test_application_api_create_dup_name

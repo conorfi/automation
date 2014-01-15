@@ -134,6 +134,96 @@ class TestGatePermissionAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
+    def test_permission_api_create_json(self):
+        """
+        GATEKEEPER_PERMISSION_API_001A test_permission_api_create_json
+        create a new permission using the permission api,
+        Uses json payload
+        clean up the data (implictly tests DELETE and GET)
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        perm_data = self.gk_service.create_permission_data(session)
+
+        # create a new permission
+        create_response = self.gk_service.gk_crud(
+            session=session,
+            method='POST',
+            resource="permission",
+            data=perm_data,
+            type='json'
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # get app data from the db
+        app_db_data = self.gk_dao.get_app_by_app_name(
+            self.db, create_response.json()['application']['name']
+            )
+        app_id = app_db_data['application_id']
+        app_name = app_db_data['name']
+        app_default_url = app_db_data['default_url']
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # set permission name
+        permission_name = create_response.json()['name']
+         # set permission_id
+        permission_id = create_response.json()['permission_id']
+        # get permission data directly from database
+        permission_info = self.gk_dao.get_permission_by_name(
+            self.db, permission_name, app_id
+        )
+
+        # verify the creation of the permission POST action
+        self.assertEquals(
+            create_response.json()['name'], permission_info['name']
+        )
+        self.assertEquals(
+            create_response.json()['permission_id'],
+            permission_info['permission_id']
+        )
+        self.assertEquals(
+            create_response.json()['application_id'],
+            permission_info['application_id']
+        )
+
+        # verify the creation of the permission POST action
+        self.assertEquals(
+            create_response.json()['application']['name'],
+            app_db_data['name']
+        )
+        self.assertEquals(
+            create_response.json()['application']['default_url'],
+            app_db_data['default_url']
+        )
+
+        self.assertEquals(
+            create_response.json()['application']['application_id'],
+            app_db_data['application_id']
+        )
+
+        # clean up - delete the permission
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="permission", id=permission_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # read the new permission data
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
+        )
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
     def test_permission_api_create_missing_params(self):
         """
         GATEKEEPER_PERMISSION_API_002 test_permission_api_create_missing_params

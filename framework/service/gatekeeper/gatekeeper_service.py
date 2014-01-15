@@ -13,6 +13,7 @@ from testconfig import config
 from framework.utility.utility import Utility
 import Cookie
 import time
+import json
 
 
 class GateKeeperService:
@@ -93,7 +94,7 @@ class GateKeeperService:
 
     def create_session_urlencoded(self, url=None, payload=None, verify=None,
                                   allow_redirects=None, redirect_url=None,
-                                  credentials=None):
+                                  credentials=None, type='urlencoded'):
         """
         creates a session through the login API
         @param url: Optional. request url of API
@@ -101,7 +102,8 @@ class GateKeeperService:
         @param redirect_url: Url to redirect
         @param verify: boolean to determine if SSL cert will be verified
         @param allow_redirects: boolean determines if SSL cert will be verified
-
+        @param credentials: username and password
+        @paratm type: json or urlencoded
         @return: a request object
 
         """
@@ -116,15 +118,14 @@ class GateKeeperService:
         if redirect_url is not None:
             url = url + redirect_url
 
-        # if(redirect_url == None):
-        #    payload = payload.update(config['gatekeeper']['redirect'])
-
         # requests is url-encoded by default
         if verify is None:
             verify = False
 
         if allow_redirects is None:
             allow_redirects = True
+        if type is 'json':
+            data = json.dumps(payload)
         # url encoded
         response = requests.post(
             url=url,
@@ -552,17 +553,21 @@ class GateKeeperService:
         id=None,
         id2=None,
         data=None,
-        verify=None
+        verify=None,
+        type='urlencoded'
     ):
         """
         test function for GK API CRUD operations
 
         @param session:  session object and associated cookie
         @param: method i.e GET,POST,PUT or DELETE
-        @param id: id ofr put,delete,get
+        @param resource: resource under test
+        @param id: id for put,delete,get
+        @param id2: id for put,delete,get
         @param data: data for PUT and DELETE
         @param verify: boolean to determine if SSL cert will be verified
         @param allow_redirects:  boolean to determine if redirects are allowed
+        @param type: urlencoded or json
         @return: a request session object containing the user info
 
         """
@@ -580,6 +585,10 @@ class GateKeeperService:
 
         if(verify is None):
             verify = False
+
+        if type is 'json':
+            data = json.dumps(data)
+            print 'json'
 
         response = self._http_method_generator(
             session,

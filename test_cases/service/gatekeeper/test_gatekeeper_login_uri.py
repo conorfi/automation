@@ -151,7 +151,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.ok)
         self.assertTrue('Example Domain' in response.text)
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_login_with_invalid_data(self):
         """
         GATEKEEPER_LOGIN_URI_004 test_login_with_invalid_data
@@ -161,14 +161,11 @@ class TestGateKeeperLoginURI(unittest.TestCase):
 
         # list of dicts with missing data
         bad_data = [
-                    {'username': '', 'password': ''},
-                    # {'username': None, 'password': None},
-                    {'username': self.util.random_str(), 'password': ''},
-                    # {'username': self.util.random_str(), 'password': None},
-                    {'username': '', 'password':  self.util.random_str()},
-                    # {'username': None, 'password':  self.util.random_str()},
-                    {'username': self.util.random_str(),
-                        'password': self.util.random_str()}
+            {'username': '', 'password': ''},
+            {'username': self.util.random_str(), 'password': ''},
+            {'username': '', 'password':  self.util.random_str()},
+            {'username': self.util.random_str(),
+                'password': self.util.random_str()}
         ]
 
         for dict in bad_data:
@@ -200,5 +197,30 @@ class TestGateKeeperLoginURI(unittest.TestCase):
             # 302
             self.assertEquals(response.status_code, requests.codes.ok)
 
+    @attr(env=['test'], priority=1)
+    def test_can_login_default_redirect_json(self):
+        """
+        GATEKEEPER_LOGIN_URI_005 test_can_login_default_redirect_json
+        creates a session through a POST to the login API using json
+        body. Default redirect
+        The vast majority of tests are urlencoded - this is as simple login
+        using json
+        """
 
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False, type='json'
+        )
 
+        # assert against database
+        db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
+        self.assertEquals(db_response['cookie_id'], cookie_id)
+        self.assertEquals(db_response['user_id'], self.default_test_user)
+
+        # create a session - allow redirects
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=True, type='json'
+        )
+
+        # 200 response
+        self.assertEquals(response.status_code, requests.codes.ok)
