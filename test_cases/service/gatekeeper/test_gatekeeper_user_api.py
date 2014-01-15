@@ -910,3 +910,32 @@ class TestGateUserAPI(unittest.TestCase):
                     self.gk_service.EMAIL_VALIDATION
                     in create_response.json()['error']
                 )
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_delete_admin_delete_itself(self):
+        """
+        GATEKEEPER_USER_API_017 test_user_api_delete_admin_delete_itself
+        Ensure users cannot delete themseves
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # Attempt for the admin user to delete themselves
+        # self.default_test_user is the admin user id
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=self.default_test_user
+        )
+
+        # ensure a 403 is returned
+        self.assertEquals(del_response.status_code, requests.codes.forbidden)
+        # correct error message
+        self.assertTrue(
+            self.gk_service.DELETE_THEMSELVES
+            in del_response.json()['error']
+        )

@@ -1062,3 +1062,41 @@ class TestGatePermissionAPI(unittest.TestCase):
                     self.gk_service.APP_ID_VALIDATION
                     in create_response.json()['error']
                 )
+
+    @attr(env=['test'], priority=1)
+    def test_org_api_delete_gk_permisssion(self):
+        """
+        GATEKEEPER_PERMISSION_API_015 test_org_api_delete_gk_permisssion
+        Ensure seed data such as aam org cannot be deleted
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        gk_app_id = self.gk_dao.get_app_by_app_name(
+            self.db, self.gk_service.GK_APP)['application_id']
+
+        gk_perm_id = self.gk_dao.get_permission_by_name(
+            self.db,
+            per_name=self.gk_service.GK_ALL_PERMISSION,
+            app_id=gk_app_id
+        )['permission_id']
+
+        # Attempt for the admin user to delete themselves
+        # self.default_test_user is the admin user id
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="permission",
+            id=gk_perm_id
+        )
+
+        # ensure a 403 is returned
+        self.assertEquals(del_response.status_code, requests.codes.forbidden)
+        # correct error message
+        self.assertTrue(
+            self.gk_service.DELETE_DATA
+            in del_response.json()['error']
+        )

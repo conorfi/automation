@@ -557,3 +557,35 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
                     self.gk_service.PARAM_NOT_ALLOWED
                     in create_response.json()['error']
                 )
+
+    @attr(env=['test'], priority=1)
+    def test_org_api_delete_aam_org(self):
+        """
+        GATEKEEPER_ORG_API_012 test_org_api_delete_aam_org
+        Ensure seed data such as aam org cannot be deleted
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        aam_org_id = self.gk_dao.get_org_by_orgname(
+            self.db, self.gk_service.ORG_AAM)['organization_id']
+
+        # Attempt for the admin user to delete themselves
+        # self.default_test_user is the admin user id
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=aam_org_id
+        )
+
+        # ensure a 403 is returned
+        self.assertEquals(del_response.status_code, requests.codes.forbidden)
+        # correct error message
+        self.assertTrue(
+            self.gk_service.DELETE_DATA
+            in del_response.json()['error']
+        )

@@ -36,6 +36,8 @@ class GateKeeperService:
         # special permission that allows acess to the gk admin end point
         self.GK_ALL_PERMISSION = "gatekeeper_all"
 
+        self.ORG_AAM = "Arts Alliance Media"
+
         # hash of the password test - using this rather than implementing the
         # gatekeeper hashing function if the hashing function ever change sit
         # will break a number of these functions
@@ -84,6 +86,8 @@ class GateKeeperService:
             " a minimum length of 1 and maximum length of 512"
         self.APP_ID_VALIDATION = "Valid application ID required"
         self.PARAM_NOT_ALLOWED = "not allowed"
+        self.DELETE_THEMSELVES = "Users are not allowed to delete themselves."
+        self.DELETE_DATA = "Cannot delete data"
 
     def _create_url(self,
                     path,

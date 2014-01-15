@@ -697,9 +697,9 @@ class TestGateApplicationAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
-    def test_application_api_data_validation_individual(self):
+    def test_app_api_data_validation_individual(self):
         """
-        GATEKEEPER_USER_API_013 test_application_api_data_validation_individual
+        GATEKEEPER_APPLICATION_API_013 test_app_api_data_validation_individual
         attempt to create application with invalid data - individual fields
         """
         # login and create session
@@ -745,7 +745,7 @@ class TestGateApplicationAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_application_api_data_validation_multiple(self):
         """
-        GATEKEEPER_USER_API_014 test_application_api_data_validation_multiple
+        GATEKEEPER_APP_API_014 test_application_api_data_validation_multiple
         attempt to create application with invalid data - multiple fields
         """
         # login and create session
@@ -777,3 +777,35 @@ class TestGateApplicationAPI(unittest.TestCase):
                 self.gk_service.DEFAULT_URL_VALIDATION
                 in create_response.json()['error']
             )
+
+    @attr(env=['test'], priority=1)
+    def test_application_api_delete_gk_app(self):
+        """
+        GATEKEEPER_APP_API_015 test_application_api_delete_gk_app
+        Ensure seed data such as gatekeeper application cannot be deleted
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        gk_app_id = self.gk_dao.get_app_by_app_name(
+            self.db, self.gk_service.GK_APP)['application_id']
+
+        # Attempt for the admin user to delete themselves
+        # self.default_test_user is the admin user id
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=gk_app_id
+        )
+
+        # ensure a 403 is returned
+        self.assertEquals(del_response.status_code, requests.codes.forbidden)
+        # correct error message
+        self.assertTrue(
+            self.gk_service.DELETE_DATA
+            in del_response.json()['error']
+        )
