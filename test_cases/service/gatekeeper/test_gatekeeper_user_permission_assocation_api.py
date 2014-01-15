@@ -1,7 +1,8 @@
 """
 @summary: Contains a set of test cases for the user permission API
 of the gatekeeper(single sign on) project
-These test cases realted to the association between permission_id and applciation_id
+These test cases realted to the association between permission_id and
+application_id
 Note: only 1 factor authentication test cases
 
 These test have a number of dependencies
@@ -347,9 +348,9 @@ class TestGateGrpPermAssocationAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
-    def test_user_perm_assoc_api_read_not_exis(self):
+    def test_user_perm_ass_api_read_not_exis(self):
         """
-        GATEKEEPER_USER_PERM_ASSOC_API_007 test_user_perm_assoc_api_read_not_exis
+        GATEKEEPER_USER_PERM_ASSOC_API_007 test_user_perm_ass_api_read_not_exis
         attempt to read data that dosen't exist
         clean up the data (implictly tests DELETE)
         """
@@ -451,9 +452,9 @@ class TestGateGrpPermAssocationAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
-    def test_user_perm_assoc_api_read_no_data(self):
+    def test_user_perm_ass_api_read_no_data(self):
         """
-        GATEKEEPER_USER_PERM_ASSOC_API_008 test_user_perm_assoc_api_read_no_data
+        GATEKEEPER_USER_PERM_ASSOC_API_008 test_user_perm_ass_api_read_no_data
         attempt to read no data
         clean up the data (implictly tests DELETE and GET)
         """
@@ -559,7 +560,7 @@ class TestGateGrpPermAssocationAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_perm_assoc_api_del_not_exist(self):
         """
-        GATEKEEPER_USER_PERM_ASSOC_API_011 test_user_perm_assoc_api_del_not_exist
+        GATEKEEPER_USER_PERM_ASSOC_API_011 test_user_perm_ass_api_del_not_exist
         attempt to delete identifiers that do not exist
         """
         # login and create session

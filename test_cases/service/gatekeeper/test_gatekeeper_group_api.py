@@ -94,6 +94,56 @@ class TestGateGroupAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
+    def test_group_api_create_json(self):
+        """
+        GATEKEEPER_GROUP_API_001A test_group_api_create_json
+        create a new group using the group api,
+        Uses json paylaod
+        clean up the data (implictly tests DELETE and GET)
+
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # create a new group
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="group", type='json'
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # set groupname
+        groupname = create_response.json()['name']
+         # set group_id
+        group_id = create_response.json()['group_id']
+        # get group data directly from database
+        group_info = self.gk_dao.get_group_by_name(self.db, groupname)
+
+        # verify the creation of the group POST action
+        self.assertEquals(create_response.json()['name'], group_info['name'])
+        self.assertEquals(
+            create_response.json()['group_id'], group_info['group_id']
+        )
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="group", id=group_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # read the new group data
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="group", id=group_id
+        )
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
     def test_group_api_create_no_data(self):
         """
         GATEKEEPER_GROUP_API_002 test_group_api_create_no_data

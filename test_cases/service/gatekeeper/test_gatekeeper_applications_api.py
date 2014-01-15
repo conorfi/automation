@@ -158,4 +158,3 @@ class TestGateUsersAPI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.ok)
         # length 2 i.e empty array
         self.assertEquals(len(response.content), 2)
-

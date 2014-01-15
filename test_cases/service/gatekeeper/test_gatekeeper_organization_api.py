@@ -97,6 +97,58 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
+    def test_org_api_create_json(self):
+        """
+        GATEKEEPER_ORG_API_001A test_org_api_create_json
+        create a new org using the org api,
+        Uses json data
+        clean up the data (implictly tests DELETE and GET)
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # create a new org
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="organization", type='json'
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # set orgname
+        orgname = create_response.json()['name']
+         # set org_id
+        org_id = create_response.json()['organization_id']
+        # get org data directly from database
+        org_info = self.gk_dao.get_org_by_orgname(self.db, orgname)
+
+        # verify the creation of the org POST action
+        self.assertEquals(
+            create_response.json()['name'], org_info['name']
+        )
+        self.assertEquals(
+            create_response.json()['organization_id'],
+            org_info['organization_id']
+        )
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="organization", id=org_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # read the new org data
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="organization", id=org_id
+        )
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
     def test_org_api_create_no_data(self):
         """
         GATEKEEPER_ORG_API_002 test_org_api_create_no_data
@@ -285,7 +337,11 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
 
         # update the org one with org two data
         update_response = self.gk_service.gk_crud(
-            session, method='PUT', resource="organization", data=org_two_data, id=org_id_one
+            session,
+            method='PUT',
+            resource="organization",
+            data=org_two_data,
+            id=org_id_one
         )
 
         # ensure correct status code is returned
@@ -501,3 +557,35 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
                     self.gk_service.PARAM_NOT_ALLOWED
                     in create_response.json()['error']
                 )
+
+    @attr(env=['test'], priority=1)
+    def test_org_api_delete_aam_org(self):
+        """
+        GATEKEEPER_ORG_API_012 test_org_api_delete_aam_org
+        Ensure seed data such as aam org cannot be deleted
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        aam_org_id = self.gk_dao.get_org_by_orgname(
+            self.db, self.gk_service.ORG_AAM)['organization_id']
+
+        # Attempt for the admin user to delete themselves
+        # self.default_test_user is the admin user id
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=aam_org_id
+        )
+
+        # ensure a 403 is returned
+        self.assertEquals(del_response.status_code, requests.codes.forbidden)
+        # correct error message
+        self.assertTrue(
+            self.gk_service.DELETE_DATA
+            in del_response.json()['error']
+        )

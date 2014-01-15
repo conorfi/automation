@@ -117,7 +117,9 @@ class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
             self.assertEquals(api_count, 1, "count mismatch")
 
             # verify the contents of the users API
-            self.assertEquals(response.json()[0]['permission_id'], permission_id)
+            self.assertEquals(
+                response.json()[0]['permission_id'],
+                permission_id)
             self.assertEquals(response.json()[0]['group_id'], group_id)
 
         # clean up - delete the user
@@ -245,4 +247,3 @@ class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-

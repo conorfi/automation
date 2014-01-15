@@ -13,6 +13,7 @@ from testconfig import config
 from framework.utility.utility import Utility
 import Cookie
 import time
+import json
 
 
 class GateKeeperService:
@@ -34,6 +35,8 @@ class GateKeeperService:
         self.DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
         # special permission that allows acess to the gk admin end point
         self.GK_ALL_PERMISSION = "gatekeeper_all"
+
+        self.ORG_AAM = "Arts Alliance Media"
 
         # hash of the password test - using this rather than implementing the
         # gatekeeper hashing function if the hashing function ever change sit
@@ -61,6 +64,8 @@ class GateKeeperService:
         self.MISSING_PARAM = "Missing parameter(s)"
         self.NOT_LOGGED_IN = "Not logged in"
         self.INVALID_VERIFCATION_CODE = "Verification+code+not+valid"
+        self.INVALID_USERNAME_PASSWORD = "Username+or+password+not+valid"
+        self.INVALID_USERNAME_PASSWORD_HTML = "Username or password not valid"
         self.FK_ERROR = "violates foreign key constraint"
         self.PARAM_NOT_ALLOWED = "not allowed"
         self.NO_PARAM_SUPPLIED = "No parameter(s) supplied."
@@ -81,6 +86,8 @@ class GateKeeperService:
             " a minimum length of 1 and maximum length of 512"
         self.APP_ID_VALIDATION = "Valid application ID required"
         self.PARAM_NOT_ALLOWED = "not allowed"
+        self.DELETE_THEMSELVES = "Users are not allowed to delete themselves."
+        self.DELETE_DATA = "Cannot delete data"
 
     def _create_url(self,
                     path,
@@ -91,7 +98,7 @@ class GateKeeperService:
 
     def create_session_urlencoded(self, url=None, payload=None, verify=None,
                                   allow_redirects=None, redirect_url=None,
-                                  credentials=None):
+                                  credentials=None, type='urlencoded'):
         """
         creates a session through the login API
         @param url: Optional. request url of API
@@ -99,7 +106,8 @@ class GateKeeperService:
         @param redirect_url: Url to redirect
         @param verify: boolean to determine if SSL cert will be verified
         @param allow_redirects: boolean determines if SSL cert will be verified
-
+        @param credentials: username and password
+        @paratm type: json or urlencoded
         @return: a request object
 
         """
@@ -114,15 +122,14 @@ class GateKeeperService:
         if redirect_url is not None:
             url = url + redirect_url
 
-        # if(redirect_url == None):
-        #    payload = payload.update(config['gatekeeper']['redirect'])
-
         # requests is url-encoded by default
         if verify is None:
             verify = False
 
         if allow_redirects is None:
             allow_redirects = True
+        if type is 'json':
+            data = json.dumps(payload)
         # url encoded
         response = requests.post(
             url=url,
@@ -550,17 +557,21 @@ class GateKeeperService:
         id=None,
         id2=None,
         data=None,
-        verify=None
+        verify=None,
+        type='urlencoded'
     ):
         """
         test function for GK API CRUD operations
 
         @param session:  session object and associated cookie
         @param: method i.e GET,POST,PUT or DELETE
-        @param id: id ofr put,delete,get
+        @param resource: resource under test
+        @param id: id for put,delete,get
+        @param id2: id for put,delete,get
         @param data: data for PUT and DELETE
         @param verify: boolean to determine if SSL cert will be verified
         @param allow_redirects:  boolean to determine if redirects are allowed
+        @param type: urlencoded or json
         @return: a request session object containing the user info
 
         """
@@ -578,6 +589,10 @@ class GateKeeperService:
 
         if(verify is None):
             verify = False
+
+        if type is 'json':
+            data = json.dumps(data)
+            print 'json'
 
         response = self._http_method_generator(
             session,

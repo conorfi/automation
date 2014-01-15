@@ -235,7 +235,6 @@ class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
             # length 2 i.e empty array
             self.assertEquals(len(response.content), 2)
 
-
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
             session,
