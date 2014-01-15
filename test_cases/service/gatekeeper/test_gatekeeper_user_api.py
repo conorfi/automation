@@ -770,6 +770,8 @@ class TestGateUserAPI(unittest.TestCase):
             {'password': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
             # either side of the email will be 127
             {'email': self.util.random_email(len=127)},
+            # domain less than 2 characters
+            {'email': "1@1.1"},
             {'email': self.util.random_str()},
             {'fake': self.util.random_str()},
         ]
@@ -779,8 +781,6 @@ class TestGateUserAPI(unittest.TestCase):
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="user", data=user_data
             )
-            # BUG - https://www.pivotaltracker.com/story/show/63796880
-            # email format validation
             self.assertEquals(
                 create_response.status_code, requests.codes.bad_request
             )
@@ -855,7 +855,6 @@ class TestGateUserAPI(unittest.TestCase):
             # if this defect is resolved this verification
             # will have to be altered if seperate error message per field
 
-            # BUG - https://www.pivotaltracker.com/story/show/63796880
             if('username' in dict.keys()
                     and 'name' in dict.keys()):
                 self.assertTrue(
