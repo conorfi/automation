@@ -88,6 +88,7 @@ class GateKeeperService:
         self.PARAM_NOT_ALLOWED = "not allowed"
         self.DELETE_THEMSELVES = "Users are not allowed to delete themselves."
         self.DELETE_DATA = "Cannot delete data"
+        self.NOT_PRESENT = "is not present"
 
     def _create_url(self,
                     path,

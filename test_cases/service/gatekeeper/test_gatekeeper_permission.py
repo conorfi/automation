@@ -982,7 +982,7 @@ class TestGatePermissionAPI(unittest.TestCase):
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
 
-    @attr(env=['test'], priority=1)
+    @attr(env=['test'], priority=2)
     def test_perms_api_data_validation_individual(self):
         """
         GATEKEEPER_PERMISSION_API_014 test_perms_api_data_validation_individual
@@ -1026,6 +1026,22 @@ class TestGatePermissionAPI(unittest.TestCase):
                     self.gk_service.PARAM_NOT_ALLOWED
                     in create_response.json()['error']
                 )
+
+        # BUG - https://www.pivotaltracker.com/story/show/63907916
+        # bug realted to the error code and mesasge
+        # seperate check for non existant app id check
+        dict = {'application_id':  self.util.random_int()}
+        data = self.gk_service.create_permission_data(session, dict)
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=data
+        )
+        self.assertEquals(
+            create_response.status_code, requests.codes.conflict
+        )
+        self.assertTrue(
+            self.gk_service.NOT_PRESENT
+            in create_response.json()['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_perms_api_data_validation_multiple(self):
