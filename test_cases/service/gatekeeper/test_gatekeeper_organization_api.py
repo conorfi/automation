@@ -537,12 +537,6 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="organization", data=dict
             )
-            # BUG - https://www.pivotaltracker.com/story/show/63808516
-            # allow name to be emptry string
-            # BUG - https://www.pivotaltracker.com/story/show/63813308
-            # sting exceeds max limit
-            # BUG - https://www.pivotaltracker.com/story/show/63813544
-            # special characters allowed
             self.assertEquals(
                 create_response.status_code, requests.codes.bad_request
             )

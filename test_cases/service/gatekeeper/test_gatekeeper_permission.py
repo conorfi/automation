@@ -982,7 +982,7 @@ class TestGatePermissionAPI(unittest.TestCase):
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_perms_api_data_validation_individual(self):
         """
         GATEKEEPER_PERMISSION_API_014 test_perms_api_data_validation_individual

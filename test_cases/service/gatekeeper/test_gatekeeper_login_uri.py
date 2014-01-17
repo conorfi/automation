@@ -224,3 +224,89 @@ class TestGateKeeperLoginURI(unittest.TestCase):
 
         # 200 response
         self.assertEquals(response.status_code, requests.codes.ok)
+
+    @attr(env=['test'], priority=1)
+    def test_can_login_default_redirect_json(self):
+        """
+        GATEKEEPER_LOGIN_URI_006 test_login_max_retries
+        A user can only attempt to login a maximum of 5 times
+        """
+
+            # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # create username and apssword
+        rand_str = self.util.random_str()
+        credentials = {
+            'username': self.util.random_str(4),
+            'password': self.util.random_str(8)
+        }
+
+        user_data = self.gk_service.create_user_data(user_dict=credentials)
+
+        # create a new user
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user", data=user_data
+        )
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # ensure user can login in
+         # login in as new user
+        response = self.gk_service.create_session_urlencoded(
+            allow_redirects=False, credentials=credentials
+        )
+        # 302 response
+        self.assertEquals(response.status_code, requests.codes.found)
+
+        # attempt to login in 5 times with a wrong password
+        # set password to a different password to cause failed logins
+        bad_credentials = {
+            'username': credentials['username'],
+            'password': self.util.random_str(8)
+        }
+
+        # decrementing for loop
+        for attempt_login in range(self.gk_service.MAX_ATTEMPT_LOGIN, 0, -1):
+            # login in as new user
+            response = self.gk_service.create_session_urlencoded(
+                credentials=bad_credentials
+            )
+            # 200 response
+            self.assertEquals(response.status_code, requests.codes.ok)
+
+            # 5th and 4th attempt
+            # just invalid user name and password error message
+            if (attempt_login > self.gk_service.THREE_ATTEMPTS_LOGIN):
+                self.assertTrue(self.gk_service.INVALID_USERNAME_PASSWORD_HTML
+                                in response.text)
+            # 3rd and 2nd attempt
+            # user informed of final two attempts
+            elif(attempt_login <= self.gk_service.THREE_ATTEMPTS_LOGIN
+                    and attempt_login > 1):
+                error_message = self.gk_service.LOGIN_ATTEMPTS % (
+                    attempt_login - 1
+                    )
+                self.assertTrue(error_message in response.text)
+            # last attempt
+            # user informed that attempts has been exceeded
+            else:
+                self.assertTrue(self.gk_service.INVALID_USERNAME_PASSWORD_HTML
+                                in response.text)
+                self.assertTrue(self.gk_service.LOGIN_ATTEMPTS_EXCEEDED
+                                in response.text)
+
+        # ensure user can no longer login using the correct credentials
+        response = self.gk_service.create_session_urlencoded(
+            credentials=credentials
+        )
+        # 200 response
+        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertTrue(
+            self.gk_service.LOGIN_ATTEMPTS_EXCEEDED
+            in response.text
+        )
+
+

@@ -35,6 +35,8 @@ class GateKeeperService:
         self.DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
         # special permission that allows acess to the gk admin end point
         self.GK_ALL_PERMISSION = "gatekeeper_all"
+        self.MAX_ATTEMPT_LOGIN = 5
+        self.THREE_ATTEMPTS_LOGIN = 3
 
         self.ORG_AAM = "Arts Alliance Media"
 
@@ -89,6 +91,10 @@ class GateKeeperService:
         self.DELETE_THEMSELVES = "Users are not allowed to delete themselves."
         self.DELETE_DATA = "Cannot delete data"
         self.NOT_PRESENT = "is not present"
+        self.LOGIN_ATTEMPTS = "Username or password not valid."\
+            " Attempts left: %d"
+        self.LOGIN_ATTEMPTS_EXCEEDED = "Exceeded maximum login attempts." \
+            " Please reset your password or contact the site administrator."
 
     def _create_url(self,
                     path,
