@@ -95,3 +95,9 @@ config['api']['gk']['grp_app_v1'] = {}
 config['api']['gk']['grp_app_v1']['post'] = 'api/v1/groupapplication/'
 config['api']['gk']['grp_app_v1']['id'] = 'api/v1/groupapplication/%s/%s'
 config['api']['gk']['grp_apps_v1'] = 'api/v1/groupapplications/'
+config['api']['gk']['recover_account_v1'] = {}
+config['api']['gk']['recover_account_v1']['post'] = 'recoveraccount'
+config['api']['gk']['recover_account_v1']['param'] = "recoveraccount?style"\
+    "=gatekeeper&check_email=True"
+config['api']['gk']['change_password_v1'] = {}
+config['api']['gk']['change_password_v1']['post'] = 'changepassword/%s'

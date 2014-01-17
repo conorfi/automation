@@ -214,6 +214,20 @@ class GateKeeperDAO(object):
             else:
                 return result[0]
 
+    def get_token_count(self, db):
+            """
+            Returns token count
+            @param db: the database connection that will be utilized
+            @return: count
+
+            """
+            query = """select count(*) from token"""
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
     def get_app_by_app_name(self, db, app_name):
             """
             Returns app data based on app name
@@ -285,6 +299,24 @@ class GateKeeperDAO(object):
             query = """select *
                         from gatekeeper_group
                         where name='%s'""" % grp_name
+            result = db.query(query)
+            if (not result):
+                return None
+            else:
+                return result[0]
+
+    def get_token_by_user_id(self, db, user_id):
+            """
+            get the latest token  from the database
+            @param db: the database connection that will be utilized
+            @return: token info
+
+            """
+
+            query = """
+            select * from token
+            where user_id=%d""" % (user_id)
+
             result = db.query(query)
             if (not result):
                 return None

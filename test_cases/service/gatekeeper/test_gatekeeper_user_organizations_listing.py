@@ -173,9 +173,14 @@ class TestGateKeeperUsersOrgsListingAPI(unittest.TestCase):
                 resource="user_org",
                 params=params
             )
-            # BUG: https://www.pivotaltracker.com/story/show/63735728
             # 200
             self.assertEquals(response.status_code, requests.codes.ok)
+
+            # all results returned - so ensure that the count returned
+            # is matched by the count in the database
+            api_count = response.json().__len__()
+            db_count = self.gk_dao.get_user_org_count(self.db)['count']
+            self.assertEquals(api_count, db_count, "count mismatch")
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
