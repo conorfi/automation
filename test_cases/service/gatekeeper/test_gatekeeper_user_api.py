@@ -62,8 +62,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.user(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user"
         )
 
         # ensure a 201 is returned
@@ -92,15 +92,72 @@ class TestGateUserAPI(unittest.TestCase):
         # set user_id
         user_id = create_response.json()['user_id']
         # clean up - delete the user
-        del_response = self.gk_service.user(
-            session, method='DELETE', user_id=user_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.user(
-            session, method='GET', user_id=user_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id
+        )
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_create_json(self):
+        """
+        GATEKEEPER_USER_API_002 test_user_api_create_json
+        create a new user using the user api,
+        clean up the data (implictly tests DELETE and GET)
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # create a new user
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user", type='json'
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # set username
+        username = create_response.json()['username']
+        # get user data directly from database
+        user_info = self.gk_dao.get_user_by_username(self.db, username)
+
+        # verify the creation of the user POST action
+        self.assertEquals(
+            create_response.json()['username'], user_info['username']
+        )
+        self.assertEquals(
+            create_response.json()['user_id'], user_info['user_id']
+        )
+        self.assertEquals(create_response.json()['name'], user_info['name'])
+        self.assertEquals(create_response.json()['phone'], user_info['phone'])
+        self.assertEquals(create_response.json()['email'], user_info['email'])
+        self.assertEquals(
+            create_response.json()['last_logged_in'],
+            user_info['last_logged_in']
+        )
+
+        # set user_id
+        user_id = create_response.json()['user_id']
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # read the new user data
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -109,7 +166,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_create_missing_params(self):
         """
-        GATEKEEPER_USER_API_002 test_user_api_create_missing_params
+        GATEKEEPER_USER_API_003 test_user_api_create_missing_params
         attempt to create a new user using the user api with missing params
         """
         # login and create session
@@ -129,8 +186,8 @@ class TestGateUserAPI(unittest.TestCase):
         for user_dict in no_data:
 
             user_data = self.gk_service.create_user_data(user_dict)
-            create_response = self.gk_service.user(
-                session, method='POST', user_data=user_data
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="user", data=user_data
             )
             self.assertEquals(
                 create_response.status_code, requests.codes.bad_request
@@ -143,7 +200,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_create_no_data(self):
         """
-        GATEKEEPER_USER_API_003 test_user_api_create_no_data
+        GATEKEEPER_USER_API_004 test_user_api_create_no_data
         attempt to create a new user using the user api with missing params
         """
         # login and create session
@@ -159,8 +216,8 @@ class TestGateUserAPI(unittest.TestCase):
         # create empty dict
         no_data = {'username': None}
 
-        create_response = self.gk_service.user(
-            session, method='POST', user_data=no_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user", data=no_data
         )
 
         # 400
@@ -174,9 +231,9 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
     @attr(env=['test'], priority=1)
-    def test_user_api_create_duplicate_username(self):
+    def test_user_api_create_duplicate_fields(self):
         """
-        GATEKEEPER_USER_API_004 test_user_api_create_duplicate_username
+        GATEKEEPER_USER_API_005 test_user_api_create_duplicate_fields
         attempt to create a new user using the user api with same params
         """
 
@@ -185,30 +242,38 @@ class TestGateUserAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        user_data = self.gk_service.create_user_data()
         # create a new user
-        create_response = self.gk_service.user(
-            session, method='POST', user_data=user_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user"
         )
 
-        # ensure a 201 is returned
-        self.assertEquals(create_response.status_code, requests.codes.created)
+        user_dict = [
+            {'username': create_response.json()['username']},
+            {'email': create_response.json()['email']}
 
-        create_response = self.gk_service.user(
-            session, method='POST', user_data=user_data
-        )
+        ]
 
-        self.assertEquals(
-            create_response.status_code, requests.codes.conflict
-        )
-        self.assertTrue(
-            self.gk_service.DUPLICATE_KEY in create_response.json()['error']
-        )
+        for data in user_dict:
+            user_data = self.gk_service.create_user_data(data)
+            create_response = self.gk_service.gk_crud(
+                session,
+                method='POST',
+                resource="user",
+                data=user_data
+            )
+
+            self.assertEquals(
+                create_response.status_code, requests.codes.conflict
+            )
+            self.assertTrue(
+                self.gk_service.DUPLICATE_KEY
+                in create_response.json()['error']
+            )
 
     @attr(env=['test'], priority=1)
     def test_user_api_update(self):
         """
-        GATEKEEPER_USER_API_005 test_user_api_update
+        GATEKEEPER_USER_API_006 test_user_api_update
         update all the user data using the user api
         """
 
@@ -218,8 +283,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.user(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user"
         )
 
         # ensure a 201 is returned
@@ -228,8 +293,8 @@ class TestGateUserAPI(unittest.TestCase):
         user_id = create_response.json()['user_id']
 
         # update user
-        update_response = self.gk_service.user(
-            session, method='PUT', user_id=user_id
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="user", id=user_id
         )
 
         # set username
@@ -260,24 +325,24 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # clean up - delete the user
-        del_response = self.gk_service.user(
-            session, method='DELETE', user_id=user_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.user(
-            session, method='GET', user_id=user_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
 
     @attr(env=['test'], priority=1)
-    def test_user_api_update_duplicate_name(self):
+    def test_user_api_update_duplicate_fields(self):
         """
-        GATEKEEPER_USER_API_006 test_user_api_update_duplicate_name
+        GATEKEEPER_USER_API_007 test_user_api_update_duplicate_fields
         attempt to update an user using the user api but
         the username should not be unique
         clean up the data (implictly tests DELETE and GET)
@@ -292,8 +357,8 @@ class TestGateUserAPI(unittest.TestCase):
         user_one_data = self.gk_service.create_user_data()
         user_two_data = self.gk_service.create_user_data()
         # create user one
-        user_one_response = self.gk_service.user(
-            session, method='POST', user_data=user_one_data
+        user_one_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user", data=user_one_data
         )
         # ensure correct status code is returned
         self.assertEquals(
@@ -302,33 +367,48 @@ class TestGateUserAPI(unittest.TestCase):
         user_id_one = user_one_response.json()['user_id']
 
         # create user two
-        user_two_response = self.gk_service.user(
-            session, method='POST', user_data=user_two_data
+        user_two_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user", data=user_two_data
         )
         # ensure correct status code is returned
         self.assertEquals(
             user_two_response.status_code, requests.codes.created
         )
-        # update the user one with user two data
-        update_response = self.gk_service.user(
-            session, method='PUT', user_data=user_two_data, user_id=user_id_one
-        )
 
-        # ensure correct status code is returned
-        self.assertEquals(update_response.status_code, requests.codes.conflict)
-        self.assertTrue(
-            self.gk_service.DUPLICATE_KEY in update_response.json()['error']
-        )
+        user_dict = [
+            {'username': user_two_response.json()['username']},
+            {'email': user_two_response.json()['email']}
+
+        ]
+
+        for data in user_dict:
+            user_data = self.gk_service.create_user_data(data)
+            create_response = self.gk_service.gk_crud(
+                session,
+                method='PUT',
+                resource="user",
+                data=user_data,
+                id=user_id_one
+            )
+
+            self.assertEquals(
+                create_response.status_code, requests.codes.conflict
+            )
+            self.assertTrue(
+                self.gk_service.DUPLICATE_KEY
+                in create_response.json()['error']
+            )
+
         # clean up - delete the user
-        del_response = self.gk_service.user(
-            session, method='DELETE', user_id=user_id_one
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id_one
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.user(
-            session, method='GET', user_id=user_id_one
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id_one
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -337,7 +417,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update_individually(self):
         """
-        GATEKEEPER_USER_API_007 test_user_api_update_individually
+        GATEKEEPER_USER_API_008 test_user_api_update_individually
         update fields individually
         """
         # login and create session
@@ -346,8 +426,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.user(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user"
         )
 
         # ensure a 201 is returned
@@ -360,17 +440,21 @@ class TestGateUserAPI(unittest.TestCase):
         phone = self.util.phone_number()
         email = self.util.random_email()
         user_dict = [
-            {'username': rand_str},
-            {'name': rand_str},
-            {'phone': phone},
-            {'email': email},
-            {'password': rand_str}
+            {'username': self.util.random_str(4)},
+            {'name': self.util.random_str(1)},
+            {'phone': self.util.phone_number()},
+            {'email': self.util.random_email()},
+            {'password': self.util.random_str(8)}
         ]
 
         for data in user_dict:
             user_data = self.gk_service.create_user_data(data)
-            update_response = self.gk_service.user(
-                session, method='PUT', user_data=user_data, user_id=user_id
+            update_response = self.gk_service.gk_crud(
+                session,
+                method='PUT',
+                resource="user",
+                data=user_data,
+                id=user_id
             )
 
         # set username
@@ -399,15 +483,15 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # clean up - delete the user
-        del_response = self.gk_service.user(
-            session, method='DELETE', user_id=user_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.user(
-            session, method='GET', user_id=user_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -416,7 +500,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_update_non_existant_user_id(self):
         """
-        GATEKEEPER_USER_API_008 test_user_api_update_non_existant_user_id
+        GATEKEEPER_USER_API_009 test_user_api_update_non_existant_user_id
         attempt to update a non existant user id
         """
         # login and create session
@@ -425,8 +509,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         user_id = self.util.random_int()
-        update_response = self.gk_service.user(
-            session, method='PUT', user_id=user_id
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="user", id=user_id
         )
 
         # 404 response
@@ -441,7 +525,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_read(self):
         """
-        GATEKEEPER_USER_API_009 test_user_api_read
+        GATEKEEPER_USER_API_010 test_user_api_read
         verify the read(GET) response
         """
 
@@ -451,8 +535,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.user(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user"
         )
 
         # ensure a 201 is returned
@@ -466,8 +550,8 @@ class TestGateUserAPI(unittest.TestCase):
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # read(GET) user data
-        read_response = self.gk_service.user(
-            session, method='GET', user_id=user_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id
         )
 
         # verify the creation of the user POST action
@@ -486,15 +570,15 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # clean up - delete the user
-        del_response = self.gk_service.user(
-            session, method='DELETE', user_id=user_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new user data
-        read_response = self.gk_service.user(
-            session, method='GET', user_id=user_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -503,7 +587,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_read_existant_user_id(self):
         """
-        GATEKEEPER_USER_API_010 test_user_api_read_existant_user_id
+        GATEKEEPER_USER_API_011 test_user_api_read_existant_user_id
         attempt to get a non existant user id
         """
         # login and create session
@@ -512,8 +596,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         user_id = self.util.random_int()
-        update_response = self.gk_service.user(
-            session, method='GET', user_id=user_id
+        update_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id
         )
 
         # 404 response
@@ -528,7 +612,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_delete(self):
         """
-        GATEKEEPER_USER_API_011 test_user_api_delete
+        GATEKEEPER_USER_API_012 test_user_api_delete
         explicit test case for delete functionality
         """
 
@@ -538,8 +622,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # create a new user
-        create_response = self.gk_service.user(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user"
         )
 
         # ensure a 201 is returned
@@ -548,8 +632,8 @@ class TestGateUserAPI(unittest.TestCase):
         # set user_id
         user_id = create_response.json()['user_id']
         # clean up - delete the user
-        del_response = self.gk_service.user(
-            session, method='DELETE', user_id=user_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -557,8 +641,8 @@ class TestGateUserAPI(unittest.TestCase):
         self.assertEquals(len(del_response.content), 0)
 
         # read the new user data
-        read_response = self.gk_service.user(
-            session, method='GET', user_id=user_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="user", id=user_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -567,7 +651,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_read_non_existant_user_id(self):
         """
-        GATEKEEPER_USER_API_012 test_user_api_get_non_existant_user_id
+        GATEKEEPER_USER_API_013 test_user_api_get_non_existant_user_id
         attempt to get a non existant user id
         """
         # login and create session
@@ -576,8 +660,8 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         user_id = self.util.random_int()
-        update_response = self.gk_service.user(
-            session, method='DELETE', user_id=user_id
+        update_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
         )
 
         # 404 response
@@ -592,7 +676,7 @@ class TestGateUserAPI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_user_login(self):
         """
-        GATEKEEPER_USER_API_013 test_user_api_user_login
+        GATEKEEPER_USER_API_014 test_user_api_user_login
         login as newly created,updated and deleted user
         """
 
@@ -604,14 +688,14 @@ class TestGateUserAPI(unittest.TestCase):
         # create username and apssword
         rand_str = self.util.random_str()
         credentials = {
-            'username': rand_str,
-            'password': rand_str
+            'username': self.util.random_str(4),
+            'password': self.util.random_str(8)
         }
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
         # create a new user
-        create_response = self.gk_service.user(
-            session, method='POST', user_data=user_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user", data=user_data
         )
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -635,8 +719,8 @@ class TestGateUserAPI(unittest.TestCase):
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
         # update user
-        update_response = self.gk_service.user(
-            session, method='PUT', user_id=user_id, user_data=user_data
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="user", id=user_id, data=user_data
         )
 
         # login in as updated user
@@ -647,8 +731,8 @@ class TestGateUserAPI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.found)
 
         # clean up - delete the user
-        del_response = self.gk_service.user(
-            session, method='DELETE', user_id=user_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -660,3 +744,197 @@ class TestGateUserAPI(unittest.TestCase):
             allow_redirects=False, credentials=credentials
         )
         assert response.status_code, requests.codes
+
+    @attr(env=['test'], priority=1)
+    def test_user_data_validation_individual(self):
+        """
+        GATEKEEPER_USER_API_015 test_user_api_create_missing_params
+        attempt to create a new user using the user api with missing params
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'username': self.util.random_str(3)},
+            {'username': self.util.random_str(65)},
+            {'username': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            {'name': ''},
+            {'name': self.util.random_str(101)},
+            {'name': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            {'phone': 123},
+            {'password': self.util.random_str(7)},
+            {'password': self.util.random_str(101)},
+            {'password': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            # either side of the email will be 127
+            {'email': self.util.random_email(len=127)},
+            # domain less than 2 characters
+            {'email': "1@1.1"},
+            {'email': self.util.random_str()},
+            {'fake': self.util.random_str()},
+        ]
+
+        for dict in bad_data:
+            user_data = self.gk_service.create_user_data(dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="user", data=user_data
+            )
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            if('username' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.USERNAME_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('name' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('password' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PASSWORD_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('phone' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PHONE_VALIDATION
+                    in create_response.json()['error']
+                )
+
+            elif('email' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.EMAIL_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('fake' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PARAM_NOT_ALLOWED
+                    in create_response.json()['error']
+                )
+
+    @attr(env=['test'], priority=1)
+    def test_user_data_validation_multiple_fields(self):
+        """
+        GATEKEEPER_USER_API_016 test_user_api_create_missing_params
+        attempt to create a new user using the user api with missing params
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'username': self.util.random_str(3), 'name': ''},
+            {'password': self.util.random_str(101),
+                'email': self.util.random_str()},
+            {'username': self.util.random_str(65),
+                'phone': 123,
+                'password': self.util.random_str(7)},
+            {'name': self.util.random_str(101),
+                'email': self.util.random_email(len=127),
+                'password': self.util.random_str(101)}
+        ]
+
+        for dict in bad_data:
+            data = self.gk_service.create_user_data(dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="user", data=data
+            )
+
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            # BUG: https://www.pivotaltracker.com/story/show/63796662
+            # if this defect is resolved this verification
+            # will have to be altered if seperate error message per field
+
+            if('username' in dict.keys()
+                    and 'name' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.USERNAME_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+
+            elif ('username' in dict.keys()
+                    and 'phone' in dict.keys()
+                    and 'password' in dict.keys()):
+
+                self.assertTrue(
+                    self.gk_service.USERNAME_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.PHONE_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.PASSWORD_VALIDATION
+                    in create_response.json()['error'])
+
+            elif ('name' in dict.keys()
+                    and 'email' in dict.keys()
+                    and 'password' in dict.keys()):
+
+                self.assertTrue(
+                    self.gk_service.NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.EMAIL_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.PASSWORD_VALIDATION
+                    in create_response.json()['error'])
+
+            # BUG - https://www.pivotaltracker.com/story/show/63796880
+            elif('password' in dict.keys()
+                    and 'email' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PASSWORD_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.EMAIL_VALIDATION
+                    in create_response.json()['error']
+                )
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_delete_admin_delete_itself(self):
+        """
+        GATEKEEPER_USER_API_017 test_user_api_delete_admin_delete_itself
+        Ensure users cannot delete themseves
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # Attempt for the admin user to delete themselves
+        # self.default_test_user is the admin user id
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=self.default_test_user
+        )
+
+        # ensure a 403 is returned
+        self.assertEquals(del_response.status_code, requests.codes.forbidden)
+        # correct error message
+        self.assertTrue(
+            self.gk_service.DELETE_THEMSELVES
+            in del_response.json()['error']
+        )

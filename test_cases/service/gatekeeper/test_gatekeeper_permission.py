@@ -57,22 +57,26 @@ class TestGatePermissionAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # get an application id
+        perm_data = self.gk_service.create_permission_data(session)
+
+        # create a new permission
+        create_response = self.gk_service.gk_crud(
+            session=session,
+            method='POST',
+            resource="permission",
+            data=perm_data
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # get app data from the db
         app_db_data = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
+            self.db, create_response.json()['application']['name']
             )
         app_id = app_db_data['application_id']
         app_name = app_db_data['name']
         app_default_url = app_db_data['default_url']
-
-        # create data
-        perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(perms_dict)
-
-        # create a new permission
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=permission_data
-        )
 
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -115,15 +119,105 @@ class TestGatePermissionAPI(unittest.TestCase):
         )
 
         # clean up - delete the permission
-        del_response = self.gk_service.permission(
-            session, method='DELETE', permission_id=permission_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="permission", id=permission_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new permission data
-        read_response = self.gk_service.permission(
-            session, method='GET', permission_id=permission_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
+        )
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
+    def test_permission_api_create_json(self):
+        """
+        GATEKEEPER_PERMISSION_API_001A test_permission_api_create_json
+        create a new permission using the permission api,
+        Uses json payload
+        clean up the data (implictly tests DELETE and GET)
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        perm_data = self.gk_service.create_permission_data(session)
+
+        # create a new permission
+        create_response = self.gk_service.gk_crud(
+            session=session,
+            method='POST',
+            resource="permission",
+            data=perm_data,
+            type='json'
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # get app data from the db
+        app_db_data = self.gk_dao.get_app_by_app_name(
+            self.db, create_response.json()['application']['name']
+            )
+        app_id = app_db_data['application_id']
+        app_name = app_db_data['name']
+        app_default_url = app_db_data['default_url']
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # set permission name
+        permission_name = create_response.json()['name']
+         # set permission_id
+        permission_id = create_response.json()['permission_id']
+        # get permission data directly from database
+        permission_info = self.gk_dao.get_permission_by_name(
+            self.db, permission_name, app_id
+        )
+
+        # verify the creation of the permission POST action
+        self.assertEquals(
+            create_response.json()['name'], permission_info['name']
+        )
+        self.assertEquals(
+            create_response.json()['permission_id'],
+            permission_info['permission_id']
+        )
+        self.assertEquals(
+            create_response.json()['application_id'],
+            permission_info['application_id']
+        )
+
+        # verify the creation of the permission POST action
+        self.assertEquals(
+            create_response.json()['application']['name'],
+            app_db_data['name']
+        )
+        self.assertEquals(
+            create_response.json()['application']['default_url'],
+            app_db_data['default_url']
+        )
+
+        self.assertEquals(
+            create_response.json()['application']['application_id'],
+            app_db_data['application_id']
+        )
+
+        # clean up - delete the permission
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="permission", id=permission_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # read the new permission data
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -141,9 +235,16 @@ class TestGatePermissionAPI(unittest.TestCase):
             allow_redirects=False
         )
 
+        rand_str = self.util.random_str()
+
+        # create data with no name
+        none_dict = {'application_id': None}
+        perm_data = self.gk_service.create_permission_data(
+            session, dict=none_dict
+        )
         # default data has no app_id
-        create_response = self.gk_service.permission(
-            session, method='POST'
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=perm_data
         )
 
         # 400
@@ -156,16 +257,14 @@ class TestGatePermissionAPI(unittest.TestCase):
             in create_response.json()['error']
         )
 
-        # get an application id
-        app_id = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-            )['application_id']
-
         # create data with no name
-        perms_dict = {'application_id': app_id, 'name': None}
-         # default data has no app_id
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=perms_dict
+        none_dict = {'name': None}
+        perm_data = self.gk_service.create_permission_data(
+            session, dict=none_dict
+        )
+                # default data has no app_id
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=perm_data
         )
 
         # 400
@@ -199,8 +298,8 @@ class TestGatePermissionAPI(unittest.TestCase):
         perms_dict = {'name': None}
 
         # default data has no app_id
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=perms_dict
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=perms_dict
         )
 
         # 400
@@ -226,36 +325,45 @@ class TestGatePermissionAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # get an application id
-        app_id = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-            )['application_id']
-
-        # create data
-        perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(perms_dict)
+        permission_data = self.gk_service.create_permission_data(session)
 
         # create a new permission
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=permission_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=permission_data
         )
 
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=permission_data
+        # set permission_id
+        permission_id = create_response.json()['permission_id']
+
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=permission_data
         )
-        # BUG: https://www.pivotaltracker.com/story/show/63469730
-        # ensure a 409 is returned
         self.assertEquals(
             create_response.status_code, requests.codes.conflict
+        )
+
+        # clean up - delete the permission
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="permission", id=permission_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # read the new permission data
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
+        )
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
 
     @attr(env=['test'], priority=1)
     def test_permission_api_duplicate_name(self):
         """
-        GATEKEEPER_PERMISSION_API_005 test_permission_api_duplicate_name_app
+        GATEKEEPER_PERMISSION_API_005 test_permission_api_duplicate_name
         attempt to create a new permission using the permission api -
         The permission name may not be unique as long as the app_id
         is unique
@@ -281,8 +389,8 @@ class TestGatePermissionAPI(unittest.TestCase):
         perms_dict = {'application_id': app_id_one, 'name': name}
 
         # create a new permission
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=perms_dict
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=perms_dict
         )
 
         # ensure a 201 is returned
@@ -291,8 +399,8 @@ class TestGatePermissionAPI(unittest.TestCase):
         # create data - app id one and non unique name
         perms_dict = {'application_id': app_id_two, 'name': name}
 
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=perms_dict
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=perms_dict
         )
 
         # ensure a 201 is returned
@@ -309,26 +417,37 @@ class TestGatePermissionAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # get an application id
-        app_id = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-            )['application_id']
-
-        # get the data we will update to
-        updated_app_db_data = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.DEFAULT_TEST_APP
-            )
-        updated_app_id = updated_app_db_data['application_id']
-        updated_app_name = updated_app_db_data['name']
-        updated_app_default_url = updated_app_db_data['default_url']
-
-        # create data
-        perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(perms_dict)
+        perm_data = self.gk_service.create_permission_data(session)
 
         # create a new permission
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=permission_data
+        create_response = self.gk_service.gk_crud(
+            session=session,
+            method='POST',
+            resource="permission",
+            data=perm_data
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # create a new application
+        updated_app_data = self.gk_service.gk_crud(
+            session, method='POST', resource='application'
+        )
+
+        updated_app_id = updated_app_data.json()['application_id']
+        updated_app_name = updated_app_data.json()['name']
+        updated_app_default_url = updated_app_data.json()['default_url']
+
+        # create data
+        perms_dict = {'application_id': updated_app_id}
+        permission_data = self.gk_service.create_permission_data(
+            session, dict=perms_dict
+        )
+
+        # create a new permission
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=permission_data
         )
 
         # ensure a 201 is returned
@@ -343,11 +462,11 @@ class TestGatePermissionAPI(unittest.TestCase):
         }
 
         # update application_id
-        update_response = self.gk_service.permission(
+        update_response = self.gk_service.gk_crud(
             session,
-            method='PUT',
-            permission_id=permission_id,
-            permission_data=perms_dict
+            method='PUT', resource="permission",
+            id=permission_id,
+            data=perms_dict
         )
 
         # ensure a 202 is returned
@@ -377,28 +496,28 @@ class TestGatePermissionAPI(unittest.TestCase):
         # verify the creation of the permission POST action
         self.assertEquals(
             update_response.json()['application']['name'],
-            updated_app_db_data['name']
+            updated_app_name
         )
         self.assertEquals(
             update_response.json()['application']['default_url'],
-            updated_app_db_data['default_url']
+            updated_app_default_url
         )
 
         self.assertEquals(
             update_response.json()['application']['application_id'],
-            updated_app_db_data['application_id']
+            updated_app_id
         )
 
         # clean up - delete the permission
-        del_response = self.gk_service.permission(
-            session, method='DELETE', permission_id=permission_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="permission", id=permission_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new permission data
-        read_response = self.gk_service.permission(
-            session, method='GET', permission_id=permission_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -416,26 +535,38 @@ class TestGatePermissionAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # get an application id
-        app_id = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-            )['application_id']
-
-        # get the data we will update to
-        updated_app_db_data = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.DEFAULT_TEST_APP
-            )
-        updated_app_id = updated_app_db_data['application_id']
-        updated_app_name = updated_app_db_data['name']
-        updated_app_default_url = updated_app_db_data['default_url']
-
-        # create data
-        perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(perms_dict)
+        perm_data = self.gk_service.create_permission_data(session)
 
         # create a new permission
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=permission_data
+        create_response = self.gk_service.gk_crud(
+            session=session,
+            method='POST',
+            resource="permission",
+            data=perm_data
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+         # create a new application
+        updated_app_data = self.gk_service.gk_crud(
+            session, method='POST', resource='application'
+        )
+
+        updated_app_id = updated_app_data.json()['application_id']
+        updated_app_name = updated_app_data.json()['name']
+        updated_app_default_url = updated_app_data.json()['default_url']
+
+        # create data
+        perms_dict = {'application_id': updated_app_id}
+        permission_data = self.gk_service.create_permission_data(
+            session,
+            dict=perms_dict
+        )
+
+        # create a new permission
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=permission_data
         )
 
         # ensure a 201 is returned
@@ -448,11 +579,11 @@ class TestGatePermissionAPI(unittest.TestCase):
         perms_dict = {'application_id': updated_app_id}
 
         # update application_id
-        update_response = self.gk_service.permission(
+        update_response = self.gk_service.gk_crud(
             session,
-            method='PUT',
-            permission_id=permission_id,
-            permission_data=perms_dict
+            method='PUT', resource="permission",
+            id=permission_id,
+            data=perms_dict
         )
 
         # ensure a 202 is returned
@@ -462,11 +593,11 @@ class TestGatePermissionAPI(unittest.TestCase):
         perms_dict = {'name': self.util.random_str()}
 
         # update permission name
-        update_response = self.gk_service.permission(
+        update_response = self.gk_service.gk_crud(
             session,
-            method='PUT',
-            permission_id=permission_id,
-            permission_data=perms_dict
+            method='PUT', resource="permission",
+            id=permission_id,
+            data=perms_dict
         )
         # ensure a 202 is returned
         self.assertEquals(update_response.status_code, requests.codes.accepted)
@@ -494,28 +625,28 @@ class TestGatePermissionAPI(unittest.TestCase):
         # verify the creation of the permission POST action
         self.assertEquals(
             update_response.json()['application']['name'],
-            updated_app_db_data['name']
+            updated_app_name
         )
         self.assertEquals(
             update_response.json()['application']['default_url'],
-            updated_app_db_data['default_url']
+            updated_app_default_url
         )
 
         self.assertEquals(
             update_response.json()['application']['application_id'],
-            updated_app_db_data['application_id']
+            updated_app_id
         )
 
         # clean up - delete the permission
-        del_response = self.gk_service.permission(
-            session, method='DELETE', permission_id=permission_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="permission", id=permission_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new permission data
-        read_response = self.gk_service.permission(
-            session, method='GET', permission_id=permission_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -535,19 +666,12 @@ class TestGatePermissionAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # get an application id
-        app_id = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-            )['application_id']
-        # create data
-        perms_dict = {'application_id': app_id}
-
-        perms_one_data = self.gk_service.create_permission_data(perms_dict)
-        perms_two_data = self.gk_service.create_permission_data(perms_dict)
+        perms_one_data = self.gk_service.create_permission_data(session)
+        perms_two_data = self.gk_service.create_permission_data(session)
 
         # create permission one
-        permission_one_response = self.gk_service.permission(
-            session, method='POST', permission_data=perms_one_data
+        permission_one_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=perms_one_data
         )
         # ensure correct status code is returned
         self.assertEquals(
@@ -556,8 +680,8 @@ class TestGatePermissionAPI(unittest.TestCase):
         permission_id_one = permission_one_response.json()['permission_id']
 
         # create permission two
-        permission_two_response = self.gk_service.permission(
-            session, method='POST', permission_data=perms_two_data
+        permission_two_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=perms_two_data
         )
         # ensure correct status code is returned
         self.assertEquals(
@@ -566,32 +690,38 @@ class TestGatePermissionAPI(unittest.TestCase):
         permission_id_two = permission_two_response.json()['permission_id']
 
         # update the permission one with permission two data
-        update_response = self.gk_service.permission(
-            session, method='PUT',
-            permission_data=perms_two_data,
-            permission_id=permission_id_one
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="permission",
+            data=perms_two_data,
+            id=permission_id_one
         )
 
         # ensure correct status code is returned i.e 409 rather than 202
         self.assertEquals(update_response.status_code, requests.codes.conflict)
 
         # clean up - delete the permission
-        del_response = self.gk_service.permission(
-            session, method='DELETE', permission_id=permission_id_one
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="permission",
+            id=permission_id_one
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
          # clean up - delete the permission
-        del_response = self.gk_service.permission(
-            session, method='DELETE', permission_id=permission_id_two
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="permission",
+            id=permission_id_two
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new permission data
-        read_response = self.gk_service.permission(
-            session, method='GET', permission_id=permission_id_one
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id_one
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -607,16 +737,10 @@ class TestGatePermissionAPI(unittest.TestCase):
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
-         # get an application id
-        app_id = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-            )['application_id']
-        # create data
-        perms_dict = {'application_id': app_id}
 
         permission_id = self.util.random_int()
-        update_response = self.gk_service.permission(
-            session, method='PUT', permission_id=permission_id
+        update_response = self.gk_service.gk_crud(
+            session, method='PUT', resource="permission", id=permission_id
         )
 
         # 404 response
@@ -639,18 +763,9 @@ class TestGatePermissionAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # get an application id
-        app_id = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-            )['application_id']
-
-        # create data
-        perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(perms_dict)
-
         # create a new permission
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=permission_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission"
         )
 
         # ensure a 201 is returned
@@ -665,11 +780,11 @@ class TestGatePermissionAPI(unittest.TestCase):
         # create data
         perms_dict = {'application_id': rand_app_id}
 
-        update_response = self.gk_service.permission(
+        update_response = self.gk_service.gk_crud(
             session,
-            method='PUT',
-            permission_id=permission_id,
-            permission_data=perms_dict
+            method='PUT', resource="permission",
+            id=permission_id,
+            data=perms_dict
         )
 
         # 409 response
@@ -679,6 +794,24 @@ class TestGatePermissionAPI(unittest.TestCase):
         # verify that the error message is correct
         self.assertTrue(
             self.gk_service.FK_ERROR in update_response.json()['error']
+        )
+
+        # clean up - delete the permission
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="permission",
+            id=permission_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # read the new permission data
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
+        )
+        self.assertTrue(
+            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
 
     @attr(env=['test'], priority=1)
@@ -694,20 +827,23 @@ class TestGatePermissionAPI(unittest.TestCase):
         )
 
         # get application data
-        app_db_data = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-            )
-        app_id = app_db_data['application_id']
-        app_name = app_db_data['name']
-        app_default_url = app_db_data['default_url']
+        app_data = self.gk_service.gk_crud(
+            session, method='POST', resource='application'
+        )
+        app_id = app_data.json()['application_id']
+        app_name = app_data.json()['name']
+        app_default_url = app_data.json()['default_url']
 
         # create data
         perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(perms_dict)
+        permission_data = self.gk_service.create_permission_data(
+            session,
+            dict=perms_dict
+        )
 
         # create a new permission
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=permission_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=permission_data
         )
 
         # ensure a 201 is returned
@@ -723,8 +859,8 @@ class TestGatePermissionAPI(unittest.TestCase):
         )
 
         # read(GET) permission data
-        read_response = self.gk_service.permission(
-            session, method='GET', permission_id=permission_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
         )
 
         # verify the creation of the permission POST action
@@ -743,28 +879,28 @@ class TestGatePermissionAPI(unittest.TestCase):
          # verify the creation of the permission POST action
         self.assertEquals(
             create_response.json()['application']['name'],
-            app_db_data['name']
+            app_name
         )
         self.assertEquals(
             create_response.json()['application']['default_url'],
-            app_db_data['default_url']
+            app_default_url
         )
 
         self.assertEquals(
             create_response.json()['application']['application_id'],
-            app_db_data['application_id']
+            app_id
         )
 
         # clean up - delete the permission
-        del_response = self.gk_service.permission(
-            session, method='DELETE', permission_id=permission_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="permission", id=permission_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
         # read the new permission data
-        read_response = self.gk_service.permission(
-            session, method='GET', permission_id=permission_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
@@ -782,8 +918,8 @@ class TestGatePermissionAPI(unittest.TestCase):
         )
 
         permission_id = self.util.random_int()
-        read_response = self.gk_service.permission(
-            session, method='GET', permission_id=permission_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
         )
 
         # 404 response
@@ -814,11 +950,14 @@ class TestGatePermissionAPI(unittest.TestCase):
 
         # create data
         perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(perms_dict)
+        permission_data = self.gk_service.create_permission_data(
+            session,
+            dict=perms_dict
+        )
 
         # create a new permission
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=permission_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=permission_data
         )
 
         # ensure a 201 is returned
@@ -827,8 +966,8 @@ class TestGatePermissionAPI(unittest.TestCase):
         # set permission_id
         permission_id = create_response.json()['permission_id']
         # clean up - delete the permission
-        del_response = self.gk_service.permission(
-            session, method='DELETE', permission_id=permission_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="permission", id=permission_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -836,9 +975,144 @@ class TestGatePermissionAPI(unittest.TestCase):
         self.assertEquals(len(del_response.content), 0)
 
         # read the new permission data
-        read_response = self.gk_service.permission(
-            session, method='GET', permission_id=permission_id
+        read_response = self.gk_service.gk_crud(
+            session, method='GET', resource="permission", id=permission_id
         )
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
+    def test_perms_api_data_validation_individual(self):
+        """
+        GATEKEEPER_PERMISSION_API_014 test_perms_api_data_validation_individual
+        attempt to create application with invalid data - individual fields
+        """
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'name': ''},
+            {'name': self.util.random_str(513)},
+            {'name': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            {'application_id':  self.util.random_str()},
+            {'fake': self.util.random_str()}
+        ]
+
+        for dict in bad_data:
+            data = self.gk_service.create_permission_data(session, dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="permission", data=data
+            )
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            if('name' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PERM_NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('application_id' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.APP_ID_VALIDATION
+                    in create_response.json()['error']
+                )
+            elif('fake' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PARAM_NOT_ALLOWED
+                    in create_response.json()['error']
+                )
+
+        # BUG - https://www.pivotaltracker.com/story/show/63907916
+        # bug realted to the error code and mesasge
+        # seperate check for non existant app id check
+        dict = {'application_id':  self.util.random_int()}
+        data = self.gk_service.create_permission_data(session, dict)
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=data
+        )
+        self.assertEquals(
+            create_response.status_code, requests.codes.conflict
+        )
+        self.assertTrue(
+            self.gk_service.NOT_PRESENT
+            in create_response.json()['error']
+        )
+
+    @attr(env=['test'], priority=1)
+    def test_perms_api_data_validation_multiple(self):
+        """
+        GATEKEEPER_PERMISSION_API_015 test_perms_api_data_validation_multiple
+        attempt to create application with invalid data - multiple fields
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # list of dicts with missing data
+        bad_data = [
+            {'name': '', 'application_id':  self.util.random_str()}
+        ]
+
+        for dict in bad_data:
+            data = self.gk_service.create_permission_data(session, dict)
+            create_response = self.gk_service.gk_crud(
+                session, method='POST', resource="permission", data=data
+            )
+            self.assertEquals(
+                create_response.status_code, requests.codes.bad_request
+            )
+
+            if('name' in dict.keys() and 'application_id' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PERM_NAME_VALIDATION
+                    in create_response.json()['error']
+                )
+                self.assertTrue(
+                    self.gk_service.APP_ID_VALIDATION
+                    in create_response.json()['error']
+                )
+
+    @attr(env=['test'], priority=1)
+    def test_org_api_delete_gk_permisssion(self):
+        """
+        GATEKEEPER_PERMISSION_API_015 test_org_api_delete_gk_permisssion
+        Ensure seed data such as aam org cannot be deleted
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        gk_app_id = self.gk_dao.get_app_by_app_name(
+            self.db, self.gk_service.GK_APP)['application_id']
+
+        gk_perm_id = self.gk_dao.get_permission_by_name(
+            self.db,
+            per_name=self.gk_service.GK_ALL_PERMISSION,
+            app_id=gk_app_id
+        )['permission_id']
+
+        # Attempt for the admin user to delete themselves
+        # self.default_test_user is the admin user id
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="permission",
+            id=gk_perm_id
+        )
+
+        # ensure a 403 is returned
+        self.assertEquals(del_response.status_code, requests.codes.forbidden)
+        # correct error message
+        self.assertTrue(
+            self.gk_service.DELETE_DATA
+            in del_response.json()['error']
         )

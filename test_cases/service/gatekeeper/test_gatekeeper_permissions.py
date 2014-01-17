@@ -57,8 +57,9 @@ class TestGatePermissionsAPI(unittest.TestCase):
         )
 
         # return list of all permissions
-        response = self.gk_service.permissions(
-            session
+        response = self.gk_service.gk_listing(
+            session,
+            resource="permission"
         )
 
         # 200
@@ -91,11 +92,14 @@ class TestGatePermissionsAPI(unittest.TestCase):
 
         # create data
         perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(perms_dict)
+        permission_data = self.gk_service.create_permission_data(
+            session,
+            dict=perms_dict
+        )
 
         # create a new permission
-        create_response = self.gk_service.permission(
-            session, method='POST', permission_data=permission_data
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="permission", data=permission_data
         )
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
@@ -110,8 +114,9 @@ class TestGatePermissionsAPI(unittest.TestCase):
         )
 
         # return just the newly created user fron the list of users
-        response = self.gk_service.permissions(
+        response = self.gk_service.gk_listing(
             session,
+            resource="permission",
             name=permission_name
         )
         # 200
@@ -150,8 +155,8 @@ class TestGatePermissionsAPI(unittest.TestCase):
         )
 
         # clean up - delete the user
-        del_response = self.gk_service.permission(
-            session, method='DELETE', permission_id=permission_id
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="permission", id=permission_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -168,8 +173,9 @@ class TestGatePermissionsAPI(unittest.TestCase):
 
         permission_name = "sofake"
         # return just the newly created user from the list of permissions
-        response = self.gk_service.permissions(
+        response = self.gk_service.gk_listing(
             session,
+            resource="permission",
             name=permission_name
         )
 

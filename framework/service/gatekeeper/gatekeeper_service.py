@@ -13,6 +13,7 @@ from testconfig import config
 from framework.utility.utility import Utility
 import Cookie
 import time
+import json
 
 
 class GateKeeperService:
@@ -34,6 +35,10 @@ class GateKeeperService:
         self.DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
         # special permission that allows acess to the gk admin end point
         self.GK_ALL_PERMISSION = "gatekeeper_all"
+        self.MAX_ATTEMPT_LOGIN = 5
+        self.THREE_ATTEMPTS_LOGIN = 3
+
+        self.ORG_AAM = "Arts Alliance Media"
 
         # hash of the password test - using this rather than implementing the
         # gatekeeper hashing function if the hashing function ever change sit
@@ -52,8 +57,7 @@ class GateKeeperService:
         self.SESSION_FORBIDDEN = "Forbidden session with cookie %s"\
             " for application fake"
         self.SESSION_NOT_ALLOWED = 'User not allowed access this session!'
-        self.MISSING_PARAMETERS = "Missing parameters: "\
-            "application_name,user_id"
+        self.MISSING_PARAMETERS = "Missing parameters: "
         self.MISSING_APP_NAME = "Missing parameters: application_name"
         self.MISSING_APP_ID = "Missing parameters: user_id"
         self.CONFIRM_LOGOUT = "Please confirm logout"
@@ -62,9 +66,36 @@ class GateKeeperService:
         self.MISSING_PARAM = "Missing parameter(s)"
         self.NOT_LOGGED_IN = "Not logged in"
         self.INVALID_VERIFCATION_CODE = "Verification+code+not+valid"
+        self.INVALID_USERNAME_PASSWORD = "Username+or+password+not+valid"
+        self.INVALID_USERNAME_PASSWORD_HTML = "Username or password not valid"
         self.FK_ERROR = "violates foreign key constraint"
         self.PARAM_NOT_ALLOWED = "not allowed"
         self.NO_PARAM_SUPPLIED = "No parameter(s) supplied."
+        self.METHOD_NOT_AVAILABLE = "not currently available"
+        self.USERNAME_VALIDATION = "Alphanumeric characters required with a"\
+            " minimum length of 4 and maximum length of 64"
+        self.NAME_VALIDATION = "Word characters required with a"\
+            " minimum length of 1 and maximum length of 100"
+        self.PASSWORD_VALIDATION = "Alphanumeric characters required with"\
+            " a minimum length of 8 and maximum length of 100"
+        self.PHONE_VALIDATION = "E.164 formatted number required" \
+            " e.g. +44 20 7751 7500"
+        self.EMAIL_VALIDATION = "Valid email format required, maximum"\
+            " 254 characters in length e.g. test@test.com"
+        self.DEFAULT_URL_VALIDATION = "A valid http/https"\
+            " URL e.g. http://localhost/test"
+        self.PERM_NAME_VALIDATION = "Alphanumeric characters required with"\
+            " a minimum length of 1 and maximum length of 512"
+        self.APP_ID_VALIDATION = "Valid application ID required"
+        self.PARAM_NOT_ALLOWED = "not allowed"
+        self.DELETE_THEMSELVES = "Users are not allowed to delete themselves."
+        self.DELETE_DATA = "Cannot delete data"
+        self.NOT_PRESENT = "is not present"
+        self.LOGIN_ATTEMPTS = "Username or password not valid."\
+            " Attempts left: %d"
+        self.LOGIN_ATTEMPTS_EXCEEDED = "Exceeded maximum login attempts." \
+            " Please reset your password or contact the site administrator."
+        self.RECOVER_RESPONSE = "you should now have received the email with"
 
     def _create_url(self,
                     path,
@@ -73,17 +104,17 @@ class GateKeeperService:
         return '{0}://{1}:{2}/{3}'.format(
             config['gatekeeper']['scheme'], host, port, path)
 
-    def create_session_urlencoded(self, url=None, payload=None, verify=None,
+    def create_session_urlencoded(self, url=None, verify=None,
                                   allow_redirects=None, redirect_url=None,
-                                  credentials=None):
+                                  credentials=None, type='urlencoded'):
         """
         creates a session through the login API
         @param url: Optional. request url of API
-        @param payload: Optional. The credentials of the user
         @param redirect_url: Url to redirect
         @param verify: boolean to determine if SSL cert will be verified
         @param allow_redirects: boolean determines if SSL cert will be verified
-
+        @param credentials: username and password
+        @paratm type: json or urlencoded
         @return: a request object
 
         """
@@ -98,21 +129,25 @@ class GateKeeperService:
         if redirect_url is not None:
             url = url + redirect_url
 
-        # if(redirect_url == None):
-        #    payload = payload.update(config['gatekeeper']['redirect'])
-
         # requests is url-encoded by default
         if verify is None:
             verify = False
 
         if allow_redirects is None:
             allow_redirects = True
+
+        headers = {}
+        if type == 'json':
+            credentials = json.dumps(credentials)
+            headers['Content-Type'] = 'application/json'
+
         # url encoded
         response = requests.post(
             url=url,
             data=credentials,
             verify=verify,
-            allow_redirects=allow_redirects
+            allow_redirects=allow_redirects,
+            headers=headers
         )
         return response
 
@@ -354,102 +389,6 @@ class GateKeeperService:
 
         return response
 
-    def application(
-        self,
-        session,
-        method,
-        app_id=None,
-        app_data=None,
-        verify=None
-    ):
-        """
-        Application API for CRUD operations
-
-        @param session:  session object and associated cookie
-        @param: method i.e GET,POST,PUT or DELETE
-        @param app_id: application id
-        @param app_data: data for PUT and DELETE
-        @param verify: boolean to determine if SSL cert will be verified
-        @param allow_redirects:  boolean to determine if redirects are allowed
-        @return: a request session object containing the user info
-
-        """
-
-        url = self._create_url(config['api']['gk']['application_v1']['post'])
-
-        if(app_id is not None):
-
-            request_url = self._create_url(
-                config['api']['gk']['application_v1']['id']
-            )
-            request_url = request_url % (app_id)
-
-        if((method == 'POST' or method == 'PUT') and app_data is None):
-            app_data = self.create_app_data()
-
-        if(verify is None):
-            verify = False
-
-        if method == 'GET':
-            response = session.get(url=request_url, verify=verify)
-        if method == 'POST':
-            response = session.post(url=url, data=app_data, verify=verify)
-        if method == 'PUT':
-            response = session.put(
-                url=request_url, data=app_data, verify=verify
-                )
-        if method == 'DELETE':
-            response = session.delete(url=request_url, verify=verify)
-
-        return response
-
-    def user(
-        self,
-        session,
-        method,
-        user_id=None,
-        user_data=None,
-        verify=None
-    ):
-        """
-        User API for CRUD operations
-        @param session:  session object and associated cookie
-        @param: method: i.e GET,POST,PUT or DELETE
-        @param user_id: user id
-        @param user_data: data for PUT and DELETE
-        @param verify: boolean to determine if SSL cert will be verified
-        @param allow_redirects:  boolean to determine if redirects are allowed
-        @return: a request session object containing the user info
-
-        """
-
-        url = self._create_url(config['api']['gk']['user_v1']['post'])
-
-        if(user_id is not None):
-            request_url = self._create_url(
-                config['api']['gk']['user_v1']['id']
-            )
-            request_url = request_url % (user_id)
-
-        if((method == 'POST' or method == 'PUT') and user_data is None):
-            user_data = self.create_user_data()
-
-        if(verify is None):
-            verify = False
-
-        if method == 'GET':
-            response = session.get(url=request_url, verify=verify)
-        if method == 'POST':
-            response = session.post(url=url, data=user_data, verify=verify)
-        if method == 'PUT':
-            response = session.put(
-                url=request_url, data=user_data, verify=verify
-                )
-        if method == 'DELETE':
-            response = session.delete(url=request_url, verify=verify)
-
-        return response
-
     def create_user_data(self, user_dict=None):
 
         """
@@ -458,18 +397,17 @@ class GateKeeperService:
         @return: a user data dict
 
         """
-
-        rand_str = self.util.random_str(5)
-        phone = self.util.phone_number()
-        email = self.util.random_email()
+        # create user data
+        # strings set to minimum length
+        # except name which is set to 4 rather than 1-for quality of test data
+        # phone and email set to correct format
         user_data = {
-            'username': rand_str,
-            'name': rand_str,
-            'phone': phone,
-            'email': email,
-            'password': rand_str
+            'username': self.util.random_str(4),
+            'name': self.util.random_str(4),
+            'phone': self.util.phone_number(),
+            'email': self.util.random_email(),
+            'password': self.util.random_str(8)
         }
-
         if user_dict is not None:
             user_data.update(user_dict)
 
@@ -576,109 +514,6 @@ class GateKeeperService:
         session = self.create_requests_session_with_cookie(my_cookie)
         return session, cookie_id, response
 
-    def users(
-            self,
-            session,
-            name=None,
-            verify=None
-            ):
-        """
-        Users API for CRUD operations
-        @param session:  session object and associated cookie
-        @param name: username
-        @param verify: boolean to determine if SSL cert will be verified
-        @return: a request session object containing the user info
-
-        """
-
-        request_url = self._create_url(config['api']['gk']['users_v1'])
-
-        if (name is not None):
-            request_url = request_url + '/?name=%s'
-            request_url = request_url % (name)
-
-        if(verify is None):
-            verify = False
-
-        response = session.get(url=request_url, verify=verify)
-
-        return response
-
-    def applications(
-            self,
-            session,
-            name=None,
-            verify=None
-            ):
-        """
-        applications API for CRUD operations
-        @param session:  session object and associated cookie
-        @param name: application name
-        @param verify: boolean to determine if SSL cert will be verified
-        @return: a request session object containing the user info
-
-        """
-        request_url = self._create_url(
-            config['api']['gk']['applications_v1']
-        )
-
-        if (name is not None):
-            request_url = request_url + '/?name=%s'
-            request_url = request_url % (name)
-
-        if(verify is None):
-            verify = False
-
-        response = session.get(url=request_url, verify=verify)
-
-        return response
-
-    def org(
-            self,
-            session,
-            method,
-            org_id=None,
-            org_data=None,
-            verify=None
-            ):
-        """
-        Organisation API for CRUD operations
-        @param session:  session object and associated cookie
-        @param: method: i.e GET,POST,PUT or DELETE
-        @param org_id: org id
-        @param org_data: data for PUT and DELETE
-        @param verify: boolean to determine if SSL cert will be verified
-        @return: a request session object containing the organisation info
-
-        """
-
-        url = self._create_url(config['api']['gk']['org_v1']['post'])
-
-        if(org_id is not None):
-            request_url = self._create_url(
-                config['api']['gk']['org_v1']['id']
-            )
-            request_url = request_url % (org_id)
-
-        if((method == 'POST' or method == 'PUT') and org_data is None):
-            org_data = self.create_org_data()
-
-        if(verify is None):
-            verify = False
-
-        if method == 'GET':
-            response = session.get(url=request_url, verify=verify)
-        if method == 'POST':
-            response = session.post(url=url, data=org_data, verify=verify)
-        if method == 'PUT':
-            response = session.put(
-                url=request_url, data=org_data, verify=verify
-                )
-        if method == 'DELETE':
-            response = session.delete(url=request_url, verify=verify)
-
-        return response
-
     def create_org_data(self):
 
         """
@@ -692,81 +527,6 @@ class GateKeeperService:
         }
 
         return org_data
-
-    def orgs(
-            self,
-            session,
-            name=None,
-            verify=None
-            ):
-        """
-        Organizations API for CRUD operations
-        @param session:  session object and associated cookie
-        @param name: organization name
-        @param verify: boolean to determine if SSL cert will be verified
-        @return: a request session object containing the user info
-
-        """
-        request_url = self._create_url(
-            config['api']['gk']['orgs_v1']
-        )
-
-        if (name is not None):
-            request_url = request_url + '/?name=%s'
-            request_url = request_url % (name)
-
-        if(verify is None):
-            verify = False
-
-        response = session.get(url=request_url, verify=verify)
-
-        return response
-
-    def group(
-            self,
-            session,
-            method,
-            group_id=None,
-            group_data=None,
-            verify=None
-            ):
-        """
-        Group API for CRUD operations
-        @param session:  session object and associated cookie
-        @param: method: i.e GET,POST,PUT or DELETE
-        @param group_id: group id
-        @param group_data: data for PUT and DELETE
-        @param verify: boolean to determine if SSL cert will be verified
-        @return: a request session object containing the group info
-
-        """
-
-        url = self._create_url(config['api']['gk']['group_v1']['post'])
-
-        if(group_id is not None):
-            request_url = self._create_url(
-                config['api']['gk']['group_v1']['id']
-            )
-            request_url = request_url % (group_id)
-
-        if((method == 'POST' or method == 'PUT') and group_data is None):
-            group_data = self.create_group_data()
-
-        if(verify is None):
-            verify = False
-
-        if method == 'GET':
-            response = session.get(url=request_url, verify=verify)
-        if method == 'POST':
-            response = session.post(url=url, data=group_data, verify=verify)
-        if method == 'PUT':
-            response = session.put(
-                url=request_url, data=group_data, verify=verify
-                )
-        if method == 'DELETE':
-            response = session.delete(url=request_url, verify=verify)
-
-        return response
 
     def create_group_data(self):
 
@@ -782,23 +542,233 @@ class GateKeeperService:
 
         return group_data
 
-    def groups(
+    def _http_method_generator(
+        self, session, method, request_url, verify, data, headers=None
+            ):
+
+        if method == 'GET':
+            response = session.get(url=request_url, verify=verify,
+                                   headers=headers)
+        if method == 'POST':
+            response = session.post(
+                url=request_url, data=data, verify=verify, headers=headers
+            )
+        if method == 'PUT':
+            response = session.put(
+                url=request_url, data=data, verify=verify, headers=headers
+                )
+        if method == 'DELETE':
+            response = session.delete(url=request_url, verify=verify,
+                                      headers=headers)
+
+        return response
+
+    def gk_crud(
+        self,
+        session,
+        method,
+        resource,
+        id=None,
+        id2=None,
+        data=None,
+        verify=None,
+        type='urlencoded'
+    ):
+        """
+        test function for GK API CRUD operations
+
+        @param session:  session object and associated cookie
+        @param: method i.e GET,POST,PUT or DELETE
+        @param resource: resource under test
+        @param id: id for put,delete,get
+        @param id2: id for put,delete,get
+        @param data: data for PUT and DELETE
+        @param verify: boolean to determine if SSL cert will be verified
+        @param allow_redirects:  boolean to determine if redirects are allowed
+        @param type: urlencoded or json
+        @return: a request session object containing the user info
+
+        """
+        if(method == 'POST'):
+            # check the resource and set the post URI
+            request_url = self._set_post_url(resource)
+        else:
+            # check the resource and set the put URI
+            request_url = self._set_put_del_read_url(resource, id, id2)
+
+        # if data must be created
+        if((method == 'POST' or method == 'PUT') and data is None):
+            # check the resource so that the data can be set
+            data = self._set_data(resource, session)
+
+        if(verify is None):
+            verify = False
+
+        headers = {}
+        if type == 'json':
+            data = json.dumps(data)
+            headers['Content-Type'] = 'application/json'
+
+        response = self._http_method_generator(
+            session,
+            method,
+            request_url,
+            verify,
+            data,
+            headers=headers
+        )
+
+        return response
+
+    def _set_post_url(self, resource):
+
+        if resource == "application":
+            request_url = self._create_url(
+                config['api']['gk']['application_v1']['post']
+            )
+        elif resource == "organization":
+            request_url = self._create_url(
+                config['api']['gk']['org_v1']['post']
+            )
+        elif resource == "user":
+            request_url = self._create_url(
+                config['api']['gk']['user_v1']['post']
+            )
+        elif resource == "group":
+            request_url = self._create_url(
+                config['api']['gk']['group_v1']['post']
+            )
+        elif resource == "permission":
+            request_url = self._create_url(
+                config['api']['gk']['permission_v1']['post']
+            )
+        elif resource == "user_app":
+            request_url = self._create_url(
+                config['api']['gk']['user_app_v1']['post']
+            )
+        elif resource == "user_grp":
+            request_url = self._create_url(
+                config['api']['gk']['user_grp_v1']['post']
+            )
+        elif resource == "user_org":
+            request_url = self._create_url(
+                config['api']['gk']['user_org_v1']['post']
+            )
+        elif resource == "grp_perm":
+            request_url = self._create_url(
+                config['api']['gk']['grp_perm_v1']['post']
+            )
+        elif resource == "user_perm":
+            request_url = self._create_url(
+                config['api']['gk']['user_perm_v1']['post']
+            )
+        elif resource == "grp_app":
+            request_url = self._create_url(
+                config['api']['gk']['grp_app_v1']['post']
+            )
+        return request_url
+
+    def _set_put_del_read_url(self, resource, id, id2):
+
+        if resource == "application":
+            request_url = self._create_url(
+                config['api']['gk']['application_v1']['id']
+            )
+            request_url = request_url % (id)
+        elif resource == "organization":
+            request_url = self._create_url(
+                config['api']['gk']['org_v1']['id']
+            )
+            request_url = request_url % (id)
+        elif resource == "user":
+            request_url = self._create_url(
+                config['api']['gk']['user_v1']['id']
+            )
+            request_url = request_url % (id)
+        elif resource == "group":
+            request_url = self._create_url(
+                config['api']['gk']['group_v1']['id']
+            )
+            request_url = request_url % (id)
+        elif resource == "permission":
+            request_url = self._create_url(
+                config['api']['gk']['permission_v1']['id']
+            )
+            request_url = request_url % (id)
+        elif resource == "user_app":
+            request_url = self._create_url(
+                config['api']['gk']['user_app_v1']['id']
+            )
+            request_url = request_url % (id, id2)
+        elif resource == "user_grp":
+            request_url = self._create_url(
+                config['api']['gk']['user_grp_v1']['id']
+            )
+            request_url = request_url % (id, id2)
+        elif resource == "user_org":
+            request_url = self._create_url(
+                config['api']['gk']['user_org_v1']['id']
+            )
+            request_url = request_url % (id, id2)
+        elif resource == "grp_perm":
+            request_url = self._create_url(
+                config['api']['gk']['grp_perm_v1']['id']
+            )
+            request_url = request_url % (id, id2)
+        elif resource == "user_perm":
+            request_url = self._create_url(
+                config['api']['gk']['user_perm_v1']['id']
+            )
+            request_url = request_url % (id, id2)
+        elif resource == "grp_app":
+            request_url = self._create_url(
+                config['api']['gk']['grp_app_v1']['id']
+            )
+            request_url = request_url % (id, id2)
+        return request_url
+
+    def _set_data(self, resource, session):
+        if resource == "application":
+            data = self.create_app_data()
+        elif resource == "organization":
+            data = self.create_org_data()
+        elif resource == "user":
+            data = self.create_user_data()
+        elif resource == "group":
+            data = self.create_group_data()
+        elif resource == "permission":
+            data = self.create_permission_data(session)
+        elif resource == "user_app":
+            data = self.create_user_app_data()
+        elif resource == "user_app":
+            data = self.create_user_grp_data()
+        elif resource == "user_org":
+            data = self.create_user_org_data()
+        elif resource == "grp_perm":
+            data = self.create_grp_perm_data()
+        elif resource == "user_perm":
+            data = self.create_user_perm_data()
+        elif resource == "grp_app":
+            data = self.create_grp_app_data()
+        return data
+
+    def gk_listing(
             self,
             session,
+            resource,
             name=None,
             verify=None
             ):
         """
-        Groups API for CRUD operations
+        Test function for listing results from gk APIs
         @param session:  session object and associated cookie
-        @param name: group name
+        @param name: name to filter on
         @param verify: boolean to determine if SSL cert will be verified
         @return: a request session object containing the user info
 
         """
-        request_url = self._create_url(
-            config['api']['gk']['groups_v1']
-        )
+
+        request_url = self._set_listing_url(resource)
 
         if (name is not None):
             request_url = request_url + '/?name=%s'
@@ -811,99 +781,285 @@ class GateKeeperService:
 
         return response
 
-    def permission(
-            self,
-            session,
-            method,
-            permission_id=None,
-            permission_data=None,
-            verify=None
-            ):
-        """
-        permission API for CRUD operations
-        @param session:  session object and associated cookie
-        @param: method: i.e GET,POST,PUT or DELETE
-        @param permission_id: permission id
-        @param permission_data: data for PUT and DELETE
-        @param verify: boolean to determine if SSL cert will be verified
-        @return: a request session object containing the permission info
+    def _set_listing_url(self, resource):
 
-        """
-
-        url = self._create_url(config['api']['gk']['permission_v1']['post'])
-
-        if(permission_id is not None):
+        if resource == "application":
             request_url = self._create_url(
-                config['api']['gk']['permission_v1']['id']
+                config['api']['gk']['applications_v1']
             )
-            request_url = request_url % (permission_id)
-
-        if((method == 'POST' or method == 'PUT') and permission_data is None):
-            permission_data = self.create_permission_data()
-
-        if(verify is None):
-            verify = False
-
-        if method == 'GET':
-            response = session.get(url=request_url, verify=verify)
-        if method == 'POST':
-            response = session.post(
-                url=url, data=permission_data, verify=verify
+        elif resource == "organization":
+            request_url = self._create_url(
+                config['api']['gk']['orgs_v1']
             )
-        if method == 'PUT':
-            response = session.put(
-                url=request_url, data=permission_data, verify=verify
-                )
-        if method == 'DELETE':
-            response = session.delete(url=request_url, verify=verify)
+        elif resource == "user":
+            request_url = self._create_url(
+                config['api']['gk']['users_v1']
+            )
+        elif resource == "group":
+            request_url = self._create_url(
+                config['api']['gk']['groups_v1']
+            )
+        elif resource == "permission":
+            request_url = self._create_url(
+                config['api']['gk']['permissions_v1']
+            )
+        return request_url
 
-        return response
+    def create_user_app_data(self, session, dict=None):
 
-    def create_permission_data(self, perms_dict=None):
+        """
+        Creation of user_app_data
+        @param dict: optional dict - can be merged with a default dict
+        @return: a user app data dict
+
+        """
+        app_id = self.gk_crud(
+            session, method='POST', resource='application'
+        ).json()['application_id']
+        user_id = self.gk_crud(
+            session, method='POST', resource='user'
+        ).json()['user_id']
+
+        data = {'user_id': user_id, 'application_id': app_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_user_grp_data(self, session, dict=None):
+
+        """
+        Creation of group app_data
+        @param dict: optional dict - can be merged with a default dict
+        @return: a user group data dict
+
+        """
+        group_id = self.gk_crud(
+            session, method='POST', resource='group'
+        ).json()['group_id']
+        user_id = self.gk_crud(
+            session, method='POST', resource='user'
+        ).json()['user_id']
+
+        data = {'user_id': user_id, 'group_id': group_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_user_org_data(self, session, dict=None):
+        """
+        Creation of group app_data
+        @param dict: optional dict - can be merged with a default dict
+        @return: a user org data dict
+
+        """
+        org_id = self.gk_crud(
+            session, method='POST', resource='organization'
+        ).json()['organization_id']
+        user_id = self.gk_crud(
+            session, method='POST', resource='user'
+        ).json()['user_id']
+
+        data = {'user_id': user_id, 'organization_id': org_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_grp_perm_data(self, session, dict=None):
+        """
+        Creation of group app_data
+        @param dict: optional dict - can be merged with a default dict
+        @return: a user org data dict
+
+        """
+        group_id = self.gk_crud(
+            session, method='POST', resource='group'
+        ).json()['group_id']
+        perm_id = self.gk_crud(
+            session, method='POST', resource='permission'
+        ).json()['permission_id']
+
+        data = {'group_id': group_id, 'permission_id': perm_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_user_perm_data(self, session, dict=None):
+        """
+        Creation of user perm data
+        @param dict: optional dict - can be merged with a default dict
+        @return: a user org data dict
+
+        """
+        user_id = self.gk_crud(
+            session, method='POST', resource='user'
+        ).json()['user_id']
+        perm_id = self.gk_crud(
+            session, method='POST', resource='permission'
+        ).json()['permission_id']
+
+        data = {'user_id': user_id, 'permission_id': perm_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_grp_app_data(self, session, dict=None):
+        """
+        Creation of grp application data
+        @param dict: optional dict - can be merged with a default dict
+        @return: a grp app data dict
+
+        """
+        group_id = self.gk_crud(
+            session, method='POST', resource='group'
+        ).json()['group_id']
+        app_id = self.gk_crud(
+            session, method='POST', resource='application'
+        ).json()['application_id']
+
+        data = {'group_id': group_id, 'application_id': app_id}
+
+        if dict is not None:
+            data.update(dict)
+
+        return data
+
+    def create_permission_data(self, session, dict=None):
 
         """
         Creation of a organisation dict
         @return: an org data dict
 
         """
-        # create random permission name
+        app_id = self.gk_crud(
+            session, method='POST', resource='application'
+        ).json()['application_id']
         rand_str = self.util.random_str(5)
 
-        permission_data = {
+        data = {
             'name': rand_str,
-            'application_id': None
+            'application_id': app_id
         }
 
-        if perms_dict is not None:
-            permission_data.update(perms_dict)
+        if dict is not None:
+            data.update(dict)
 
-        return permission_data
+        return data
 
-    def permissions(
+    def gk_assocation_listing(
             self,
             session,
-            name=None,
+            resource,
+            params=None,
             verify=None
             ):
         """
-        Permissions API for CRUD operations
+        Test function for listing results from gk APIs
         @param session:  session object and associated cookie
-        @param name: permission name
+        @param name: name to filter on
         @param verify: boolean to determine if SSL cert will be verified
         @return: a request session object containing the user info
 
         """
-        request_url = self._create_url(
-            config['api']['gk']['permissions_v1']
-        )
 
-        if (name is not None):
-            request_url = request_url + '/?name=%s'
-            request_url = request_url % (name)
+        request_url = self._set_assocation_listing_url(resource)
 
         if(verify is None):
             verify = False
 
-        response = session.get(url=request_url, verify=verify)
+        response = session.get(url=request_url, verify=verify, params=params)
+
+        return response
+
+    def _set_assocation_listing_url(self, resource):
+
+        if resource == "user_app":
+            request_url = self._create_url(
+                config['api']['gk']['user_apps_v1']
+            )
+        elif resource == "user_org":
+            request_url = self._create_url(
+                config['api']['gk']['user_orgs_v1']
+            )
+        elif resource == "user_perm":
+            request_url = self._create_url(
+                config['api']['gk']['user_perms_v1']
+            )
+        elif resource == "user_grp":
+            request_url = self._create_url(
+                config['api']['gk']['user_grps_v1']
+            )
+        elif resource == "grp_perm":
+            request_url = self._create_url(
+                config['api']['gk']['grp_perms_v1']
+            )
+        elif resource == "grp_app":
+            request_url = self._create_url(
+                config['api']['gk']['grp_apps_v1']
+            )
+        return request_url
+
+    def recover_account(self, email, verify=None, allow_redirects=None):
+
+        """
+        Used to recover a users account
+
+        @param session: python-request session
+        @param url: recover account url
+        @param email: users email
+        @return: a confritamtion message
+
+        """
+        url = self._create_url(
+            config['api']['gk']['recover_account_v1']['post']
+        )
+
+        if allow_redirects is None:
+            allow_redirects = True
+
+        if(verify is None):
+            verify = False
+        response = requests.post(
+            url, data=email, verify=verify, allow_redirects=allow_redirects
+        )
+
+        return response
+
+    def change_password(
+        self, token, password, verify=None, allow_redirects=None
+    ):
+
+        """
+        Used to change a users psssword
+
+        @param session: python-request session
+        @param password: authnerication style token
+        @param password: new password
+        @return: a confritamtion message
+
+        """
+        url = self._create_url(
+            config['api']['gk']['change_password_v1']['post']
+        )
+        url = url % (token)
+
+        if allow_redirects is None:
+            allow_redirects = True
+
+        if(verify is None):
+            verify = False
+
+        response = requests.post(
+            url, data=password, verify=verify, allow_redirects=allow_redirects
+        )
 
         return response

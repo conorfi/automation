@@ -565,23 +565,43 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         Ensures user info CANNOT be return from the user api when a invalid
         user id is provided
         """
-        # login and create session
+
+        # login and create admin session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        # create first random user
+        password = 'testtest'
+        user1_data = self.gk_service.create_user_data({'password': password})
+        response = self.gk_service.gk_crud(session, 'POST', 'user',
+                                           data=user1_data)
+        self.assertEquals(response.status_code, requests.codes.created)
+
+        # create second random user, storing user ID
+        user2_data = self.gk_service.create_user_data()
+        response = self.gk_service.gk_crud(session, 'POST', 'user',
+                                           data=user2_data)
+        self.assertEquals(response.status_code, requests.codes.created)
+        json_data = response.json()
+        self.assertTrue('user_id' in json_data)
+        user2_data['user_id'] = json_data['user_id']
+
+        # login with first random user
+        credentials = {'username': user1_data['username'],
+                       'password': password}
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect']
+            credentials=credentials
         )
 
-        # add one to the user id to create a random element to userid
-        random_user_id = self.gk_dao.get_user_by_username(
-            self.db,
-            self.gk_service.ADMIN_USER
-        )['user_id'] + 1
-
+        # attempt access to user application for second random user
         response = self.gk_service.user_app(
             session,
-            random_user_id,
+            user2_data['user_id'],
             self.gk_service.DEFAULT_TEST_APP
         )
+
         # ensure that the request is forbidden(403)
         # without a valid session cookie
         self.assertEquals(response.status_code, requests.codes.forbidden)
@@ -605,8 +625,9 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.bad_request)
         json_data = response.json()
         self.assertTrue('error' in json_data)
-        self.assertEqual(json_data['error'],
-                         self.gk_service.MISSING_PARAMETERS)
+        self.assertTrue(
+            self.gk_service.MISSING_PARAMETERS in json_data['error']
+        )
 
     @attr(env=['test'], priority=1)
     def test_user_app_with_no_application_name(self):

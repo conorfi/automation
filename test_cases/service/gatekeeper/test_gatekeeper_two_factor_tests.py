@@ -70,7 +70,7 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
             payload,
             allow_redirects=False
         )
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -162,7 +162,7 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
             payload,
             allow_redirects=False
         )
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -277,9 +277,9 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
             session,
             payload, allow_redirects=False
         )
-        # 303 response(as allow_redirects=False)
+        # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
         self.assertTrue(
             self.gk_service.INVALID_VERIFCATION_CODE in response.text
         )
@@ -297,7 +297,7 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
             payload,
             allow_redirects=False
         )
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -355,9 +355,9 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
             session,
             payload, allow_redirects=False
         )
-        # 303 response(as allow_redirects=False)
+        # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
         self.assertTrue(
             self.gk_service.INVALID_VERIFCATION_CODE in response.text
         )
@@ -397,9 +397,9 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
             session,
             payload, allow_redirects=False
         )
-        # 303 response(as allow_redirects=False)
+        # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
         self.assertTrue(
             self.gk_service.INVALID_VERIFCATION_CODE in response.text
         )
@@ -410,7 +410,7 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
             payload,
             allow_redirects=False
         )
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -471,9 +471,9 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # 303 response(as allow_redirects=False)
+        # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
         no_cookie_found = \
             "No+session+with+cookie+%s+found" % (fake_cookie_value)
         self.assertTrue(no_cookie_found in response.text)
@@ -507,9 +507,9 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
             session,
             payload, allow_redirects=False
         )
-        # 303 response(as allow_redirects=False)
+        # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.other)
+        self.assertEquals(response.status_code, requests.codes.found)
         self.assertTrue(
             self.gk_service.INVALID_VERIFCATION_CODE in response.text
         )
