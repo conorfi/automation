@@ -103,13 +103,12 @@ class GateKeeperService:
         return '{0}://{1}:{2}/{3}'.format(
             config['gatekeeper']['scheme'], host, port, path)
 
-    def create_session_urlencoded(self, url=None, payload=None, verify=None,
+    def create_session_urlencoded(self, url=None, verify=None,
                                   allow_redirects=None, redirect_url=None,
                                   credentials=None, type='urlencoded'):
         """
         creates a session through the login API
         @param url: Optional. request url of API
-        @param payload: Optional. The credentials of the user
         @param redirect_url: Url to redirect
         @param verify: boolean to determine if SSL cert will be verified
         @param allow_redirects: boolean determines if SSL cert will be verified
@@ -135,14 +134,19 @@ class GateKeeperService:
 
         if allow_redirects is None:
             allow_redirects = True
-        if type is 'json':
-            data = json.dumps(payload)
+
+        headers = {}
+        if type == 'json':
+            credentials = json.dumps(credentials)
+            headers['Content-Type'] = 'application/json'
+
         # url encoded
         response = requests.post(
             url=url,
             data=credentials,
             verify=verify,
-            allow_redirects=allow_redirects
+            allow_redirects=allow_redirects,
+            headers=headers
         )
         return response
 
@@ -538,21 +542,23 @@ class GateKeeperService:
         return group_data
 
     def _http_method_generator(
-        self, session, method, request_url, verify, data
+        self, session, method, request_url, verify, data, headers=None
             ):
 
         if method == 'GET':
-            response = session.get(url=request_url, verify=verify)
+            response = session.get(url=request_url, verify=verify,
+                                   headers=headers)
         if method == 'POST':
             response = session.post(
-                url=request_url, data=data, verify=verify
+                url=request_url, data=data, verify=verify, headers=headers
             )
         if method == 'PUT':
             response = session.put(
-                url=request_url, data=data, verify=verify
+                url=request_url, data=data, verify=verify, headers=headers
                 )
         if method == 'DELETE':
-            response = session.delete(url=request_url, verify=verify)
+            response = session.delete(url=request_url, verify=verify,
+                                      headers=headers)
 
         return response
 
@@ -597,16 +603,18 @@ class GateKeeperService:
         if(verify is None):
             verify = False
 
-        if type is 'json':
+        headers = {}
+        if type == 'json':
             data = json.dumps(data)
-            print 'json'
+            headers['Content-Type'] = 'application/json'
 
         response = self._http_method_generator(
             session,
             method,
             request_url,
             verify,
-            data
+            data,
+            headers=headers
         )
 
         return response

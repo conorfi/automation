@@ -217,13 +217,8 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         self.assertEquals(db_response['cookie_id'], cookie_id)
         self.assertEquals(db_response['user_id'], self.default_test_user)
 
-        # create a session - allow redirects
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=True, type='json'
-        )
-
-        # 200 response
-        self.assertEquals(response.status_code, requests.codes.ok)
+        # 302 response
+        self.assertEquals(response.status_code, requests.codes.found)
 
     @attr(env=['test'], priority=1)
     def test_can_login_default_redirect_json(self):
@@ -308,5 +303,3 @@ class TestGateKeeperLoginURI(unittest.TestCase):
             self.gk_service.LOGIN_ATTEMPTS_EXCEEDED
             in response.text
         )
-
-
