@@ -95,6 +95,7 @@ class GateKeeperService:
             " Attempts left: %d"
         self.LOGIN_ATTEMPTS_EXCEEDED = "Exceeded maximum login attempts." \
             " Please reset your password or contact the site administrator."
+        self.RECOVER_RESPONSE = "you should now have received the email with"
 
     def _create_url(self,
                     path,
@@ -1006,3 +1007,59 @@ class GateKeeperService:
                 config['api']['gk']['grp_apps_v1']
             )
         return request_url
+
+    def recover_account(self, email, verify=None, allow_redirects=None):
+
+        """
+        Used to recover a users account
+
+        @param session: python-request session
+        @param url: recover account url
+        @param email: users email
+        @return: a confritamtion message
+
+        """
+        url = self._create_url(
+            config['api']['gk']['recover_account_v1']['post']
+        )
+
+        if allow_redirects is None:
+            allow_redirects = True
+
+        if(verify is None):
+            verify = False
+        response = requests.post(
+            url, data=email, verify=verify, allow_redirects=allow_redirects
+        )
+
+        return response
+
+    def change_password(
+        self, token, password, verify=None, allow_redirects=None
+    ):
+
+        """
+        Used to change a users psssword
+
+        @param session: python-request session
+        @param password: authnerication style token
+        @param password: new password
+        @return: a confritamtion message
+
+        """
+        url = self._create_url(
+            config['api']['gk']['change_password_v1']['post']
+        )
+        url = url % (token)
+
+        if allow_redirects is None:
+            allow_redirects = True
+
+        if(verify is None):
+            verify = False
+
+        response = requests.post(
+            url, data=password, verify=verify, allow_redirects=allow_redirects
+        )
+
+        return response

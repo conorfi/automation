@@ -220,7 +220,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         # 302 response
         self.assertEquals(response.status_code, requests.codes.found)
 
-    @attr(env=['test'], priority=1)
+    @attr(env=['test'], priority=2)
     def test_can_login_default_redirect_json(self):
         """
         GATEKEEPER_LOGIN_URI_006 test_login_max_retries
@@ -247,6 +247,8 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         )
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
+
+        user_id = create_response.json()['user_id']
 
         # ensure user can login in
          # login in as new user
@@ -303,3 +305,15 @@ class TestGateKeeperLoginURI(unittest.TestCase):
             self.gk_service.LOGIN_ATTEMPTS_EXCEEDED
             in response.text
         )
+        # ensure the attempted count in the database is 5
+        fail_login_count = self.gk_dao.get_user_by_username(
+            self.db, username=credentials['username']
+        )['failed_login_count']
+        self.assertEquals(fail_login_count, self.gk_service.MAX_ATTEMPT_LOGIN)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
