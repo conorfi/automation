@@ -507,15 +507,19 @@ class TestGateApplicationAPI(unittest.TestCase):
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="application"
         )
+
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
         app_id = create_response.json()['application_id']
 
-        # update the application
-
+        # read the application
         read_response = self.gk_service.gk_crud(
             session, method='GET', resource="application", id=app_id
         )
+
+        # field count check form read
+        # 3 fields should be returned
+        self.assertEquals(len(read_response.json()), 3)
 
         # ensure a 200 is returned
         self.assertEquals(read_response.status_code, requests.codes.ok)

@@ -421,6 +421,10 @@ class TestGateGroupAPI(unittest.TestCase):
             session, method='GET', resource="group", id=group_id
         )
 
+        # field count check form read
+        # 2 fields should be returned
+        self.assertEquals(len(read_response.json()), 2)
+
         # verify the creation of the group POST action
         self.assertEquals(
             read_response.json()['group_id'],
