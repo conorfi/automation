@@ -713,6 +713,7 @@ class TestGateApplicationAPI(unittest.TestCase):
             {'name': self.util.random_str(101)},
             {'name': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
             {'default_url':  self.util.random_str()},
+            {'default_url':  self.util.random_str(513)},
             {'fake': self.util.random_str()}
         ]
 

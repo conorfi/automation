@@ -220,7 +220,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         # 302 response
         self.assertEquals(response.status_code, requests.codes.found)
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_can_login_default_redirect_json(self):
         """
         GATEKEEPER_LOGIN_URI_006 test_login_max_retries
