@@ -16,7 +16,8 @@ and application_name is adfuser
 import requests
 from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
+from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
+    GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
@@ -31,7 +32,7 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Things that need to be done once
-        cls.db = BaseDAO(config['gatekeeper']['db']['connection'])
+        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
 
     @classmethod
     def tearDownClass(cls):
@@ -132,7 +133,7 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
         )
 
         self.assertTrue(
-            config['api']['gk']['recover_account_v1']['param'] in
+            config['api'][SERVICE_NAME]['recover_account_v1']['param'] in
             response.headers['location']
         )
         self.assertFalse(

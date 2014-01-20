@@ -16,7 +16,8 @@ and application_name is adfuser
 import requests
 from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
+from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
+    GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
@@ -31,7 +32,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Things that need to be done once
-        cls.db = BaseDAO(config['gatekeeper']['db']['connection'])
+        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
 
     @classmethod
     def tearDownClass(cls):
@@ -58,7 +59,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         # login and create session - allow_redirects=False
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
 
         # assert against database
@@ -69,7 +70,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         # create a session - allow_redirects=True
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=True,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
         # 200 response
         self.assertEquals(response.status_code, requests.codes.ok)
@@ -141,12 +142,12 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
 
         response = self.gk_service.validate_url_with_cookie(
             session=session,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
         self.assertEquals(response.status_code, requests.codes.ok)
         self.assertTrue('Example Domain' in response.text)
@@ -173,7 +174,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
             # create a session - allow_redirects=FALSE
             response = self.gk_service.create_session_urlencoded(
                 allow_redirects=False,
-                redirect_url=config['gatekeeper']['redirect'],
+                redirect_url=config[SERVICE_NAME]['redirect'],
                 credentials=dict
                 )
 
@@ -186,7 +187,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
              # create a session - allow_redirects=True
             response = self.gk_service.create_session_urlencoded(
                 allow_redirects=True,
-                redirect_url=config['gatekeeper']['redirect'],
+                redirect_url=config[SERVICE_NAME]['redirect'],
                 credentials=dict
                 )
 

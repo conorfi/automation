@@ -16,7 +16,8 @@ and application_name is adfuser
 import requests
 from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
+from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
+    GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
@@ -31,7 +32,7 @@ class TestGateKeeperLogoutURI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Things that need to be done once
-        cls.db = BaseDAO(config['gatekeeper']['db']['connection'])
+        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
 
     @classmethod
     def tearDownClass(cls):
@@ -60,12 +61,12 @@ class TestGateKeeperLogoutURI(unittest.TestCase):
          # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
 
         response = self.gk_service.validate_url_with_cookie(
             session,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
         self.assertEquals(response.status_code, requests.codes.ok)
         self.assertTrue('Example Domain' in response.text)
