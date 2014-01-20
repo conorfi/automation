@@ -116,6 +116,10 @@ class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
             api_count = response.json().__len__()
             self.assertEquals(api_count, 1, "count mismatch")
 
+            # field count
+            # 2 fields should be returned
+            self.assertEquals(len(response.json()[0]), 2)
+
             # verify the contents of the users API
             self.assertEquals(
                 response.json()[0]['permission_id'], permission_id

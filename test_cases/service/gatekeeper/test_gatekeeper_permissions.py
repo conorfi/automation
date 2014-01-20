@@ -71,7 +71,7 @@ class TestGatePermissionsAPI(unittest.TestCase):
         db_count = self.gk_dao. get_permission_count(self.db)['count']
         self.assertEquals(api_count, db_count, "count mismatch")
 
-    @attr(env=['test'], priority=2)
+    @attr(env=['test'], priority=1)
     def test_permissions_api_name_filter(self):
         """
         GATEKEEPER_PERMISSIONS_API_002 test_permissions_api_name_filter

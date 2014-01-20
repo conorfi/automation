@@ -106,7 +106,7 @@ class TestGateUsersAPI(unittest.TestCase):
 
         # field count check form read
         # 2 fields should be returned
-        self.assertEquals(len(response.json()), 2)
+        self.assertEquals(len(response.json()[0]), 2)
 
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)

@@ -82,6 +82,8 @@ class GateKeeperService:
             " e.g. +44 20 7751 7500"
         self.EMAIL_VALIDATION = "Valid email format required, maximum"\
             " 254 characters in length e.g. test@test.com"
+        self.EMAIL_VALIDATION_HTML = "Valid+email+format+required%2C"\
+            "+maximum+254+characters+in+length+e.g.+test%40test.com"
         self.DEFAULT_URL_VALIDATION = "A valid http/https"\
             " URL e.g. http://localhost/test"
         self.PERM_NAME_VALIDATION = "Alphanumeric characters required with"\
@@ -96,6 +98,7 @@ class GateKeeperService:
         self.LOGIN_ATTEMPTS_EXCEEDED = "Exceeded maximum login attempts." \
             " Please reset your password or contact the site administrator."
         self.RECOVER_RESPONSE = "you should now have received the email with"
+        self.UNEXPECTED_PARAM = "Unexpected body parameters"
 
     def _create_url(self,
                     path,
@@ -106,7 +109,8 @@ class GateKeeperService:
 
     def create_session_urlencoded(self, url=None, verify=None,
                                   allow_redirects=None, redirect_url=None,
-                                  credentials=None, type='urlencoded'):
+                                  credentials=None, type='urlencoded',
+                                  headers=None):
         """
         creates a session through the login API
         @param url: Optional. request url of API
@@ -136,8 +140,8 @@ class GateKeeperService:
         if allow_redirects is None:
             allow_redirects = True
 
-        headers = {}
         if type == 'json':
+            headers = {}
             credentials = json.dumps(credentials)
             headers['Content-Type'] = 'application/json'
 
@@ -1047,6 +1051,7 @@ class GateKeeperService:
         @return: a confritamtion message
 
         """
+
         url = self._create_url(
             config['api']['gk']['change_password_v1']['post']
         )

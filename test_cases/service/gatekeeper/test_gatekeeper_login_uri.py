@@ -154,7 +154,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_login_with_invalid_data(self):
         """
-        GATEKEEPER_LOGIN_URI_004 test_login_with_invalid_data
+        GATEKEEPER_LOGIN_URI_005 test_login_with_invalid_data
         combinations of fake username and password
         test for redirects true and false
         """
@@ -176,7 +176,6 @@ class TestGateKeeperLoginURI(unittest.TestCase):
                 redirect_url=config['gatekeeper']['redirect'],
                 credentials=dict
                 )
-
             self.assertTrue(
                 self.gk_service.INVALID_USERNAME_PASSWORD in response.text
             )
@@ -200,7 +199,7 @@ class TestGateKeeperLoginURI(unittest.TestCase):
     @attr(env=['test'], priority=1)
     def test_can_login_default_redirect_json(self):
         """
-        GATEKEEPER_LOGIN_URI_005 test_can_login_default_redirect_json
+        GATEKEEPER_LOGIN_URI_006 test_can_login_default_redirect_json
         creates a session through a POST to the login API using json
         body. Default redirect
         The vast majority of tests are urlencoded - this is as simple login
@@ -221,9 +220,40 @@ class TestGateKeeperLoginURI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.found)
 
     @attr(env=['test'], priority=1)
+    def test_login_with_no_data(self):
+        """
+        GATEKEEPER_LOGIN_URI_007 test_login_with_no_data
+        combinations of fake username and password
+        test for redirects true and false
+        """
+
+        # list of dicts with missing data
+        bad_data = [
+            {'username': None, 'password': None},
+            {'username': self.util.random_str(), 'password': None},
+            {'username': None, 'password':  self.util.random_str()}
+        ]
+
+        headers = {'Content-Length': 0}
+        for dict in bad_data:
+
+            # create a session - allow_redirects=FALSE
+            response = self.gk_service.create_session_urlencoded(
+                allow_redirects=False,
+                redirect_url=config['gatekeeper']['redirect'],
+                credentials=dict,
+                headers=headers
+                )
+            self.assertTrue(
+                self.gk_service.INVALID_USERNAME_PASSWORD in response.text
+            )
+            # 302
+            self.assertEquals(response.status_code, requests.codes.found)
+
+    @attr(env=['test'], priority=1)
     def test_can_login_default_redirect_json(self):
         """
-        GATEKEEPER_LOGIN_URI_006 test_login_max_retries
+        GATEKEEPER_LOGIN_URI_008 test_login_max_retries
         A user can only attempt to login a maximum of 5 times
         """
 

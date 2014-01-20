@@ -771,6 +771,8 @@ class TestGateUserAPI(unittest.TestCase):
             {'password': self.util.random_str(7)},
             {'password': self.util.random_str(101)},
             {'password': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            # empty string
+            {'email': ''},
             # either side of the email will be 127
             {'email': self.util.random_email(len=127)},
             # domain less than 2 characters
