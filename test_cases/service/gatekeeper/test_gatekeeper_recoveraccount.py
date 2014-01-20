@@ -53,6 +53,7 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
         """
         GATEKEEPER_RECOVER_ACCOUNT_001 test_can_recover_account
         A user can recover their account through their email
+        Tests that the token is created
         """
 
        # login and create session
@@ -85,6 +86,9 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
             email_dict, allow_redirects=False
         )
 
+        # ensure a 302 is returned
+        self.assertEquals(response.status_code, requests.codes.found)
+
         self.assertTrue(
             config['api']['gk']['recover_account_v1']['post'] in
             response.headers['location']
@@ -110,10 +114,10 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
-    def test_can_recover_account_no_email_acc(self):
+    def test_can_recover_account_email_no_exits(self):
         """
-        GATEKEEPER_RECOVER_ACCOUNT_002 test_can_recover_account_no_email_acc
-        No token create if no
+        GATEKEEPER_RECOVER_ACCOUNT_002 test_can_recover_account_email_no_exits
+        No token create if the email is not associated with a customer
         """
 
         email_dict = {'email': self.util.random_email()}
@@ -126,6 +130,9 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
             email_dict, allow_redirects=False
         )
 
+        # ensure a 302 is returned
+        self.assertEquals(response.status_code, requests.codes.found)
+
         self.assertTrue(
             config['api']['gk']['recover_account_v1']['param'] in
             response.headers['location']
@@ -134,6 +141,98 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
             'error' in
             response.headers['location']
         )
+
+        # check token count in the database
+        token_count_two = self.gk_dao.get_token_count(self.db)
+        self.assertEquals(
+            token_count_one, token_count_two
+        )
+
+    @attr(env=['test'], priority=1)
+    def test_can_recover_acc_email_not_provided(self):
+        """
+        GATEKEEPER_RECOVER_ACCOUNT_003 test_can_recover_acc_email_not_provided
+        No token create if the email is not associated with a customer
+        """
+
+        email_dict = None
+
+        # check token count in the database
+        token_count_one = self.gk_dao.get_token_count(self.db)
+
+        # recover call
+        response = self.gk_service.recover_account(
+            email_dict, allow_redirects=False
+        )
+
+        # BUG - https://www.pivotaltracker.com/story/show/64051184
+        # TODO: update/add assertion after this defect is resolved
+        """
+        # ensure a 400 is returned
+        self.assertEquals(response.status_code, requests.codes.bad_request)
+
+        self.assertTrue(
+            config['api']['gk']['recover_account_v1']['param'] in
+            response.headers['location']
+        )
+        self.assertFalse(
+            'error' in
+            response.headers['location']
+        )
+
+        # check token count in the database
+        token_count_two = self.gk_dao.get_token_count(self.db)
+        self.assertEquals(
+            token_count_one, token_count_two
+        )
+        """
+
+    @attr(env=['test'], priority=1)
+    def test_can_recover_acc_empty_email(self):
+        """
+        GATEKEEPER_RECOVER_ACCOUNT_004 test_can_recover_acc_empty_email
+        No token create if the email is not associated with a customer
+        """
+        # list of dicts with missing data
+        bad_data = [
+            # empty string
+            {'email': ''},
+            # either side of the email will be 127
+            {'email': self.util.random_email(len=127)},
+            # domain less than 2 characters
+            {'email': "1@1.1"},
+            {'email': self.util.random_str()},
+            # BUG - https://www.pivotaltracker.com/story/show/64143024
+            # TODO: re-add fake dict when above bug is resolved
+            # {'fake': self.util.random_str()}
+        ]
+
+        # check token count in the database
+        token_count_one = self.gk_dao.get_token_count(self.db)
+
+        for dict in bad_data:
+            # recover call
+            response = self.gk_service.recover_account(
+                dict, allow_redirects=False
+            )
+            # ensure a 302 is returned
+            self.assertEquals(response.status_code, requests.codes.found)
+
+            self.assertTrue(
+                'error' in
+                response.headers['location']
+            )
+
+            if('email' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.EMAIL_VALIDATION_HTML
+                    in response.headers['location']
+                )
+            elif('fake' in dict.keys()):
+                self.assertTrue(
+                    self.gk_service.PARAM_NOT_ALLOWED
+                    in urllib2.unquote(response.headers['location'])
+                )
 
         # check token count in the database
         token_count_two = self.gk_dao.get_token_count(self.db)

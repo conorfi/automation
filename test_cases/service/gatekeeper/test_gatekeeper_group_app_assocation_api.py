@@ -317,6 +317,10 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
             id=grp_app_data['group_id']
         )
 
+        # field count check form read
+        # 2 fields should be returned
+        self.assertEquals(len(read_response.json()), 2)
+
         # verify that the data is correct
         self.assertEquals(
             grp_app_data['application_id'],
