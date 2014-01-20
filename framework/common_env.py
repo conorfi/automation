@@ -9,7 +9,7 @@ def get_common_config():
     """
     Returns the common configuration options that never change.
     """
-    config = {}
+    config = {'api': {}}
     set_google_config(config)
     set_tms_config(config)
     return config
@@ -82,7 +82,6 @@ def set_tms_config(config):
     config['tms']['db_type'] = 'sqlite:///'
     config['tms']['credentials'] = {'username': 'admin', 'password': 'admin'}
 
-    config['api'] = {}
     config['api']['core'] = {}
     config['api']['core']['pack'] = {}
     config['api']['core']['pack']['save'] = 'core/pack/save'
@@ -189,3 +188,7 @@ def set_courier_config(config, **kwargs):
     """
     name = SERVICE_NAME_COURIER
     set_base_service_config(config, name, **kwargs)
+
+    config['api'][name] = {}
+    config['api'][name]['authenticate_v1'] = {}
+    config['api'][name]['authenticate_v1']['post'] = 'authenticate/'
