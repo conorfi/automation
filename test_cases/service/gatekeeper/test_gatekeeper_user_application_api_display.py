@@ -16,7 +16,8 @@ and application_name is adfuser
 import requests
 from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
+from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
+    GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
@@ -31,7 +32,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Things that need to be done once
-        cls.db = BaseDAO(config['gatekeeper']['db']['connection'])
+        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
 
     @classmethod
     def tearDownClass(cls):
@@ -128,7 +129,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # verify the user end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['user_endpoint']
         )
 
         self.assertEquals(response.status_code, requests.codes.forbidden)
@@ -136,7 +137,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # verify the admin end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['admin_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['admin_endpoint']
         )
         self.assertEquals(response.status_code, requests.codes.forbidden)
 
@@ -227,14 +228,14 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['user_endpoint']
         )
         self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the admin end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['admin_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['admin_endpoint']
         )
         self.assertEquals(response.status_code, requests.codes.forbidden)
 
@@ -259,7 +260,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint'],
+            end_point=config[SERVICE_NAME]['dummy']['user_endpoint'],
             parameters=parameters
         )
         self.assertEquals(response.status_code, requests.codes.ok)
@@ -267,7 +268,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # verify the admin end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['admin_endpoint'],
+            end_point=config[SERVICE_NAME]['dummy']['admin_endpoint'],
             parameters=parameters
         )
         self.assertEquals(response.status_code, requests.codes.ok)
@@ -403,14 +404,14 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['user_endpoint']
         )
         self.assertEquals(response.status_code, requests.codes.ok)
 
         # verify the admin end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['admin_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['admin_endpoint']
         )
         self.assertEquals(response.status_code, requests.codes.forbidden)
 
@@ -438,7 +439,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # verify the user end point can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint'],
+            end_point=config[SERVICE_NAME]['dummy']['user_endpoint'],
             parameters=parameters
         )
         self.assertEquals(response.status_code, requests.codes.ok)
@@ -446,7 +447,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # verify the admin end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['admin_endpoint'],
+            end_point=config[SERVICE_NAME]['dummy']['admin_endpoint'],
             parameters=parameters
         )
         self.assertEquals(response.status_code, requests.codes.ok)
@@ -521,7 +522,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect'],
+            redirect_url=config[SERVICE_NAME]['redirect'],
             cookie_value=cookie_value
         )
 
@@ -546,7 +547,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
 
         fake_application = "fake"
@@ -621,7 +622,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
 
         response = self.gk_service.user_app(session, '', '')
@@ -643,7 +644,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
 
         user_id = self.gk_dao.get_user_by_username(
@@ -669,7 +670,7 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
-            redirect_url=config['gatekeeper']['redirect']
+            redirect_url=config[SERVICE_NAME]['redirect']
         )
 
         response = self.gk_service.user_app(

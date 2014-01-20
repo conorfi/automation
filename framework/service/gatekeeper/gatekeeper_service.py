@@ -15,8 +15,10 @@ import Cookie
 import time
 import json
 
+from framework.common_env import SERVICE_NAME_GATEKEEPER as SERVICE_NAME
 
-class GateKeeperService:
+
+class GateKeeperService(object):
 
     def __init__(self):
         # initialize utility class
@@ -102,10 +104,10 @@ class GateKeeperService:
 
     def _create_url(self,
                     path,
-                    host=config['gatekeeper']['host'],
-                    port=config['gatekeeper']['port']):
+                    host=config[SERVICE_NAME]['host'],
+                    port=config[SERVICE_NAME]['port']):
         return '{0}://{1}:{2}/{3}'.format(
-            config['gatekeeper']['scheme'], host, port, path)
+            config[SERVICE_NAME]['scheme'], host, port, path)
 
     def create_session_urlencoded(self, url=None, verify=None,
                                   allow_redirects=None, redirect_url=None,
@@ -124,11 +126,11 @@ class GateKeeperService:
         """
         if url is None:
             url = self._create_url(
-                config['api']['gk']['session']['create_v1'])
+                config['api'][SERVICE_NAME]['session']['create_v1'])
 
         # requests is url-encoded by default
         if credentials is None:
-            credentials = config['gatekeeper']['credentials']
+            credentials = config[SERVICE_NAME]['credentials']
 
         if redirect_url is not None:
             url = url + redirect_url
@@ -168,7 +170,7 @@ class GateKeeperService:
 
         """
         url = self._create_url(
-            config['api']['gk']['session']['validate_v1'])
+            config['api'][SERVICE_NAME]['session']['validate_v1'])
 
         request_url = url + '/%s'
         request_url = request_url % (cookie_id)
@@ -222,7 +224,7 @@ class GateKeeperService:
             parameters = {}
         if(url is None):
             url = self._create_url(
-                config['api']['gk']['session']['create_v1'])
+                config['api'][SERVICE_NAME]['session']['create_v1'])
         if(redirect_url is not None):
             url = url + redirect_url
         if(verify is None):
@@ -252,7 +254,7 @@ class GateKeeperService:
 
         if(url is None):
             url = self._create_url(
-                config['api']['gk']['session']['logout_v1'])
+                config['api'][SERVICE_NAME]['session']['logout_v1'])
         response = session.post(url, verify=False)
         return response
 
@@ -271,7 +273,7 @@ class GateKeeperService:
 
         if(url is None):
             url = self._create_url(
-                config['api']['gk']['session']['logout_v1'])
+                config['api'][SERVICE_NAME]['session']['logout_v1'])
         response = session.get(url, verify=False)
         return response
 
@@ -293,7 +295,7 @@ class GateKeeperService:
 
         if(url is None):
             url = self._create_url(
-                config['api']['gk']['session']['user_info_v1'])
+                config['api'][SERVICE_NAME]['session']['user_info_v1'])
         request_url = url % (user_id, application)
         if(verify is None):
             verify = False
@@ -329,8 +331,8 @@ class GateKeeperService:
 
         if(url is None):
             url = self._create_url('',
-                                   host=config['gatekeeper']['dummy']['host'],
-                                   port=config['gatekeeper']['dummy']['port'])
+                                   host=config[SERVICE_NAME]['dummy']['host'],
+                                   port=config[SERVICE_NAME]['dummy']['port'])
         if(end_point is not None):
             url = url + end_point
 
@@ -372,7 +374,7 @@ class GateKeeperService:
         """
         if(url is None):
             url = self._create_url(
-                config['api']['gk']['session']['submit_verification_v1'])
+                config['api'][SERVICE_NAME]['session']['submit_verification_v1'])
         if(redirect_url is not None):
             url = url + redirect_url
 
@@ -467,8 +469,8 @@ class GateKeeperService:
         """
         url = self._create_url(
             '',
-            host=config['gatekeeper']['dummy']['host'],
-            port=config['gatekeeper']['dummy']['port']
+            host=config[SERVICE_NAME]['dummy']['host'],
+            port=config[SERVICE_NAME]['dummy']['port']
         )
         session = requests.session()
         session.cookies['sso_cookie'] = cookie
@@ -628,47 +630,47 @@ class GateKeeperService:
 
         if resource == "application":
             request_url = self._create_url(
-                config['api']['gk']['application_v1']['post']
+                config['api'][SERVICE_NAME]['application_v1']['post']
             )
         elif resource == "organization":
             request_url = self._create_url(
-                config['api']['gk']['org_v1']['post']
+                config['api'][SERVICE_NAME]['org_v1']['post']
             )
         elif resource == "user":
             request_url = self._create_url(
-                config['api']['gk']['user_v1']['post']
+                config['api'][SERVICE_NAME]['user_v1']['post']
             )
         elif resource == "group":
             request_url = self._create_url(
-                config['api']['gk']['group_v1']['post']
+                config['api'][SERVICE_NAME]['group_v1']['post']
             )
         elif resource == "permission":
             request_url = self._create_url(
-                config['api']['gk']['permission_v1']['post']
+                config['api'][SERVICE_NAME]['permission_v1']['post']
             )
         elif resource == "user_app":
             request_url = self._create_url(
-                config['api']['gk']['user_app_v1']['post']
+                config['api'][SERVICE_NAME]['user_app_v1']['post']
             )
         elif resource == "user_grp":
             request_url = self._create_url(
-                config['api']['gk']['user_grp_v1']['post']
+                config['api'][SERVICE_NAME]['user_grp_v1']['post']
             )
         elif resource == "user_org":
             request_url = self._create_url(
-                config['api']['gk']['user_org_v1']['post']
+                config['api'][SERVICE_NAME]['user_org_v1']['post']
             )
         elif resource == "grp_perm":
             request_url = self._create_url(
-                config['api']['gk']['grp_perm_v1']['post']
+                config['api'][SERVICE_NAME]['grp_perm_v1']['post']
             )
         elif resource == "user_perm":
             request_url = self._create_url(
-                config['api']['gk']['user_perm_v1']['post']
+                config['api'][SERVICE_NAME]['user_perm_v1']['post']
             )
         elif resource == "grp_app":
             request_url = self._create_url(
-                config['api']['gk']['grp_app_v1']['post']
+                config['api'][SERVICE_NAME]['grp_app_v1']['post']
             )
         return request_url
 
@@ -676,57 +678,57 @@ class GateKeeperService:
 
         if resource == "application":
             request_url = self._create_url(
-                config['api']['gk']['application_v1']['id']
+                config['api'][SERVICE_NAME]['application_v1']['id']
             )
             request_url = request_url % (id)
         elif resource == "organization":
             request_url = self._create_url(
-                config['api']['gk']['org_v1']['id']
+                config['api'][SERVICE_NAME]['org_v1']['id']
             )
             request_url = request_url % (id)
         elif resource == "user":
             request_url = self._create_url(
-                config['api']['gk']['user_v1']['id']
+                config['api'][SERVICE_NAME]['user_v1']['id']
             )
             request_url = request_url % (id)
         elif resource == "group":
             request_url = self._create_url(
-                config['api']['gk']['group_v1']['id']
+                config['api'][SERVICE_NAME]['group_v1']['id']
             )
             request_url = request_url % (id)
         elif resource == "permission":
             request_url = self._create_url(
-                config['api']['gk']['permission_v1']['id']
+                config['api'][SERVICE_NAME]['permission_v1']['id']
             )
             request_url = request_url % (id)
         elif resource == "user_app":
             request_url = self._create_url(
-                config['api']['gk']['user_app_v1']['id']
+                config['api'][SERVICE_NAME]['user_app_v1']['id']
             )
             request_url = request_url % (id, id2)
         elif resource == "user_grp":
             request_url = self._create_url(
-                config['api']['gk']['user_grp_v1']['id']
+                config['api'][SERVICE_NAME]['user_grp_v1']['id']
             )
             request_url = request_url % (id, id2)
         elif resource == "user_org":
             request_url = self._create_url(
-                config['api']['gk']['user_org_v1']['id']
+                config['api'][SERVICE_NAME]['user_org_v1']['id']
             )
             request_url = request_url % (id, id2)
         elif resource == "grp_perm":
             request_url = self._create_url(
-                config['api']['gk']['grp_perm_v1']['id']
+                config['api'][SERVICE_NAME]['grp_perm_v1']['id']
             )
             request_url = request_url % (id, id2)
         elif resource == "user_perm":
             request_url = self._create_url(
-                config['api']['gk']['user_perm_v1']['id']
+                config['api'][SERVICE_NAME]['user_perm_v1']['id']
             )
             request_url = request_url % (id, id2)
         elif resource == "grp_app":
             request_url = self._create_url(
-                config['api']['gk']['grp_app_v1']['id']
+                config['api'][SERVICE_NAME]['grp_app_v1']['id']
             )
             request_url = request_url % (id, id2)
         return request_url
@@ -789,23 +791,23 @@ class GateKeeperService:
 
         if resource == "application":
             request_url = self._create_url(
-                config['api']['gk']['applications_v1']
+                config['api'][SERVICE_NAME]['applications_v1']
             )
         elif resource == "organization":
             request_url = self._create_url(
-                config['api']['gk']['orgs_v1']
+                config['api'][SERVICE_NAME]['orgs_v1']
             )
         elif resource == "user":
             request_url = self._create_url(
-                config['api']['gk']['users_v1']
+                config['api'][SERVICE_NAME]['users_v1']
             )
         elif resource == "group":
             request_url = self._create_url(
-                config['api']['gk']['groups_v1']
+                config['api'][SERVICE_NAME]['groups_v1']
             )
         elif resource == "permission":
             request_url = self._create_url(
-                config['api']['gk']['permissions_v1']
+                config['api'][SERVICE_NAME]['permissions_v1']
             )
         return request_url
 
@@ -988,27 +990,27 @@ class GateKeeperService:
 
         if resource == "user_app":
             request_url = self._create_url(
-                config['api']['gk']['user_apps_v1']
+                config['api'][SERVICE_NAME]['user_apps_v1']
             )
         elif resource == "user_org":
             request_url = self._create_url(
-                config['api']['gk']['user_orgs_v1']
+                config['api'][SERVICE_NAME]['user_orgs_v1']
             )
         elif resource == "user_perm":
             request_url = self._create_url(
-                config['api']['gk']['user_perms_v1']
+                config['api'][SERVICE_NAME]['user_perms_v1']
             )
         elif resource == "user_grp":
             request_url = self._create_url(
-                config['api']['gk']['user_grps_v1']
+                config['api'][SERVICE_NAME]['user_grps_v1']
             )
         elif resource == "grp_perm":
             request_url = self._create_url(
-                config['api']['gk']['grp_perms_v1']
+                config['api'][SERVICE_NAME]['grp_perms_v1']
             )
         elif resource == "grp_app":
             request_url = self._create_url(
-                config['api']['gk']['grp_apps_v1']
+                config['api'][SERVICE_NAME]['grp_apps_v1']
             )
         return request_url
 
@@ -1024,7 +1026,7 @@ class GateKeeperService:
 
         """
         url = self._create_url(
-            config['api']['gk']['recover_account_v1']['post']
+            config['api'][SERVICE_NAME]['recover_account_v1']['post']
         )
 
         if allow_redirects is None:
@@ -1053,7 +1055,7 @@ class GateKeeperService:
         """
 
         url = self._create_url(
-            config['api']['gk']['change_password_v1']['post']
+            config['api'][SERVICE_NAME]['change_password_v1']['post']
         )
         url = url % (token)
 

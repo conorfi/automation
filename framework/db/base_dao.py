@@ -11,7 +11,7 @@ from sqlalchemy import create_engine
 from testconfig import config
 
 
-class BaseDAO():
+class BaseDAO(object):
 
     def __init__(self, db_config):
 
@@ -39,21 +39,21 @@ class BaseDAO():
 
         return rows_as_dict
 
-    def trans(self, query):
+    def trans(self, query, **kwargs):
         """
         function to run raw updates,commits and delete queries
 
         @param query: query e.g select a from b where c=123
+        @param kwargs:
 
         @return:
 
         """
         trans = self.connection.begin()
         try:
-            self.connection.execute(query)
+            self.connection.execute(query, **kwargs)
             trans.commit()
-            return True
         except:
             trans.rollback()
             raise
-            return False
+        return True

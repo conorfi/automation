@@ -15,7 +15,8 @@ and application_name is adfuser
 import requests
 from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
+from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
+    GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
@@ -32,7 +33,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Things that need to be done once
-        cls.db = BaseDAO(config['gatekeeper']['db']['connection'])
+        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
 
     @classmethod
     def tearDownClass(cls):
@@ -261,7 +262,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         # verify the user end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['user_endpoint']
         )
         # 403
         self.assertEquals(response.status_code, requests.codes.forbidden)
@@ -281,7 +282,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         # the updated permissions will not apply
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['user_endpoint']
         )
         # 403
         self.assertEquals(response.status_code, requests.codes.forbidden)
@@ -295,7 +296,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
 
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint'],
+            end_point=config[SERVICE_NAME]['dummy']['user_endpoint'],
             parameters=parameters
         )
         # 200
@@ -469,7 +470,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         # verify the admin endpoint can NOT be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['admin_endpoint'],
+            end_point=config[SERVICE_NAME]['admin_endpoint'],
             url=gk_url
         )
 
@@ -488,7 +489,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         # verify the admin endpoint can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['admin_endpoint'],
+            end_point=config[SERVICE_NAME]['admin_endpoint'],
             url=gk_url
         )
 
@@ -596,7 +597,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         # verify the admin endpoint can NOT be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['admin_endpoint'],
+            end_point=config[SERVICE_NAME]['admin_endpoint'],
             url=gk_url
         )
 
@@ -614,7 +615,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
         # verify the admin endpoint can be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['admin_endpoint'],
+            end_point=config[SERVICE_NAME]['admin_endpoint'],
             url=gk_url
         )
 
@@ -680,12 +681,12 @@ class TestGateKeeperFunctional(unittest.TestCase):
         # verify the end point cannot be accessed
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['user_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['user_endpoint']
         )
         self.assertEquals(response.status_code, requests.codes.forbidden)
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config['gatekeeper']['dummy']['admin_endpoint']
+            end_point=config[SERVICE_NAME]['dummy']['admin_endpoint']
         )
         self.assertEquals(response.status_code, requests.codes.forbidden)
 
@@ -748,7 +749,7 @@ class TestGateKeeperFunctional(unittest.TestCase):
 
         headers = response.headers['Set-Cookie']
         # assert that the header httponly is present
-        if config['gatekeeper']['scheme'] == 'https':
+        if config[SERVICE_NAME]['scheme'] == 'https':
             assert 'httponly' in headers
         else:
             assert 'httponly' not in headers
