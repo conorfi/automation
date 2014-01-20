@@ -863,6 +863,10 @@ class TestGatePermissionAPI(unittest.TestCase):
             session, method='GET', resource="permission", id=permission_id
         )
 
+        # field count check form read
+        # 4 fields should be returned
+        self.assertEquals(len(read_response.json()), 4)
+
         # verify the creation of the permission POST action
         self.assertEquals(
             read_response.json()['permission_id'],

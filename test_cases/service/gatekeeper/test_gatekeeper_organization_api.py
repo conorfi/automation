@@ -428,6 +428,10 @@ class TestGatekeeperOrgAPI(unittest.TestCase):
             session, method='GET', resource="organization", id=org_id
         )
 
+        # field count check form read
+        # 4 fields should be returned
+        self.assertEquals(len(read_response.json()), 2)
+
         # verify the creation of the org POST action
         self.assertEquals(
             read_response.json()['organization_id'],

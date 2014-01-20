@@ -106,6 +106,10 @@ class TestGateKeeperUserApplicationAPI(unittest.TestCase):
         response = self.gk_service.user_app(session, user_id, appname)
         self.assertEquals(response.status_code, requests.codes.ok)
 
+        # field count
+        # 2 fields should be returned
+        self.assertEquals(len(response.json()), 7)
+
         self.assertTrue(username in response.json()['username'])
         self.assertEquals([], response.json()['organizations'])
         self.assertTrue(str(user_id) in response.json()['user_id'])

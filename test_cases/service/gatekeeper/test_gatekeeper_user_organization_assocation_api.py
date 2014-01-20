@@ -311,6 +311,10 @@ class TestGateUserAppAssocationAPI(unittest.TestCase):
             id2=user_org_data['organization_id']
         )
 
+        # field count
+        # 2 fields should be returned
+        self.assertEquals(len(read_response.json()), 2)
+
         # verify that the data is correct
         self.assertEquals(
             user_org_data['user_id'],

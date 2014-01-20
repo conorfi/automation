@@ -314,6 +314,10 @@ class TestGateGrpPermAssocationAPI(unittest.TestCase):
             id2=user_perm_data['permission_id']
         )
 
+        # field count
+        # 2 fields should be returned
+        self.assertEquals(len(read_response.json()), 2)
+
         # verify that the data is correct
         self.assertEquals(
             user_perm_data['permission_id'],

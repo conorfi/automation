@@ -107,6 +107,10 @@ class TestGateUsersAPI(unittest.TestCase):
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)
 
+        # field count check form read
+        # 4 fields should be returned
+        self.assertEquals(len(response.json()[0]), 2)
+
         # ensure only one result is returned
         api_count = response.json().__len__()
         self.assertEquals(api_count, 1, "count mismatch")

@@ -119,6 +119,11 @@ class TestGatePermissionsAPI(unittest.TestCase):
             resource="permission",
             name=permission_name
         )
+
+        # field count check form read
+        # 4 fields should be returned
+        self.assertEquals(len(response.json()[0]), 4)
+
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)
 

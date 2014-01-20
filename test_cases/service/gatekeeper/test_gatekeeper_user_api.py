@@ -554,6 +554,10 @@ class TestGateUserAPI(unittest.TestCase):
             session, method='GET', resource="user", id=user_id
         )
 
+        # field count check form read
+        # 4 fields should be returned
+        self.assertEquals(len(read_response.json()), 11)
+
         # verify the creation of the user POST action
         self.assertEquals(
             read_response.json()['username'], user_info['username']
@@ -737,7 +741,6 @@ class TestGateUserAPI(unittest.TestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # BUG: https://www.pivotaltracker.com/story/show/62791020
         # login in as new user
 
         response = self.gk_service.create_session_urlencoded(
@@ -768,6 +771,8 @@ class TestGateUserAPI(unittest.TestCase):
             {'password': self.util.random_str(7)},
             {'password': self.util.random_str(101)},
             {'password': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
+            # empty string
+            {'email': ''},
             # either side of the email will be 127
             {'email': self.util.random_email(len=127)},
             # domain less than 2 characters
@@ -898,7 +903,6 @@ class TestGateUserAPI(unittest.TestCase):
                     self.gk_service.PASSWORD_VALIDATION
                     in create_response.json()['error'])
 
-            # BUG - https://www.pivotaltracker.com/story/show/63796880
             elif('password' in dict.keys()
                     and 'email' in dict.keys()):
                 self.assertTrue(
