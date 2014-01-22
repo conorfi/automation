@@ -15,7 +15,8 @@ gatekeeper_config.update({
     'db_name': 'gatekeeper',
     'dummyapp_host': 'app-t01'
 })
-set_gatekeeper_config(**gatekeeper_config)
+
+set_gatekeeper_config(config, **gatekeeper_config)
 
 courier_config = get_default_service_config()
 courier_config.update({
@@ -25,4 +26,4 @@ courier_config.update({
     'db_host': '10.20.254.142',
     'db_name': 'courier'
 })
-set_courier_config(**courier_config)
+set_courier_config(config, **courier_config)
