@@ -219,7 +219,7 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
         )
 
         self.assertTrue(
-            config['api']['gk']['recover_account_v1']['param'] in
+            config['api'][SERVICE_NAME]['recover_account_v1']['param'] in
             response.headers['location']
         )
         self.assertFalse(
@@ -298,7 +298,7 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
         )
 
         self.assertTrue(
-            config['api']['gk']['recover_account_v1']['param'] in
+            config['api'][SERVICE_NAME]['recover_account_v1']['param'] in
             response.headers['location']
         )
         self.assertFalse(
@@ -375,7 +375,7 @@ class TestGateKeeperRecoverAccount(unittest.TestCase):
         )
 
         self.assertTrue(
-            config['api']['gk']['recover_account_v1']['param'] in
+            config['api'][SERVICE_NAME]['recover_account_v1']['param'] in
             response.headers['location']
         )
         self.assertFalse(

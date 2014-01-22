@@ -4,6 +4,9 @@ Base configuration for all automation tests
 SERVICE_NAME_GATEKEEPER = 'gatekeeper'
 SERVICE_NAME_COURIER = 'courier'
 
+TEST_ENVIRONMENT = 'test'
+DEV_ENVIRONMENT = 'dev'
+
 
 def get_common_config():
     """
@@ -13,6 +16,46 @@ def get_common_config():
     set_google_config(config)
     set_tms_config(config)
     return config
+
+
+def get_environments():
+    """
+    Set configuration about the selectable environments
+
+    Expected schema:
+
+        {'<env_name:required>':
+            {'file': '<filename with env setup:required>'}
+        }
+    """
+    environments = {}
+    environments[DEV_ENVIRONMENT] = {}
+    environments[DEV_ENVIRONMENT]['file'] = 'local_env.py'
+
+    environments[TEST_ENVIRONMENT] = {}
+    environments[TEST_ENVIRONMENT]['file'] = 'test_env.py'
+
+    return environments
+
+
+def get_test_sets():
+    """
+    Get all test sets available
+
+    Expected schema:
+        {'<test_set_name:required>':
+            {
+                'folder': '<folder to lookup the tests'
+                          '(defaults to test_set_name):optional>',
+                'filename': '<filename of the test set to run:optional>',
+                'ignore_filename': '<filename to ignore:optional>'
+            }
+        }
+    """
+    test_sets = {}
+    set_gatekeeper_test_sets(test_sets)
+    set_courier_test_sets(test_sets)
+    return test_sets
 
 
 def get_default_service_config():
@@ -179,6 +222,24 @@ def set_gatekeeper_config(config, **kwargs):
     config['api'][name]['change_password_v1']['post'] = 'changepassword/%s'
 
 
+def set_gatekeeper_test_sets(test_sets):
+    """
+    Sets Gatekeeper test sets
+    :param test_sets:
+    """
+
+    # 1 fa tests
+    test_sets['gatekeeper'] = {}
+    test_sets['gatekeeper']['ignore_filename'] = \
+        'test_gatekeeper_two_factor_tests.py'
+
+    # 2 fa tests
+    test_sets['gatekeeper_2fa'] = {}
+    test_sets['gatekeeper_2fa']['folder'] = 'gatekeeper'
+    test_sets['gatekeeper_2fa']['filename'] = \
+        'test_gatekeeper_two_factor_tests.py'
+
+
 def set_courier_config(config, **kwargs):
     """
     Sets the Courier service configuration.
@@ -194,3 +255,11 @@ def set_courier_config(config, **kwargs):
     config['api'][name]['authenticate_v1']['post'] = 'authenticate/'
     config['api'][name]['group_v1'] = {}
     config['api'][name]['group_v1']['get'] = 'rest/group/'
+
+
+def set_courier_test_sets(test_sets):
+    """
+    Sets Courier test sets
+    :param test_sets:
+    """
+    test_sets['courier'] = {}
