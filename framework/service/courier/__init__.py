@@ -32,30 +32,65 @@ class CourierService(object):
                 [method.lower()])
         return urlparse.urlunparse((scheme, host, path, None, None, None))
 
-    def _resource_request(self, resource, method='get', data=None):
+    def resource_request(self, resource,
+                         method='get', data=None, session=None):
+        """
+        Makes a request for a named resource, optionally specifying the method
+        and data sent (if PUT or POST). May also specify a requests session
+        to use instead of basic requests module.
+
+        :param resource:
+        :param method:
+        :param data:
+        :param session:
+        """
         url = self._get_resource_url(resource, method=method)
-        return getattr(requests, method.lower())(url, data=data, verify=False)
+        request_module = session if session is not None else requests
+        return (getattr(request_module, method.lower())
+                (url, data=data, verify=False))
 
     def create_random_user(self, level='admin', group_id=None):
         """
         Creates a random user. By default, creates an admin user with no
         linked group and default password.
-        Returns the newly created user data.
+        Returns the newly created user object.
+
+        :param level:
+        :param group_id:
         """
         username = self.util.random_str(10)
-        self.dao.create_user(username, self._DEFAULT_PASSWORD_HASH,
-                             level, group_id=group_id)
-        return {'username': username, 'password': self.DEFAULT_PASSWORD,
-                'level': level, 'group_id': group_id}
+        user = self.dao.create_user(username, self._DEFAULT_PASSWORD_HASH,
+                                    level, group_id=group_id)
+        user.password = self.DEFAULT_PASSWORD
+        return user
 
-    def remove_user(self, user_data):
+    def remove_user(self, user):
         """
-        Deletes the user defined by the given user data, if possible
+        Deletes the user defined by the given user, if possible
 
-        :param user_data:
+        :param user:
         """
-        if 'username' in user_data:
-            self.dao.delete_user(user_data['username'])
+        if user.username is not None:
+            self.dao.delete_user(user)
+
+    def create_random_group(self, name=None):
+        """
+        Creates a random group. Returns the newly created group object.
+
+        :param name:
+        """
+        if name is None:
+            name = self.util.random_str(10)
+        return self.dao.create_group(name)
+
+    def remove_group(self, group):
+        """
+        Deletes the group, if possible
+
+        :param group:
+        """
+        if group.name is not None:
+            self.dao.delete_group(group)
 
     def authenticate(self, username, password):
         """
@@ -66,7 +101,7 @@ class CourierService(object):
         :param username:
         :param password:
         """
-        response = self._resource_request(
+        response = self.resource_request(
             'authenticate', method='post',
             data={'username': username, 'password': password}
         )

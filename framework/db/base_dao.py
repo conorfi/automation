@@ -8,7 +8,6 @@
 '''
 
 from sqlalchemy import create_engine
-from testconfig import config
 
 
 class BaseDAO(object):
@@ -57,3 +56,22 @@ class BaseDAO(object):
             trans.rollback()
             raise
         return True
+
+    def execute(self, query):
+        """
+        Runs raw updates,commits and delete queries and returns any results.
+
+        @param query: query e.g select a from b where c=123
+
+        @return: result of the execution
+
+        """
+        raw_result = self.connection.execute(query)
+        # translate raw ResultProxy into consistent list response
+        if raw_result.is_insert:
+            raw_results = [raw_result.fetchone()]
+        elif raw_result.returns_rows:
+            raw_results = raw_result.fetchall()
+        else:
+            raw_results = []
+        return raw_results
