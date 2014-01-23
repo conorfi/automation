@@ -138,3 +138,11 @@ class ApiTestCase(unittest.TestCase):
         self.assertDictContains(actual_data, 'upload_credentials')
         self.assertEqual(expected_data['upload_credentials'],
                          actual_data['upload_credentials'])
+
+    def assertClientData(self, expected_data, actual_data):
+        """
+        Asserts that the given expected client data matches the actual group
+        data.
+        """
+        self.assertDictContains(actual_data, 'name')
+        self.assertEqual(expected_data['name'], actual_data['name'])
