@@ -9,6 +9,7 @@ from framework.utility.utility import Utility
 from framework.db.base_dao import BaseDAO
 from framework.service.courier import CourierService, SERVICE_NAME
 from framework.db.courier import CourierDao
+from framework.db.model.courier import User
 
 
 class ApiTestCase(unittest.TestCase):
@@ -29,12 +30,12 @@ class ApiTestCase(unittest.TestCase):
         self.service = CourierService(self.dao)
         self.util = Utility()
 
-    def login_random_user(self):
+    def login_random_user(self, level=User.LEVEL_ADMIN):
         """
         Creates a random user and authenticates them on the service.
         Returns the newly created user object and the associated session.
         """
-        user = self.service.create_random_user()
+        user = self.service.create_random_user(level=level)
         response, session = self.service.authenticate(user.username,
                                                       user.password)
         self.assertTrue(session is not None)
@@ -75,7 +76,7 @@ class ApiTestCase(unittest.TestCase):
         }
         """
         self.assertEqual(response.status_code, requests.codes.ok,
-                         'Invalid status code')
+                         'Invalid status code "%d"' % response.status_code)
         try:
             json_data = response.json()
         except ValueError:
@@ -92,3 +93,46 @@ class ApiTestCase(unittest.TestCase):
             # default to success if it doesn't exist
             type_message = message.get('type', 'success')
             self.assertEqual(type_message, 'success', 'Message type is error')
+
+    def assertResponseFail(self, response):
+        """
+        Asserts that the given response is OK and has JSON payload in the
+        most common format:
+        {
+            "data": <some_data>
+            "messages": [
+                {
+                    <some_more_data>
+                    "type": "error"
+                }
+            ]
+        }
+        """
+        self.assertEqual(response.status_code, requests.codes.ok,
+                         'Invalid status code "%d"' % response.status_code)
+        try:
+            json_data = response.json()
+        except ValueError:
+            json_data = None
+        self.assertTrue(json_data is not None, 'Response not in JSON format')
+        messages = json_data.get('messages')
+        self.assertIsInstance(messages, list,
+                              'Messages non-existent or not list')
+        self.assertEqual(len(messages), 1,
+                         'Messages must be list of length 1')
+        message = messages[0]
+        self.assertIsInstance(message, dict, 'Message must be dict')
+        # default to success if it doesn't exist
+        type_message = message.get('type', 'success')
+        self.assertEqual(type_message, 'error', 'Message type is success')
+
+    def assertGroupData(self, expected_data, actual_data):
+        """
+        Asserts that the given expected group data matches the actual group
+        data.
+        """
+        self.assertDictContains(actual_data, 'name')
+        self.assertEqual(expected_data['name'], actual_data['name'])
+        self.assertDictContains(actual_data, 'upload_credentials')
+        self.assertEqual(expected_data['upload_credentials'],
+                         actual_data['upload_credentials'])

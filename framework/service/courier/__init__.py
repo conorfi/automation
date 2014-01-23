@@ -4,10 +4,12 @@ Service functionality for working with Courier APIs and remote interfaces.
 import urlparse
 import requests
 import Cookie
+import json
 from testconfig import config
 
 from framework.utility.utility import Utility
 from framework.common_env import SERVICE_NAME_COURIER as SERVICE_NAME
+from framework.db.model.courier import User, Group
 
 
 class CourierService(object):
@@ -25,43 +27,70 @@ class CourierService(object):
         self.api_version = api_version
 
     def _get_resource_url(self, resource, method='get'):
+        method = method.lower()
+        versioned_resource = resource + '_' + self.api_version
         url_data = config[SERVICE_NAME]
         scheme = url_data['scheme']
         host = '%s:%s' % (url_data['host'], url_data['port'])
-        path = (config['api'][SERVICE_NAME][resource + '_' + self.api_version]
-                [method.lower()])
+        path_data = config['api'][SERVICE_NAME][versioned_resource]
+        path = (path_data[method]
+                if method in path_data else
+                path_data['default'])
         return urlparse.urlunparse((scheme, host, path, None, None, None))
 
-    def resource_request(self, resource,
+    def resource_request(self, resource, parameters=None,
                          method='get', data=None, session=None):
         """
         Makes a request for a named resource, optionally specifying the method
         and data sent (if PUT or POST). May also specify a requests session
         to use instead of basic requests module.
 
-        :param resource:
-        :param method:
-        :param data:
-        :param session:
+        :param resource: resource name
+        :param parameters: query string parameters
+        :param method: HTTP method
+        :param data: body data
+        :param session: request session with session cookies
         """
         url = self._get_resource_url(resource, method=method)
+        headers = {}
+        if data is not None:
+            # Cherrypy defaults to 411 response if no data is sent and
+            # content length header not set (which requests does not do,
+            # annoyingly)
+            # so check if nothing is going to be sent
+            is_empty_data = reduce(lambda acc, value: acc and value is None,
+                                   data.values(), True)
+            if is_empty_data:
+                headers['Content-Length'] = 0
         request_module = session if session is not None else requests
         return (getattr(request_module, method.lower())
-                (url, data=data, verify=False))
+                (url, params=parameters, data=data, verify=False,
+                 headers=headers))
 
-    def create_random_user(self, level='admin', group_id=None):
+    def generate_user(self, level=User.LEVEL_ADMIN, group_id=None):
         """
-        Creates a random user. By default, creates an admin user with no
-        linked group and default password.
+        Randomly generates and returns a valid user. By default, creates an
+        admin user with no linked group and default password.
+
+        :param level:
+        :param group_id:
+        """
+        return User(username=self.util.random_str(10),
+                    hash=self._DEFAULT_PASSWORD_HASH,
+                    password=self.DEFAULT_PASSWORD,
+                    level=level,
+                    group_id=group_id)
+
+    def create_random_user(self, level=User.LEVEL_ADMIN, group_id=None):
+        """
+        Creates a random user in the DB.
         Returns the newly created user object.
 
         :param level:
         :param group_id:
         """
-        username = self.util.random_str(10)
-        user = self.dao.create_user(username, self._DEFAULT_PASSWORD_HASH,
-                                    level, group_id=group_id)
-        user.password = self.DEFAULT_PASSWORD
+        user = self.generate_user(level=level, group_id=group_id)
+        self.dao.create_user(user)
         return user
 
     def remove_user(self, user):
@@ -73,15 +102,48 @@ class CourierService(object):
         if user.username is not None:
             self.dao.delete_user(user)
 
-    def create_random_group(self, name=None):
+    def generate_group(self, name=None, credentials=None):
         """
-        Creates a random group. Returns the newly created group object.
+        Randomly generates and returns a valid group.
 
         :param name:
+        :param credentials:
         """
-        if name is None:
-            name = self.util.random_str(10)
-        return self.dao.create_group(name)
+        return Group(name=(name or self.util.random_str(10)),
+                     upload_credentials=credentials)
+
+    def generate_group_credentials(self, public_key=None):
+        """
+        Returns randomly generated payload for group upload credentials
+
+        :param public_key:
+        """
+        return json.dumps({
+            Group.CREDENTIALS_KEY_PUBLIC: public_key or self.util.random_str(),
+            Group.CREDENTIALS_KEY_PRIVATE: self.util.random_str(),
+            Group.CREDENTIALS_KEY_BUCKET: self.util.random_str()
+        })
+
+    def create_random_group(self, name=None, credentials=None):
+        """
+        Creates a random group in the DB. Returns the newly created group
+        object.
+
+        :param name:
+        :param credentials:
+        """
+        group = self.generate_group(name=name, credentials=credentials)
+        self.dao.create_group(group)
+        return group
+
+    def group_exists(self, group):
+        """
+        Returns True if group exists, False otherwise.
+
+        :param group:
+        """
+        group_data = self.dao.read_group(group)
+        return len(group_data) == 1
 
     def remove_group(self, group):
         """
