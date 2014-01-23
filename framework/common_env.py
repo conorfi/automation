@@ -253,6 +253,8 @@ def set_courier_config(config, **kwargs):
     config['api'][name] = {}
     config['api'][name]['authenticate_v1'] = {}
     config['api'][name]['authenticate_v1']['post'] = 'authenticate/'
+    config['api'][name]['group_v1'] = {}
+    config['api'][name]['group_v1']['get'] = 'rest/group/'
 
 
 def set_courier_test_sets(test_sets):
