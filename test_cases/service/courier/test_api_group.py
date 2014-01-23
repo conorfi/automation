@@ -1,9 +1,11 @@
 """
 Integration tests for group API
 """
+import requests
 from nose.plugins.attrib import attr
 
 from . import ApiTestCase
+from framework.db.model.courier import User
 
 
 class GroupApiTestCase(ApiTestCase):
@@ -164,9 +166,26 @@ class GroupApiTestCase(ApiTestCase):
         self.service.remove_user(user)
 
     @attr(env=['test'], priority=1)
+    def test_create_fail_permissions(self):
+        """
+        COURIER_GROUP_API_009 test_create_fail_permissions
+
+        Negative test when attempting create with non-admin user
+        """
+        user, session = self.login_random_user(level=User.LEVEL_STANDARD)
+        group = self.service.generate_group(name=self.util.random_str(51))
+
+        response = self.service.resource_request(
+            'group', method='post', data=group.to_post_data(), session=session)
+
+        self.assertEqual(response.status_code, requests.codes.forbidden)
+
+        self.service.remove_user(user)
+
+    @attr(env=['test'], priority=1)
     def test_update_success(self):
         """
-        COURIER_GROUP_API_009 test_update_success
+        COURIER_GROUP_API_010 test_update_success
 
         Successful test when updating group via API
         """
@@ -188,7 +207,7 @@ class GroupApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_update_success_awscredentials(self):
         """
-        COURIER_GROUP_API_010 test_update_success_awscredentials
+        COURIER_GROUP_API_011 test_update_success_awscredentials
 
         Successful test when updating group with credentials via API
         """
@@ -214,7 +233,7 @@ class GroupApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_update_fail_empty(self):
         """
-        COURIER_GROUP_API_011 test_update_fail_empty
+        COURIER_GROUP_API_012 test_update_fail_empty
 
         Negative test when updating group via API with no data
         """
@@ -235,7 +254,7 @@ class GroupApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_update_fail_invalidname(self):
         """
-        COURIER_GROUP_API_012 test_update_fail_empty
+        COURIER_GROUP_API_013 test_update_fail_invalidname
 
         Negative test when updating group via API with no data
         """
@@ -254,9 +273,30 @@ class GroupApiTestCase(ApiTestCase):
         self.service.remove_group(group)
 
     @attr(env=['test'], priority=1)
+    def test_update_fail_permissions(self):
+        """
+        COURIER_GROUP_API_014 test_update_fail_permissions
+
+        Negative test when updating group via API with missing permissions
+        """
+        user, session = self.login_random_user(level=User.LEVEL_STANDARD)
+        group = self.service.create_random_group()
+        old_name = group.name
+        group.name = None
+
+        response = self.service.resource_request(
+            'group', method='post', data=group.to_post_data(), session=session)
+
+        self.assertEqual(response.status_code, requests.codes.forbidden)
+
+        group.name = old_name
+        self.service.remove_user(user)
+        self.service.remove_group(group)
+
+    @attr(env=['test'], priority=1)
     def test_delete_success(self):
         """
-        COURIER_GROUP_API_013 test_delete_success
+        COURIER_GROUP_API_015 test_delete_success
 
         Successful test when deleting group via API
         """
@@ -276,7 +316,7 @@ class GroupApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_delete_fail(self):
         """
-        COURIER_GROUP_API_014 test_delete_fail
+        COURIER_GROUP_API_016 test_delete_fail
 
         Negative test when deleting non-existent group via API
         """
@@ -293,7 +333,7 @@ class GroupApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_delete_fail_invalid(self):
         """
-        COURIER_GROUP_API_015 test_delete_fail_invalid
+        COURIER_GROUP_API_017 test_delete_fail_invalid
 
         Negative test when deleting invalid group via API
         """
@@ -304,5 +344,22 @@ class GroupApiTestCase(ApiTestCase):
             session=session)
 
         self.assertResponseFail(response)
+
+        self.service.remove_user(user)
+
+    @attr(env=['test'], priority=1)
+    def test_delete_fail_permissions(self):
+        """
+        COURIER_GROUP_API_018 test_delete_fail_permissions
+
+        Negative test when deleting invalid group via API
+        """
+        user, session = self.login_random_user(level=User.LEVEL_STANDARD)
+
+        response = self.service.resource_request(
+            'group', method='delete', parameters={'group_id': 22},
+            session=session)
+
+        self.assertEqual(response.status_code, requests.codes.forbidden)
 
         self.service.remove_user(user)

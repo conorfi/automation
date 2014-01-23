@@ -67,7 +67,7 @@ class CourierService(object):
                 (url, params=parameters, data=data, verify=False,
                  headers=headers))
 
-    def generate_user(self, level='admin', group_id=None):
+    def generate_user(self, level=User.LEVEL_ADMIN, group_id=None):
         """
         Randomly generates and returns a valid user. By default, creates an
         admin user with no linked group and default password.
@@ -81,7 +81,7 @@ class CourierService(object):
                     level=level,
                     group_id=group_id)
 
-    def create_random_user(self, level='admin', group_id=None):
+    def create_random_user(self, level=User.LEVEL_ADMIN, group_id=None):
         """
         Creates a random user in the DB.
         Returns the newly created user object.

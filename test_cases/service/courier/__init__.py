@@ -9,6 +9,7 @@ from framework.utility.utility import Utility
 from framework.db.base_dao import BaseDAO
 from framework.service.courier import CourierService, SERVICE_NAME
 from framework.db.courier import CourierDao
+from framework.db.model.courier import User
 
 
 class ApiTestCase(unittest.TestCase):
@@ -29,12 +30,12 @@ class ApiTestCase(unittest.TestCase):
         self.service = CourierService(self.dao)
         self.util = Utility()
 
-    def login_random_user(self):
+    def login_random_user(self, level=User.LEVEL_ADMIN):
         """
         Creates a random user and authenticates them on the service.
         Returns the newly created user object and the associated session.
         """
-        user = self.service.create_random_user()
+        user = self.service.create_random_user(level=level)
         response, session = self.service.authenticate(user.username,
                                                       user.password)
         self.assertTrue(session is not None)

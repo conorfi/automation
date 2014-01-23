@@ -9,6 +9,10 @@ from . import BaseModel
 
 class User(BaseModel):
 
+    LEVEL_ADMIN = 'admin'
+    LEVEL_STANDARD = 'standard'
+    LEVEL_READONLY = 'readonly'
+
     def __init__(self, user_id=None, username=None, group_id=None,
                  password=None, level=None, hash=None,
                  created=None, last_modified=None):
