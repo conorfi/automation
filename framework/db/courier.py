@@ -1,10 +1,7 @@
 """
 DB access functionality for Courier service DBs.
 """
-import time
 from sqlalchemy.sql import table, column
-
-from framework.db.model.courier import User, Group
 
 
 class CourierDao(object):
@@ -21,29 +18,22 @@ class CourierDao(object):
             'group', column('id'), column('name'), column('upload_credentials')
         )
 
-    def create_user(self, username, password_hash,
-                    level='admin', group_id=None):
+    def create_user(self, user):
         """
-        Create a new user in the user table, returns raw DB result.
-        Defaults to an admin user with no group.
+        Create a new user in the user table, returns updated user with new DB
+        ID.
 
-        :param username:
-        :param level:
-        :param group_id:
-        :param password_hash:
+        :param user:
         """
-        created = time.time()
-        params = {
-            'created': created, 'last_modified': created, 'username': username,
-            'group_id': group_id, 'level': level, 'hash': password_hash
-        }
-
-        query = self.user_table.insert().values(**params).\
+        user_data = user.to_data(exclude_empty=True)
+        if 'password' in user_data:
+            del user_data['password']
+        query = self.user_table.insert().values(**user_data).\
             returning(self.user_table.c.id)
 
         result = self.db.execute(query)
-        params['user_id'] = result[0]['id']
-        return User(**params)
+        user.user_id = result[0]['id']
+        return user
 
     def delete_user(self, user):
         """
@@ -55,23 +45,30 @@ class CourierDao(object):
             where(self.user_table.c.username == user.username)
         return self.db.execute(query)
 
-    def create_group(self, name, upload_credentials=None):
+    def create_group(self, group):
         """
-        Create a new group in the group table, returns raw DB result.
+        Create a new group in the group table, returns updated group with new
+        DB ID.
 
-        :param name:
-        :param upload_credentials:
+        :param group:
         """
-        params = {
-            'name': name, 'upload_credentials': upload_credentials
-        }
-
-        query = self.group_table.insert().values(**params).\
+        query = self.group_table.insert().\
+            values(**group.to_data(exclude_empty=True)).\
             returning(self.group_table.c.id)
 
         result = self.db.execute(query)
-        params['group_id'] = result[0]['id']
-        return Group(**params)
+        group.group_id = result[0]['id']
+        return group
+
+    def read_group(self, group):
+        """
+        Returns the group data from the DB for this group.
+
+        :param group:
+        """
+        query = self.group_table.select().\
+            where(self.group_table.c.name == group.name)
+        return self.db.execute(query)
 
     def delete_group(self, group):
         """

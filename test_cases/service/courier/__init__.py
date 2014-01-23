@@ -75,7 +75,7 @@ class ApiTestCase(unittest.TestCase):
         }
         """
         self.assertEqual(response.status_code, requests.codes.ok,
-                         'Invalid status code')
+                         'Invalid status code "%d"' % response.status_code)
         try:
             json_data = response.json()
         except ValueError:
@@ -92,3 +92,46 @@ class ApiTestCase(unittest.TestCase):
             # default to success if it doesn't exist
             type_message = message.get('type', 'success')
             self.assertEqual(type_message, 'success', 'Message type is error')
+
+    def assertResponseFail(self, response):
+        """
+        Asserts that the given response is OK and has JSON payload in the
+        most common format:
+        {
+            "data": <some_data>
+            "messages": [
+                {
+                    <some_more_data>
+                    "type": "error"
+                }
+            ]
+        }
+        """
+        self.assertEqual(response.status_code, requests.codes.ok,
+                         'Invalid status code "%d"' % response.status_code)
+        try:
+            json_data = response.json()
+        except ValueError:
+            json_data = None
+        self.assertTrue(json_data is not None, 'Response not in JSON format')
+        messages = json_data.get('messages')
+        self.assertIsInstance(messages, list,
+                              'Messages non-existent or not list')
+        self.assertEqual(len(messages), 1,
+                         'Messages must be list of length 1')
+        message = messages[0]
+        self.assertIsInstance(message, dict, 'Message must be dict')
+        # default to success if it doesn't exist
+        type_message = message.get('type', 'success')
+        self.assertEqual(type_message, 'error', 'Message type is success')
+
+    def assertGroupData(self, expected_data, actual_data):
+        """
+        Asserts that the given expected group data matches the actual group
+        data.
+        """
+        self.assertDictContains(actual_data, 'name')
+        self.assertEqual(expected_data['name'], actual_data['name'])
+        self.assertDictContains(actual_data, 'upload_credentials')
+        self.assertEqual(expected_data['upload_credentials'],
+                         actual_data['upload_credentials'])
