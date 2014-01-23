@@ -15,6 +15,12 @@ class BaseModel(object):
         self._alias = alias or {}
         self._db_ignore = db_ignore or []
 
+    def to_db_field(self, attribute):
+        """
+        name of the db field
+        """
+        return self._alias.get(attribute, attribute)
+
     def to_db_data(self):
         """
         Returns a dict of the model variables to be inserted into the db.
@@ -22,7 +28,7 @@ class BaseModel(object):
         This will look at all variables in the instance that have a value and
         are not private (by convention) and not in the db ignore list.
         """
-        data = dict([(self._alias.get(k, k), v)
+        data = dict([(self.to_db_field(k), v)
                      for k, v in vars(self).items()
                      if not k.startswith('_')
                      and k not in self._db_ignore
@@ -44,6 +50,88 @@ class BaseModel(object):
         """
         # expecting to match request format by default
         return self.to_request_data()
+
+
+class ModelCrud(object):
+    """
+    Model Crud operations
+    """
+    def __init__(self,
+                 db=None,
+                 tablify=None,
+                 klass=None,
+                 id=None, unique_key=None):
+
+        if db is None or klass is None or tablify is None \
+           or id is None or unique_key is None:
+            raise ValueError('All arguments are required')
+
+        super(ModelCrud, self).__init__()
+        self.db = db
+        self.klass = klass
+        self.table = tablify.get_table(klass)
+        self.id = id
+        self.unique_key = unique_key
+
+    def check_instance(self, instance):
+        """
+        Checks if the instance belongs to this model
+        """
+        if not isinstance(instance, self.klass):
+            raise ValueError('Instance is not of expected class.')
+
+    def create(self, model_instance):
+        """
+        Create a new model in the user table, returns updated model with new DB
+        ID.
+
+        :param model_instance:
+        """
+        self.check_instance(model_instance)
+
+        model_data = model_instance.to_db_data()
+        table_field = model_instance.to_db_field(self.id)
+
+        query = self.table.insert().values(**model_data). \
+            returning(getattr(self.table.c, table_field, None))
+
+        result = self.db.execute(query)
+        setattr(model_instance, self.id, result[0][table_field])
+        return model_instance
+
+    def _table_op(self, op_func, model_instance):
+        """
+        Does table operation against the unique key
+
+        :param op_func:
+        :param model_instance:
+        """
+
+        self.check_instance(model_instance)
+
+        value = getattr(model_instance, self.unique_key, None)
+        if value:
+            table_field = model_instance.to_db_field(self.unique_key)
+            query = op_func().\
+                where(getattr(self.table.c, table_field, None) == value)
+
+            return self.db.execute(query)
+
+    def delete(self, model_instance):
+        """
+        Deletes the given instance.
+
+        :param model_instance:
+        """
+        return self._table_op(self.table.delete, model_instance)
+
+    def read(self, model_instance):
+        """
+        Returns the instance from the DB for this model.
+
+        :param group:
+        """
+        return self._table_op(self.table.select, model_instance)
 
 
 class Tablify(object):

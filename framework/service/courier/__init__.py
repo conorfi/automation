@@ -4,12 +4,11 @@ Service functionality for working with Courier APIs and remote interfaces.
 import urlparse
 import requests
 import Cookie
-import json
 from testconfig import config
 
 from framework.utility.utility import Utility
 from framework.common_env import SERVICE_NAME_COURIER as SERVICE_NAME
-from framework.db.model.courier import User, Group
+from framework.db.model.courier import *
 
 
 class CourierService(object):
@@ -90,7 +89,7 @@ class CourierService(object):
         :param group_id:
         """
         user = self.generate_user(level=level, group_id=group_id)
-        self.dao.create_user(user)
+        self.dao.users.create(user)
         return user
 
     def remove_user(self, user):
@@ -99,8 +98,7 @@ class CourierService(object):
 
         :param user:
         """
-        if user.username is not None:
-            self.dao.delete_user(user)
+        self.dao.users.delete(user)
 
     def generate_group(self, name=None, credentials=None):
         """
@@ -133,7 +131,7 @@ class CourierService(object):
         :param credentials:
         """
         group = self.generate_group(name=name, credentials=credentials)
-        self.dao.create_group(group)
+        self.dao.groups.create(group)
         return group
 
     def group_exists(self, group):
@@ -142,7 +140,7 @@ class CourierService(object):
 
         :param group:
         """
-        group_data = self.dao.read_group(group)
+        group_data = self.dao.groups.read(group)
         return len(group_data) == 1
 
     def remove_group(self, group):
@@ -151,8 +149,7 @@ class CourierService(object):
 
         :param group:
         """
-        if group.name is not None:
-            self.dao.delete_group(group)
+        self.dao.groups.delete(group)
 
     def authenticate(self, username, password):
         """
@@ -184,3 +181,35 @@ class CourierService(object):
                                 value=cookie[cookie_name].value)
 
         return response, session
+
+    def generate_client(self,
+                        group_id=None):
+        """
+        Randomly generates and returns a valid client.
+
+        :param group_id:
+        """
+        return Client(client_uuid=self.util.random_str(10),
+                      name=self.util.random_str(10),
+                      speedtest_pending=False,
+                      version='',
+                      group_id=group_id)
+
+    def create_random_client(self, group_id=None):
+        """
+        Creates a random client in the DB.
+        Returns the newly created client object.
+
+        :param group_id:
+        """
+        client = self.generate_client(group_id=group_id)
+        self.dao.clients.create(client)
+        return client
+
+    def remove_client(self, client):
+        """
+        Deletes the client defined by the given client, if possible
+
+        :param client:
+        """
+        self.dao.clients.delete(client)
