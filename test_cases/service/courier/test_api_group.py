@@ -31,7 +31,7 @@ class GroupApiTestCase(ApiTestCase):
         for group_data in json_data['data']:
             group = groups.get(group_data['id'])
             if group is not None:
-                self.assertGroupData(group.to_data(), group_data)
+                self.assertGroupData(group.to_response_data(), group_data)
 
         self.service.remove_user(user)
         for group in groups.itervalues():
@@ -72,7 +72,7 @@ class GroupApiTestCase(ApiTestCase):
         self.assertResponseSuccess(response)
         json_data = response.json()
         group_data = json_data.get('data')
-        self.assertGroupData(group.to_data(), group_data)
+        self.assertGroupData(group.to_response_data(), group_data)
 
         self.service.remove_user(user)
         self.service.remove_group(group)

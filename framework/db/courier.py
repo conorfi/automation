@@ -1,22 +1,17 @@
 """
 DB access functionality for Courier service DBs.
 """
-from sqlalchemy.sql import table, column
+from model.courier import *
 
 
 class CourierDao(object):
 
-    def __init__(self, db):
+    def __init__(self, db, tablify):
         super(CourierDao, self).__init__()
         self.db = db
-        self.user_table = table(
-            'user', column('id'), column('created'), column('last_modified'),
-            column('username'), column('group_id'), column('level'),
-            column('hash')
-        )
-        self.group_table = table(
-            'group', column('id'), column('name'), column('upload_credentials')
-        )
+        self.user_table = tablify.get_table(User)
+        self.group_table = tablify.get_table(Group)
+        self.client_table = tablify.get_table(Client)
 
     def create_user(self, user):
         """
@@ -25,7 +20,7 @@ class CourierDao(object):
 
         :param user:
         """
-        user_data = user.to_data(exclude_empty=True)
+        user_data = user.to_db_data()
         if 'password' in user_data:
             del user_data['password']
         query = self.user_table.insert().values(**user_data).\
@@ -53,7 +48,7 @@ class CourierDao(object):
         :param group:
         """
         query = self.group_table.insert().\
-            values(**group.to_data(exclude_empty=True)).\
+            values(**group.to_db_data()).\
             returning(self.group_table.c.id)
 
         result = self.db.execute(query)
