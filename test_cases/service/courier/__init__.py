@@ -10,6 +10,7 @@ from framework.db.base_dao import BaseDAO
 from framework.service.courier import CourierService, SERVICE_NAME
 from framework.db.courier import CourierDao
 from framework.db.model.courier import User
+from framework.db.model import Tablify
 
 
 class ApiTestCase(unittest.TestCase):
@@ -26,7 +27,8 @@ class ApiTestCase(unittest.TestCase):
 
     def setUp(self):
         super(ApiTestCase, self).setUp()
-        self.dao = CourierDao(self.db)
+        self.tablify = Tablify()
+        self.dao = CourierDao(self.db, self.tablify)
         self.service = CourierService(self.dao)
         self.util = Utility()
 
