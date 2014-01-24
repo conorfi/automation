@@ -186,6 +186,7 @@ class CourierService(object):
         return response, session
 
     def generate_client(self,
+                        name=None,
                         group_id=None):
         """
         Randomly generates and returns a valid client.
@@ -193,19 +194,18 @@ class CourierService(object):
         :param group_id:
         """
         return Client(client_uuid=self.util.random_str(10),
-                      name=self.util.random_str(10),
-                      speedtest_pending=False,
-                      version='',
-                      group_id=group_id)
+                      name=name or self.util.random_str(10),
+                      group_id=group_id,
+                      approved=False)
 
-    def create_random_client(self, group_id=None):
+    def create_random_client(self, name=None, group_id=None):
         """
         Creates a random client in the DB.
         Returns the newly created client object.
 
         :param group_id:
         """
-        client = self.generate_client(group_id=group_id)
+        client = self.generate_client(name=name, group_id=group_id)
         self.dao.clients.create(client)
         return client
 

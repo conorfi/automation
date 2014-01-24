@@ -112,10 +112,20 @@ class Client(BaseModel):
         self.ping = ping
         self.download = download
         self.upload = upload
-        self.speedtest_pending = speedtest_pending
+        self.speedtest_pending = speedtest_pending or False
         self.remaining_disk_space = remaining_disk_space
         self.used_disk_space = used_disk_space
         self.total_disk_space = total_disk_space
-        self.version = version
+        self.version = version or ''
         self.created = created or time.time()
         self.last_modified = last_modified or self.created
+
+    def to_post_data(self):
+        filter_fields = ['name', 'client_uuid', 'group_id', 'approved']
+        data = self.to_request_data()
+
+        data['client_uuid'] = data['uuid']
+        for k in [k for k in data.keys() if k not in filter_fields]:
+            data.pop(k)
+
+        return data
