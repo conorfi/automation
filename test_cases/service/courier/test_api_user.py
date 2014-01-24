@@ -7,20 +7,14 @@ from nose.plugins.attrib import attr
 from . import ApiTestCase
 from framework.db.model.courier import User
 
-_TEST_COUNT = 0
-
 
 class UserApiTestCase(ApiTestCase):
-
-    def shortDescription(self):
-        global _TEST_COUNT
-        _TEST_COUNT += 1
-        return ('COURIER_USER_API_%03d %s' %
-                (_TEST_COUNT, self.id().split('.')[-1]))
 
     @attr(env=['test'], priority=1)
     def test_list_success(self):
         """
+        COURIER_USER_API_001 test_list_success
+
         Return list of users successfully
         """
         login_user, session = self.login_random_user()
@@ -46,6 +40,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_read_success(self):
         """
+        COURIER_USER_API_002 test_read_success
+
         Return data for one user successfully.
         """
         login_user, session = self.login_random_user()
@@ -65,6 +61,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_read_fail(self):
         """
+        COURIER_USER_API_003 test_read_fail
+
         Negative test for missing user ID
         """
         login_user, session = self.login_random_user()
@@ -79,6 +77,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_read_fail_invalid(self):
         """
+        COURIER_USER_API_004 test_read_fail_invalid
+
         Negative test for invalid user ID
         """
         login_user, session = self.login_random_user()
@@ -93,6 +93,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_create_success(self):
         """
+        COURIER_USER_API_005 test_create_success
+
         Test user creation successfully
         """
         login_user, session = self.login_random_user()
@@ -122,6 +124,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_create_success_standard(self):
         """
+        COURIER_USER_API_006 test_create_success_standard
+
         Test standard user creation successfully
         """
         login_user, session = self.login_random_user()
@@ -150,6 +154,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_create_fail_missingdata(self):
         """
+        COURIER_USER_API_007 test_create_fail_missingdata
+
         Negative test to show user creation not possible with missing data
         """
         login_user, session = self.login_random_user()
@@ -169,6 +175,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_create_fail_extradata(self):
         """
+        COURIER_USER_API_008 test_create_fail_extradata
+
         Negative test to show user creation not possible with extra post data
         """
         login_user, session = self.login_random_user()
@@ -188,6 +196,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_create_fail_invaliddata(self):
         """
+        COURIER_USER_API_009 test_create_fail_invaliddata
+
         Negative test to show user creation not possible with invalid data
         """
         login_user, session = self.login_random_user()
@@ -207,6 +217,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_create_fail_permissions(self):
         """
+        COURIER_USER_API_010 test_create_fail_permissions
+
         Negative test to show user creation not possible with standard user
         """
         login_user, session = self.login_random_user(level=User.LEVEL_STANDARD)
@@ -225,6 +237,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_update_success(self):
         """
+        COURIER_USER_API_011 test_update_success
+
         Test user update is successful.
         """
         login_user, session = self.login_random_user()
@@ -253,6 +267,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_update_fail_missingdata(self):
         """
+        COURIER_USER_API_012 test_update_fail_missingdata
+
         Negative test to show user update not possible with missing data
         """
         login_user, session = self.login_random_user()
@@ -270,6 +286,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_update_fail_invaliddata(self):
         """
+        COURIER_USER_API_013 test_update_fail_invaliddata
+
         Negative test to show user update not possible with invalid data
         """
         login_user, session = self.login_random_user()
@@ -290,6 +308,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_delete_success(self):
         """
+        COURIER_USER_API_014 test_delete_success
+
         Test user deletion successfully
         """
         login_user, session = self.login_random_user()
@@ -310,6 +330,8 @@ class UserApiTestCase(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_delete_fail_missingdata(self):
         """
+        COURIER_USER_API_015 test_delete_fail_missingdata
+
         Test user deletion successfully
         """
         login_user, session = self.login_random_user()
