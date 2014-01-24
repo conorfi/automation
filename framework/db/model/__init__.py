@@ -141,6 +141,22 @@ class ModelCrud(object):
         self.cache_remove(model_instance)
         return result
 
+    def get_model_instances(self, alias, db_data):
+        """
+        Gets all instances from db rows.
+        :param alias:
+        :param db_data:
+        """
+        instances = []
+        for data in db_data:
+            for key, db_key in alias.items():
+                data[key] = data[db_key]
+                del data[db_key]
+            db_obj = self.klass(**data)
+            instances.append(db_obj)
+
+        return instances
+
     def read(self, model_instance):
         """
         Returns the instance from the DB for this model.
@@ -148,7 +164,8 @@ class ModelCrud(object):
         :param group:
         """
         data = self._table_op(self.table.select, model_instance)
-        db_obj = self.klass(**data[0]) if len(data) > 0 else None
+        instances = self.get_model_instances(model_instance._alias,data)
+        db_obj = instances[0] if len(instances) > 0 else None
         return db_obj
 
 
