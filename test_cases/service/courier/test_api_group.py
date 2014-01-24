@@ -33,10 +33,6 @@ class GroupApiTestCase(ApiTestCase):
             if group is not None:
                 self.assertGroupData(group.to_response_data(), group_data)
 
-        self.service.users.remove(user)
-        for group in groups.itervalues():
-            self.service.groups.remove(group)
-
     @attr(env=['test'], priority=1)
     def test_list_success_empty(self):
         """
@@ -53,8 +49,6 @@ class GroupApiTestCase(ApiTestCase):
         data = json_data.get('data')
         self.assertIsInstance(data, list)
         self.assertEqual(len(data), 0)
-
-        self.service.users.remove(user)
 
     @attr(env=['test'], priority=1)
     def test_read_success(self):
@@ -74,9 +68,6 @@ class GroupApiTestCase(ApiTestCase):
         group_data = json_data.get('data')
         self.assertGroupData(group.to_response_data(), group_data)
 
-        self.service.users.remove(user)
-        self.service.groups.remove(group)
-
     @attr(env=['test'], priority=1)
     def test_read_fail(self):
         """
@@ -91,8 +82,6 @@ class GroupApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.users.remove(user)
-
     @attr(env=['test'], priority=1)
     def test_read_fail_invalid(self):
         """
@@ -106,8 +95,6 @@ class GroupApiTestCase(ApiTestCase):
             'group', parameters={'group_id': 'notaninteger'}, session=session)
 
         self.assertResponseFail(response)
-
-        self.service.users.remove(user)
 
     @attr(env=['test'], priority=1)
     def test_create_success(self):
@@ -128,7 +115,7 @@ class GroupApiTestCase(ApiTestCase):
         group_data = json_data.get('data')
         self.assertGroupData(group.to_request_data(), group_data)
 
-        self.service.users.remove(user)
+        # explicit deletion since DAO cache doesn't contain it
         self.service.groups.remove(group)
 
     @attr(env=['test'], priority=1)
@@ -148,8 +135,6 @@ class GroupApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.users.remove(user)
-
     @attr(env=['test'], priority=1)
     def test_create_fail_invalidname(self):
         """
@@ -166,8 +151,6 @@ class GroupApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.users.remove(user)
-
     @attr(env=['test'], priority=1)
     def test_create_fail_permissions(self):
         """
@@ -183,8 +166,6 @@ class GroupApiTestCase(ApiTestCase):
             session=session)
 
         self.assertEqual(response.status_code, requests.codes.forbidden)
-
-        self.service.users.remove(user)
 
     @attr(env=['test'], priority=1)
     def test_update_success(self):
@@ -205,9 +186,6 @@ class GroupApiTestCase(ApiTestCase):
         json_data = response.json()
         group_data = json_data.get('data')
         self.assertGroupData(group.to_request_data(), group_data)
-
-        self.service.users.remove(user)
-        self.service.groups.remove(group)
 
     @attr(env=['test'], priority=1)
     def test_update_success_awscredentials(self):
@@ -233,9 +211,6 @@ class GroupApiTestCase(ApiTestCase):
         group_data = json_data.get('data')
         self.assertGroupData(group.to_request_data(), group_data)
 
-        self.service.users.remove(user)
-        self.service.groups.remove(group)
-
     @attr(env=['test'], priority=1)
     def test_update_fail_empty(self):
         """
@@ -255,8 +230,6 @@ class GroupApiTestCase(ApiTestCase):
         self.assertResponseFail(response)
 
         group.name = old_name
-        self.service.users.remove(user)
-        self.service.groups.remove(group)
 
     @attr(env=['test'], priority=1)
     def test_update_fail_invalidname(self):
@@ -277,8 +250,6 @@ class GroupApiTestCase(ApiTestCase):
         self.assertResponseFail(response)
 
         group.name = old_name
-        self.service.users.remove(user)
-        self.service.groups.remove(group)
 
     @attr(env=['test'], priority=1)
     def test_update_fail_permissions(self):
@@ -299,8 +270,6 @@ class GroupApiTestCase(ApiTestCase):
         self.assertEqual(response.status_code, requests.codes.forbidden)
 
         group.name = old_name
-        self.service.users.remove(user)
-        self.service.groups.remove(group)
 
     @attr(env=['test'], priority=1)
     def test_delete_success(self):
@@ -320,8 +289,6 @@ class GroupApiTestCase(ApiTestCase):
         self.assertResponseSuccess(response)
         self.assertFalse(self.service.groups.exists(group))
 
-        self.service.users.remove(user)
-
     @attr(env=['test'], priority=1)
     def test_delete_fail(self):
         """
@@ -336,8 +303,6 @@ class GroupApiTestCase(ApiTestCase):
             session=session)
 
         self.assertResponseSuccess(response)
-
-        self.service.users.remove(user)
 
     @attr(env=['test'], priority=1)
     def test_delete_fail_invalid(self):
@@ -354,8 +319,6 @@ class GroupApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.users.remove(user)
-
     @attr(env=['test'], priority=1)
     def test_delete_fail_permissions(self):
         """
@@ -370,5 +333,3 @@ class GroupApiTestCase(ApiTestCase):
             session=session)
 
         self.assertEqual(response.status_code, requests.codes.forbidden)
-
-        self.service.users.remove(user)

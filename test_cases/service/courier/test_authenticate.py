@@ -16,8 +16,7 @@ class AuthenticateTestCase(ApiTestCase):
 
         Authenticate a user created directly in the DB.
         """
-        user, session = self.login_random_user()
-        self.service.users.remove(user)
+        self.login_random_user()
 
     @attr(env=['test'], priority=1)
     def test_authenticate_fail(self):

@@ -32,6 +32,10 @@ class ApiTestCase(unittest.TestCase):
         self.service = CourierService(self.dao)
         self.util = Utility()
 
+    def tearDown(self):
+        super(ApiTestCase, self).tearDown()
+        self.dao.clear_cache()
+
     def login_random_user(self, level=User.LEVEL_ADMIN):
         """
         Creates a random user and authenticates them on the service.

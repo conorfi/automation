@@ -41,3 +41,14 @@ class CourierDao(object):
                                  klass=Content,
                                  id='content_id',
                                  unique_key='uuid')
+
+    def clear_cache(self):
+        """
+        Clears the cache of DB instances generated via this DAO instance.
+        Removes the underlying DB data.
+        """
+        self.users.clear_cache()
+        self.groups.clear_cache()
+        self.clients.clear_cache()
+        self.content_servers.clear_cache()
+        self.content.clear_cache()

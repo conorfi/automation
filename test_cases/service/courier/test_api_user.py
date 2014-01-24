@@ -33,10 +33,6 @@ class UserApiTestCase(ApiTestCase):
             if user is not None:
                 self.assertUserData(user.to_response_data(), user_data)
 
-        self.service.users.remove(login_user)
-        for user in users.itervalues():
-            self.service.users.remove(user)
-
     @attr(env=['test'], priority=1)
     def test_read_success(self):
         """
@@ -55,9 +51,6 @@ class UserApiTestCase(ApiTestCase):
         user_data = json_data.get('data')
         self.assertUserData(user.to_response_data(), user_data)
 
-        self.service.users.remove(login_user)
-        self.service.users.remove(user)
-
     @attr(env=['test'], priority=1)
     def test_read_fail(self):
         """
@@ -72,8 +65,6 @@ class UserApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.users.remove(login_user)
-
     @attr(env=['test'], priority=1)
     def test_read_fail_invalid(self):
         """
@@ -87,8 +78,6 @@ class UserApiTestCase(ApiTestCase):
             'user', parameters={'user_id': 'invalid'}, session=session)
 
         self.assertResponseFail(response)
-
-        self.service.users.remove(login_user)
 
     @attr(env=['test'], priority=1)
     def test_create_success(self):
@@ -117,9 +106,7 @@ class UserApiTestCase(ApiTestCase):
         # admin user never has group ID, even if passed
         self.assertTrue(db_user.group_id is None)
 
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
-        self.service.users.remove(user)
+        self.service.users.remove(db_user)
 
     @attr(env=['test'], priority=1)
     def test_create_success_standard(self):
@@ -147,9 +134,8 @@ class UserApiTestCase(ApiTestCase):
         # standard user has group ID
         self.assertEqual(db_user.group_id, user.group_id)
 
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
-        self.service.users.remove(user)
+        # explicit deletion since DAO cache doesn't contain it
+        self.service.users.remove(db_user)
 
     @attr(env=['test'], priority=1)
     def test_create_fail_missingdata(self):
@@ -169,9 +155,6 @@ class UserApiTestCase(ApiTestCase):
 
         self.assertEqual(response.status_code, requests.codes.not_found)
 
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
-
     @attr(env=['test'], priority=1)
     def test_create_fail_extradata(self):
         """
@@ -189,9 +172,6 @@ class UserApiTestCase(ApiTestCase):
             'user', method='post', data=user_data, session=session)
 
         self.assertEqual(response.status_code, requests.codes.bad_request)
-
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
 
     @attr(env=['test'], priority=1)
     def test_create_fail_invaliddata(self):
@@ -211,9 +191,6 @@ class UserApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
-
     @attr(env=['test'], priority=1)
     def test_create_fail_permissions(self):
         """
@@ -230,9 +207,6 @@ class UserApiTestCase(ApiTestCase):
             session=session)
 
         self.assertEqual(response.status_code, requests.codes.forbidden)
-
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
 
     @attr(env=['test'], priority=1)
     def test_update_success(self):
@@ -260,10 +234,6 @@ class UserApiTestCase(ApiTestCase):
         db_user = self.dao.users.read(user)
         self.assertEqual(user.username, db_user.username)
 
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
-        self.service.users.remove(user)
-
     @attr(env=['test'], priority=1)
     def test_update_fail_missingdata(self):
         """
@@ -279,9 +249,6 @@ class UserApiTestCase(ApiTestCase):
             session=session)
 
         self.assertEqual(response.status_code, requests.codes.not_found)
-
-        self.service.users.remove(login_user)
-        self.service.users.remove(user)
 
     @attr(env=['test'], priority=1)
     def test_update_fail_invaliddata(self):
@@ -300,10 +267,6 @@ class UserApiTestCase(ApiTestCase):
             session=session)
 
         self.assertResponseFail(response)
-
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
-        self.service.users.remove(user)
 
     @attr(env=['test'], priority=1)
     def test_delete_success(self):
@@ -324,9 +287,6 @@ class UserApiTestCase(ApiTestCase):
         db_user = self.dao.users.read(user)
         self.assertEqual(None, db_user)
 
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
-
     @attr(env=['test'], priority=1)
     def test_delete_fail_missingdata(self):
         """
@@ -342,7 +302,3 @@ class UserApiTestCase(ApiTestCase):
             'user', method='delete', session=session)
 
         self.assertEqual(response.status_code, requests.codes.not_found)
-
-        self.service.users.remove(login_user)
-        self.service.groups.remove(group)
-        self.service.users.remove(user)

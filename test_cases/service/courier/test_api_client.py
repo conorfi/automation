@@ -28,6 +28,3 @@ class ClientApiTestCase(ApiTestCase):
         json_data = response.json()
         client_data = json_data.get('data')
         self.assertClientData(client.to_response_data(), client_data)
-
-        self.service.users.remove(user)
-        self.service.remove_client(client)

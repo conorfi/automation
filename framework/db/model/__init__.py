@@ -74,6 +74,24 @@ class ModelCrud(object):
         self.table = tablify.get_table(klass)
         self.id = id
         self.unique_key = unique_key
+        self.instance_cache = {}
+
+    def cache_add(self, instance):
+        key = getattr(instance, self.id)
+        self.instance_cache[key] = instance
+
+    def cache_remove(self, instance):
+        key = getattr(instance, self.id)
+        if key in self.instance_cache:
+            del self.instance_cache[key]
+
+    def clear_cache(self):
+        """
+        Clears the DB cache for this model
+        """
+        cache = self.instance_cache.copy()
+        for key, instance in cache.iteritems():
+            self.delete(instance)
 
     def check_instance(self, instance):
         """
@@ -99,6 +117,7 @@ class ModelCrud(object):
 
         result = self.db.execute(query)
         setattr(model_instance, self.id, result[0][table_field])
+        self.cache_add(model_instance)
         return model_instance
 
     def _table_op(self, op_func, model_instance):
@@ -125,7 +144,9 @@ class ModelCrud(object):
 
         :param model_instance:
         """
-        return self._table_op(self.table.delete, model_instance)
+        result = self._table_op(self.table.delete, model_instance)
+        self.cache_remove(model_instance)
+        return result
 
     def read(self, model_instance):
         """
