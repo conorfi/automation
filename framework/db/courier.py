@@ -2,6 +2,7 @@
 DB access functionality for Courier service DBs.
 """
 from sqlalchemy.sql import table, column
+from framework.db.model.courier import Group, User
 
 
 class CourierDao(object):
@@ -35,6 +36,23 @@ class CourierDao(object):
         user.user_id = result[0]['id']
         return user
 
+    def read_user(self, user):
+        """
+        Returns the user data from the DB for this user.
+
+        :param user:
+        """
+        query = self.user_table.select().\
+            where(self.user_table.c.username == user.username)
+        db_data = self.db.execute(query)
+        db_user = None
+        if len(db_data) > 0:
+            data = db_data[0]
+            data['user_id'] = data['id']
+            del data['id']
+            db_user = User(**data)
+        return db_user
+
     def delete_user(self, user):
         """
         Deletes the given user.
@@ -62,13 +80,20 @@ class CourierDao(object):
 
     def read_group(self, group):
         """
-        Returns the group data from the DB for this group.
+        Returns the group from the DB for this group.
 
         :param group:
         """
         query = self.group_table.select().\
             where(self.group_table.c.name == group.name)
-        return self.db.execute(query)
+        db_data = self.db.execute(query)
+        db_group = None
+        if len(db_data) > 0:
+            data = db_data[0]
+            data['group_id'] = data['id']
+            del data['id']
+            db_group = Group(**db_data[0])
+        return db_group
 
     def delete_group(self, group):
         """

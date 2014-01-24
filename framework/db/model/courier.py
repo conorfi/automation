@@ -25,6 +25,23 @@ class User(BaseModel):
         self.created = created or time.time()
         self.last_modified = last_modified or self.created
 
+    def to_response_data(self):
+        data = super(User, self).to_data()
+        del data['password']
+        del data['hash']
+        del data['created']
+        del data['last_modified']
+        return data
+
+    def to_request_data(self):
+        data = super(User, self).to_data()
+        data['edit_username'] = data['username']
+        del data['hash']
+        del data['created']
+        del data['last_modified']
+        del data['username']
+        return data
+
 
 class Group(BaseModel):
 

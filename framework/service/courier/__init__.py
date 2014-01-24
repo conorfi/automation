@@ -67,7 +67,8 @@ class CourierService(object):
                 (url, params=parameters, data=data, verify=False,
                  headers=headers))
 
-    def generate_user(self, level=User.LEVEL_ADMIN, group_id=None):
+    def generate_user(self, username=None, level=User.LEVEL_ADMIN,
+                      group_id=None):
         """
         Randomly generates and returns a valid user. By default, creates an
         admin user with no linked group and default password.
@@ -75,13 +76,14 @@ class CourierService(object):
         :param level:
         :param group_id:
         """
-        return User(username=self.util.random_str(10),
+        return User(username=username or self.util.random_str(10),
                     hash=self._DEFAULT_PASSWORD_HASH,
                     password=self.DEFAULT_PASSWORD,
                     level=level,
                     group_id=group_id)
 
-    def create_random_user(self, level=User.LEVEL_ADMIN, group_id=None):
+    def create_random_user(self, username=None, level=User.LEVEL_ADMIN,
+                           group_id=None):
         """
         Creates a random user in the DB.
         Returns the newly created user object.
@@ -89,7 +91,8 @@ class CourierService(object):
         :param level:
         :param group_id:
         """
-        user = self.generate_user(level=level, group_id=group_id)
+        user = self.generate_user(username=username, level=level,
+                                  group_id=group_id)
         self.dao.create_user(user)
         return user
 
@@ -142,8 +145,8 @@ class CourierService(object):
 
         :param group:
         """
-        group_data = self.dao.read_group(group)
-        return len(group_data) == 1
+        db_group = self.dao.read_group(group)
+        return db_group is not None
 
     def remove_group(self, group):
         """
