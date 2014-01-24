@@ -29,3 +29,8 @@ class CourierDao(object):
                                  klass=Client,
                                  id='client_uuid',
                                  unique_key='name')
+        self.feeds = ModelCrud(db=self.db,
+                                 tablify=self.tablify,
+                                 klass=Feed,
+                                 id='feed_id',
+                                 unique_key='name')

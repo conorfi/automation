@@ -119,3 +119,48 @@ class Client(BaseModel):
         self.version = version
         self.created = created or time.time()
         self.last_modified = last_modified or self.created
+
+
+
+class Feed(BaseModel):
+
+    TABLE_NAME = 'feed'
+
+
+    def __init__(self, id=None, feed_id=None, name=None,
+                 type=None,uri=None,hash=None,
+                 created=None, last_modified=None
+                 ):
+        super(Feed, self).__init__(alias={'feed_id': 'id'})
+        self.feed_id = id or feed_id
+        self.name = name
+        self.type = type
+        self.uri = uri
+        self.hash = hash
+        self.created = created or time.time()
+        self.last_modified = last_modified or self.created
+
+
+    def to_request_data(self):
+        """
+        Feed data sent to server
+        """
+        data = super(Feed, self).to_request_data()
+        del data['type']
+        del data['uri']
+        del data['name']
+        del data['created']
+        del data['last_modified']
+        return data
+
+    def to_response_data(self):
+        """
+        Response from server for user data doesn't contain some fields
+        """
+        data = super(Feed, self).to_response_data()
+        del data['password']
+        del data['hash']
+        del data['created']
+        del data['last_modified']
+        return data
+

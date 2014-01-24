@@ -216,3 +216,37 @@ class CourierService(object):
         :param client:
         """
         self.dao.clients.delete(client)
+
+    def generate_feed(self, name=None, uri=None,
+                      type=None):
+        """
+        Randomly generates and returns a valid feed.
+        :param name:
+        :param uri:
+        :param type:
+        """
+        return Feed(name=self.util.random_str(),
+                    type=self.util.random_str(),
+                    uri=self.util.random_url())
+
+    def create_random_feed(self, username=None, level=User.LEVEL_ADMIN,
+                           group_id=None):
+        """
+        Creates a random user in the DB.
+        Returns the newly created user object.
+
+        :param level:
+        :param group_id:
+        """
+        user = self.generate_feed(username=username, level=level,
+                                  group_id=group_id)
+        self.dao.feeds.create(feed)
+        return feed
+
+    def remove_feed(self, feed):
+        """
+        Deletes the feed defined by the given feed, if possible
+
+        :param feed:
+        """
+        self.dao.feeds.delete(feed)

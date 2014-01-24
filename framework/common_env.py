@@ -259,6 +259,8 @@ def set_courier_config(config, **kwargs):
     config['api'][name]['user_v1']['default'] = 'rest/user'
     config['api'][name]['client_v1'] = {}
     config['api'][name]['client_v1']['default'] = 'rest/client/'
+    config['api'][name]['feed_v1'] = {}
+    config['api'][name]['feed_v1']['default'] = 'rest/client/'
 
 
 def set_courier_test_sets(test_sets):
