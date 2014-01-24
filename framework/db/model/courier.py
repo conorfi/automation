@@ -152,3 +152,17 @@ class Content(BaseModel):
         self.deleted = deleted
         self.created = created or time.time()
         self.last_modified = last_modified or self.created
+
+
+class ContentServers(BaseModel):
+
+    TABLE_NAME = 'content_content_server'
+
+    def __init__(self, id=None, content_server_id=None,
+                 content_id=None, content_uuid=None):
+
+        super(ContentServers, self).__init__(
+            alias={'content_id': 'content_uuid'})
+        self.id = id
+        self.content_server_id = content_server_id
+        self.content_id = content_uuid or content_id

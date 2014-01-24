@@ -8,6 +8,7 @@ class BaseModel(object):
     """
     Base model class for all models. Offers some common useful functionality.
     """
+
     def __init__(self, alias=None, db_ignore=None):
         """
         Sets alias and attributes that don't exist in the database
@@ -58,22 +59,14 @@ class ModelCrud(object):
     """
     Model Crud operations
     """
-    def __init__(self,
-                 db=None,
-                 tablify=None,
-                 klass=None,
-                 id=None, unique_key=None):
-
-        if db is None or klass is None or tablify is None \
-           or id is None or unique_key is None:
-            raise ValueError('All arguments are required')
+    def __init__(self, db, tablify, klass, id, unique_key=None):
 
         super(ModelCrud, self).__init__()
         self.db = db
         self.klass = klass
         self.table = tablify.get_table(klass)
         self.id = id
-        self.unique_key = unique_key
+        self.unique_key = unique_key or id
         self.instance_cache = {}
 
     def cache_add(self, instance):
