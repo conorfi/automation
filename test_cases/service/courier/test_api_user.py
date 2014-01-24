@@ -37,7 +37,7 @@ class UserApiTestCase(ApiTestCase):
         for user_data in json_data['data']:
             user = users.get(user_data['id'])
             if user is not None:
-                self.assertUserData(user.to_data(), user_data)
+                self.assertUserData(user.to_response_data(), user_data)
 
         self.service.remove_user(login_user)
         for user in users.itervalues():
@@ -57,7 +57,7 @@ class UserApiTestCase(ApiTestCase):
         self.assertResponseSuccess(response)
         json_data = response.json()
         user_data = json_data.get('data')
-        self.assertUserData(user.to_data(), user_data)
+        self.assertUserData(user.to_response_data(), user_data)
 
         self.service.remove_user(login_user)
         self.service.remove_user(user)
@@ -111,7 +111,7 @@ class UserApiTestCase(ApiTestCase):
         self.assertEqual({}, user_data)
         # BUG: verify change occurred via DB check since response body doesn't
         # give updated data
-        db_user = self.dao.read_user(user)
+        db_user = self.dao.users.read(user)
         # admin user never has group ID, even if passed
         self.assertTrue(db_user.group_id is None)
 
@@ -139,7 +139,7 @@ class UserApiTestCase(ApiTestCase):
         self.assertEqual({}, user_data)
         # verify change occurred via DB check since response body doesn't give
         # updated data
-        db_user = self.dao.read_user(user)
+        db_user = self.dao.users.read(user)
         # standard user has group ID
         self.assertEqual(db_user.group_id, user.group_id)
 
@@ -162,6 +162,25 @@ class UserApiTestCase(ApiTestCase):
             session=session)
 
         self.assertEqual(response.status_code, requests.codes.not_found)
+
+        self.service.remove_user(login_user)
+        self.service.remove_group(group)
+
+    @attr(env=['test'], priority=1)
+    def test_create_fail_extradata(self):
+        """
+        Negative test to show user creation not possible with extra post data
+        """
+        login_user, session = self.login_random_user()
+        group = self.service.create_random_group()
+        user = self.service.generate_user(group_id=group.group_id)
+        user_data = user.to_request_data()
+        user_data['extra'] = self.util.random_str()
+
+        response = self.service.resource_request(
+            'user', method='post', data=user_data, session=session)
+
+        self.assertEqual(response.status_code, requests.codes.bad_request)
 
         self.service.remove_user(login_user)
         self.service.remove_group(group)
@@ -224,7 +243,7 @@ class UserApiTestCase(ApiTestCase):
         self.assertEqual({}, user_data)
         # verify change occurred via DB check since response body doesn't give
         # updated data
-        db_user = self.dao.read_user(user)
+        db_user = self.dao.users.read(user)
         self.assertEqual(user.username, db_user.username)
 
         self.service.remove_user(login_user)
@@ -282,7 +301,7 @@ class UserApiTestCase(ApiTestCase):
             session=session)
 
         self.assertResponseSuccess(response)
-        db_user = self.dao.read_user(user)
+        db_user = self.dao.users.read(user)
         self.assertEqual(None, db_user)
 
         self.service.remove_user(login_user)

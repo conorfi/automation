@@ -15,12 +15,12 @@ class User(BaseModel):
     LEVEL_STANDARD = 'standard'
     LEVEL_READONLY = 'readonly'
 
-    def __init__(self, user_id=None, username=None, group_id=None,
+    def __init__(self, id=None, user_id=None, username=None, group_id=None,
                  password=None, level=None, hash=None,
                  created=None, last_modified=None):
         super(User, self).__init__(alias={'user_id': 'id'},
                                    db_ignore=['password'])
-        self.user_id = user_id
+        self.user_id = id or user_id
         self.username = username
         self.group_id = group_id
         self.password = password
@@ -30,7 +30,10 @@ class User(BaseModel):
         self.last_modified = last_modified or self.created
 
     def to_response_data(self):
-        data = super(User, self).to_data()
+        """
+        Response from server for user data doesn't contain some fields
+        """
+        data = super(User, self).to_response_data()
         del data['password']
         del data['hash']
         del data['created']
@@ -38,8 +41,12 @@ class User(BaseModel):
         return data
 
     def to_request_data(self):
-        data = super(User, self).to_data()
+        """
+        User data sent to server has different username field and no hash.
+        """
+        data = super(User, self).to_request_data()
         data['edit_username'] = data['username']
+        del data['id']
         del data['hash']
         del data['created']
         del data['last_modified']
@@ -54,20 +61,19 @@ class Group(BaseModel):
     CREDENTIALS_KEY_PRIVATE = 'private_key'
     CREDENTIALS_KEY_BUCKET = 'bucket'
 
-    def __init__(self, group_id=None, name=None, upload_credentials=None):
+    def __init__(self, id=None, group_id=None, name=None,
+                 upload_credentials=None):
         super(Group, self).__init__(alias={'group_id': 'id'})
-        self.group_id = group_id
+        self.group_id = id or group_id
         self.name = name
         self.upload_credentials = upload_credentials
 
-    def to_post_data(self):
+    def to_request_data(self):
         """
         Returns the group data formatted in the required layout.
         Groups have a special organisation for POSTing data to the server.
-
-        :param exclude_empty:
         """
-        data = self.to_request_data()
+        data = super(Group, self).to_request_data()
 
         # convert JSON-ed upload credentials to data for POSTing
         if 'upload_credentials' in data \

@@ -120,12 +120,13 @@ class GroupApiTestCase(ApiTestCase):
         group = self.service.generate_group()
 
         response = self.service.resource_request(
-            'group', method='post', data=group.to_post_data(), session=session)
+            'group', method='post', data=group.to_request_data(),
+            session=session)
 
         self.assertResponseSuccess(response)
         json_data = response.json()
         group_data = json_data.get('data')
-        self.assertGroupData(group.to_post_data(), group_data)
+        self.assertGroupData(group.to_request_data(), group_data)
 
         self.service.remove_user(user)
         self.service.remove_group(group)
@@ -142,7 +143,8 @@ class GroupApiTestCase(ApiTestCase):
         group.name = None
 
         response = self.service.resource_request(
-            'group', method='post', data=group.to_post_data(), session=session)
+            'group', method='post', data=group.to_request_data(),
+            session=session)
 
         self.assertResponseFail(response)
 
@@ -159,7 +161,8 @@ class GroupApiTestCase(ApiTestCase):
         group = self.service.generate_group(name=self.util.random_str(51))
 
         response = self.service.resource_request(
-            'group', method='post', data=group.to_post_data(), session=session)
+            'group', method='post', data=group.to_request_data(),
+            session=session)
 
         self.assertResponseFail(response)
 
@@ -176,7 +179,8 @@ class GroupApiTestCase(ApiTestCase):
         group = self.service.generate_group(name=self.util.random_str(51))
 
         response = self.service.resource_request(
-            'group', method='post', data=group.to_post_data(), session=session)
+            'group', method='post', data=group.to_request_data(),
+            session=session)
 
         self.assertEqual(response.status_code, requests.codes.forbidden)
 
@@ -194,12 +198,13 @@ class GroupApiTestCase(ApiTestCase):
         group.name = 'newname'
 
         response = self.service.resource_request(
-            'group', method='post', data=group.to_post_data(), session=session)
+            'group', method='post', data=group.to_request_data(),
+            session=session)
 
         self.assertResponseSuccess(response)
         json_data = response.json()
         group_data = json_data.get('data')
-        self.assertGroupData(group.to_post_data(), group_data)
+        self.assertGroupData(group.to_request_data(), group_data)
 
         self.service.remove_user(user)
         self.service.remove_group(group)
@@ -220,12 +225,13 @@ class GroupApiTestCase(ApiTestCase):
             self.service.generate_group_credentials(public_key='totallyrandom')
 
         response = self.service.resource_request(
-            'group', method='post', data=group.to_post_data(), session=session)
+            'group', method='post', data=group.to_request_data(),
+            session=session)
 
         self.assertResponseSuccess(response)
         json_data = response.json()
         group_data = json_data.get('data')
-        self.assertGroupData(group.to_post_data(), group_data)
+        self.assertGroupData(group.to_request_data(), group_data)
 
         self.service.remove_user(user)
         self.service.remove_group(group)
@@ -243,7 +249,8 @@ class GroupApiTestCase(ApiTestCase):
         group.name = None
 
         response = self.service.resource_request(
-            'group', method='post', data=group.to_post_data(), session=session)
+            'group', method='post', data=group.to_request_data(),
+            session=session)
 
         self.assertResponseFail(response)
 
@@ -264,7 +271,8 @@ class GroupApiTestCase(ApiTestCase):
         group.name = None
 
         response = self.service.resource_request(
-            'group', method='post', data=group.to_post_data(), session=session)
+            'group', method='post', data=group.to_request_data(),
+            session=session)
 
         self.assertResponseFail(response)
 
@@ -285,7 +293,8 @@ class GroupApiTestCase(ApiTestCase):
         group.name = None
 
         response = self.service.resource_request(
-            'group', method='post', data=group.to_post_data(), session=session)
+            'group', method='post', data=group.to_request_data(),
+            session=session)
 
         self.assertEqual(response.status_code, requests.codes.forbidden)
 
