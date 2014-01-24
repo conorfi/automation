@@ -69,9 +69,11 @@ class BaseDAO(object):
         raw_result = self.connection.execute(query)
         # translate raw ResultProxy into consistent list response
         if raw_result.is_insert:
-            raw_results = [raw_result.fetchone()]
+            raw_results = [dict(raw_result.fetchone())]
         elif raw_result.returns_rows:
-            raw_results = raw_result.fetchall()
+            raw_results = []
+            for raw_row in raw_result.fetchall():
+                raw_results.append(dict(raw_row))
         else:
             raw_results = []
         return raw_results

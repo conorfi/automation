@@ -139,6 +139,18 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(expected_data['upload_credentials'],
                          actual_data['upload_credentials'])
 
+    def assertUserData(self, expected_data, actual_data):
+        """
+        Asserts that the given expected user data matches the actual user
+        data.
+        """
+        self.assertDictContains(actual_data, 'username')
+        self.assertEqual(expected_data['username'], actual_data['username'])
+        self.assertDictContains(actual_data, 'group_id')
+        self.assertEqual(expected_data['group_id'], actual_data['group_id'])
+        self.assertDictContains(actual_data, 'level')
+        self.assertEqual(expected_data['level'], actual_data['level'])
+
     def assertClientData(self, expected_data, actual_data):
         """
         Asserts that the given expected client data matches the actual group

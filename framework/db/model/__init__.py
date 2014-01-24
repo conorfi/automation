@@ -17,7 +17,7 @@ class BaseModel(object):
 
     def to_db_field(self, attribute):
         """
-        name of the db field
+        Name of the DB field from obj field
         """
         return self._alias.get(attribute, attribute)
 
@@ -39,17 +39,19 @@ class BaseModel(object):
         """
         Returns a dict of the model variables to make request.
         """
-        data = dict([(self._alias.get(k, k), v)
-                     for k, v in vars(self).items()
-                     if not k.startswith('_')])
-        return data
+        return self._to_data()
 
     def to_response_data(self):
         """
         Returns a dict of the model variables expected on response.
         """
-        # expecting to match request format by default
-        return self.to_request_data()
+        return self._to_data()
+
+    def _to_data(self):
+        data = dict([(self._alias.get(k, k), v)
+                     for k, v in vars(self).items()
+                     if not k.startswith('_')])
+        return data
 
 
 class ModelCrud(object):
@@ -131,7 +133,9 @@ class ModelCrud(object):
 
         :param group:
         """
-        return self._table_op(self.table.select, model_instance)
+        data = self._table_op(self.table.select, model_instance)
+        db_obj = self.klass(**data[0]) if len(data) > 0 else None
+        return db_obj
 
 
 class Tablify(object):
