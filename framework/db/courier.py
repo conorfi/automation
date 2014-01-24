@@ -15,7 +15,7 @@ class CourierDao(object):
         self.db = db
         self.tablify = tablify
 
-        model_cruds = {
+        self.model_cruds = {
             'users': {
                 'args': [User, 'user_id', 'username']
             },
@@ -37,7 +37,7 @@ class CourierDao(object):
         }
         # dynamically generate the ModelCruds described in the dict and
         # bind to this DAO instance
-        for attr, func_args in model_cruds.iteritems():
+        for attr, func_args in self.model_cruds.iteritems():
             model_crud = ModelCrud(
                 self.db, self.tablify, *func_args.get('args', []),
                 **func_args.get('kwargs', {})
@@ -49,8 +49,5 @@ class CourierDao(object):
         Clears the cache of DB instances generated via this DAO instance.
         Removes the underlying DB data.
         """
-        self.users.clear_cache()
-        self.groups.clear_cache()
-        self.clients.clear_cache()
-        self.content_servers.clear_cache()
-        self.content.clear_cache()
+        for attr in self.model_cruds.iterkeys():
+            getattr(self, attr).clear_cache()
