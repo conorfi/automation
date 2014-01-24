@@ -8,6 +8,7 @@ class BaseModel(object):
     """
     Base model class for all models. Offers some common useful functionality.
     """
+
     def __init__(self, alias=None, db_ignore=None):
         """
         Sets alias and attributes that don't exist in the database
@@ -58,22 +59,32 @@ class ModelCrud(object):
     """
     Model Crud operations
     """
-    def __init__(self,
-                 db=None,
-                 tablify=None,
-                 klass=None,
-                 id=None, unique_key=None):
-
-        if db is None or klass is None or tablify is None \
-           or id is None or unique_key is None:
-            raise ValueError('All arguments are required')
+    def __init__(self, db, tablify, klass, id, unique_key=None):
 
         super(ModelCrud, self).__init__()
         self.db = db
         self.klass = klass
         self.table = tablify.get_table(klass)
         self.id = id
-        self.unique_key = unique_key
+        self.unique_key = unique_key or id
+        self.instance_cache = {}
+
+    def cache_add(self, instance):
+        key = getattr(instance, self.id)
+        self.instance_cache[key] = instance
+
+    def cache_remove(self, instance):
+        key = getattr(instance, self.id)
+        if key in self.instance_cache:
+            del self.instance_cache[key]
+
+    def clear_cache(self):
+        """
+        Clears the DB cache for this model
+        """
+        cache = self.instance_cache.copy()
+        for key, instance in cache.iteritems():
+            self.delete(instance)
 
     def check_instance(self, instance):
         """
@@ -99,6 +110,7 @@ class ModelCrud(object):
 
         result = self.db.execute(query)
         setattr(model_instance, self.id, result[0][table_field])
+        self.cache_add(model_instance)
         return model_instance
 
     def _table_op(self, op_func, model_instance):
@@ -125,7 +137,9 @@ class ModelCrud(object):
 
         :param model_instance:
         """
-        return self._table_op(self.table.delete, model_instance)
+        result = self._table_op(self.table.delete, model_instance)
+        self.cache_remove(model_instance)
+        return result
 
     def get_model_instances(self, alias, db_data):
         """

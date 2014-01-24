@@ -120,12 +120,59 @@ class Client(BaseModel):
         self.created = created or time.time()
         self.last_modified = last_modified or self.created
 
-    def to_post_data(self):
+    def to_request_data(self):
         filter_fields = ['name', 'client_uuid', 'group_id', 'approved']
-        data = self.to_request_data()
+        data = super(Client, self).to_request_data()
 
         data['client_uuid'] = data['uuid']
         for k in [k for k in data.keys() if k not in filter_fields]:
             data.pop(k)
 
         return data
+
+
+class ContentServer(BaseModel):
+
+    TABLE_NAME = 'content_server'
+
+    def __init__(self, id=None, content_server_id=None,
+                 type=None, source=None):
+
+        super(ContentServer, self).__init__(alias={'content_server_id': 'id'})
+        self.content_server_id = id or content_server_id
+        self.type = type
+        self.source = source
+
+
+class Content(BaseModel):
+
+    TABLE_NAME = 'content'
+
+    def __init__(self, uuid=None, content_id=None, name=None, size=None,
+                 cpl_id=None, cpl_uri=None, tags=None, deleted=False,
+                 created=None, last_modified=None):
+
+        super(Content, self).__init__(alias={'content_id': 'uuid'})
+        self.content_server_id = uuid or content_id
+        self.name = name
+        self.size = size
+        self.cpl_id = cpl_id
+        self.cpl_uri = cpl_uri
+        self.tags = tags
+        self.deleted = deleted
+        self.created = created or time.time()
+        self.last_modified = last_modified or self.created
+
+
+class ContentServers(BaseModel):
+
+    TABLE_NAME = 'content_content_server'
+
+    def __init__(self, id=None, content_server_id=None,
+                 content_id=None, content_uuid=None):
+
+        super(ContentServers, self).__init__(
+            alias={'content_id': 'content_uuid'})
+        self.id = id
+        self.content_server_id = content_server_id
+        self.content_id = content_uuid or content_id

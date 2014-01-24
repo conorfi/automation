@@ -5,7 +5,7 @@ as separate classes
 @since: Created on December 3rd 2013
 @author: Conor Fitzgerald
 """
-
+import uuid
 import random
 import string
 
@@ -16,6 +16,9 @@ class Utility(object):
         return "".join(random.choice(
             string.ascii_lowercase) for x in xrange(n)
         )
+
+    def random_uuid(self):
+        return str(uuid.uuid1())
 
     def random_email(self, len=None):
         if(len is None):

@@ -20,7 +20,7 @@ class ClientApiTestCase(ApiTestCase):
         user, session = self.login_random_user()
         clients = {}
         for index in range(2):
-            client = self.service.create_random_client()
+            client = self.service.clients.create_random()
             clients[client.client_uuid] = client
 
         response = self.service.resource_request('client', session=session)
@@ -32,10 +32,6 @@ class ClientApiTestCase(ApiTestCase):
             client = clients.get(client_data['uuid'])
             if client is not None:
                 self.assertClientData(client.to_response_data(), client_data)
-
-        self.service.remove_user(user)
-        for client in clients.itervalues():
-            self.service.remove_client(client)
 
     @attr(env=['test'], priority=1)
     def test_list_success_empty(self):
@@ -54,8 +50,6 @@ class ClientApiTestCase(ApiTestCase):
         self.assertIsInstance(data, list)
         self.assertEqual(len(data), 0)
 
-        self.service.remove_user(user)
-
     @attr(env=['test'], priority=1)
     def test_read_success(self):
         """
@@ -64,7 +58,7 @@ class ClientApiTestCase(ApiTestCase):
         Return data for one client successfully.
         """
         user, session = self.login_random_user()
-        client = self.service.create_random_client()
+        client = self.service.clients.create_random()
 
         response = self.service.resource_request(
             'client', parameters={'client_uuid': client.client_uuid},
@@ -75,9 +69,6 @@ class ClientApiTestCase(ApiTestCase):
         json_data = response.json()
         client_data = json_data.get('data')
         self.assertClientData(client.to_response_data(), client_data)
-
-        self.service.remove_user(user)
-        self.service.remove_client(client)
 
     @attr(env=['test'], priority=1)
     def test_read_fail(self):
@@ -92,8 +83,6 @@ class ClientApiTestCase(ApiTestCase):
             'client', parameters={'client_uuid': 33}, session=session)
 
         self.assertResponseFail(response)
-
-        self.service.remove_user(user)
 
     @attr(env=['test'], priority=1)
     def test_read_fail_invalid(self):
@@ -111,8 +100,6 @@ class ClientApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.remove_user(user)
-
     @attr(env=['test'], priority=1)
     def test_update_success(self):
         """
@@ -121,13 +108,13 @@ class ClientApiTestCase(ApiTestCase):
         Test client update is successful.
         """
         login_user, session = self.login_random_user()
-        group = self.service.create_random_group()
-        client = self.service.create_random_client(name='oldname',
-                                                   group_id=group.group_id)
+        group = self.service.groups.create_random()
+        client = self.service.clients.create_random(name='oldname',
+                                                    group_id=group.group_id)
         client.name = 'newname'
 
         response = self.service.resource_request(
-            'client', method='post', data=client.to_post_data(),
+            'client', method='post', data=client.to_request_data(),
             session=session)
 
         self.assertResponseSuccess(response)
@@ -139,8 +126,4 @@ class ClientApiTestCase(ApiTestCase):
         db_client = self.dao.clients.read(client)
         self.assertEqual(client.name, db_client.name)
 
-        self.service.remove_user(login_user)
-        self.service.remove_group(group)
-        self.service.remove_client(client)
-
-
+        client.name = 'oldname'

@@ -20,7 +20,7 @@ class GroupApiTestCase(ApiTestCase):
         user, session = self.login_random_user()
         groups = {}
         for index in range(2):
-            group = self.service.create_random_group()
+            group = self.service.groups.create_random()
             groups[group.group_id] = group
 
         response = self.service.resource_request('group', session=session)
@@ -32,10 +32,6 @@ class GroupApiTestCase(ApiTestCase):
             group = groups.get(group_data['id'])
             if group is not None:
                 self.assertGroupData(group.to_response_data(), group_data)
-
-        self.service.remove_user(user)
-        for group in groups.itervalues():
-            self.service.remove_group(group)
 
     @attr(env=['test'], priority=1)
     def test_list_success_empty(self):
@@ -54,8 +50,6 @@ class GroupApiTestCase(ApiTestCase):
         self.assertIsInstance(data, list)
         self.assertEqual(len(data), 0)
 
-        self.service.remove_user(user)
-
     @attr(env=['test'], priority=1)
     def test_read_success(self):
         """
@@ -64,7 +58,7 @@ class GroupApiTestCase(ApiTestCase):
         Return data for one group successfully.
         """
         user, session = self.login_random_user()
-        group = self.service.create_random_group()
+        group = self.service.groups.create_random()
 
         response = self.service.resource_request(
             'group', parameters={'group_id': group.group_id}, session=session)
@@ -73,9 +67,6 @@ class GroupApiTestCase(ApiTestCase):
         json_data = response.json()
         group_data = json_data.get('data')
         self.assertGroupData(group.to_response_data(), group_data)
-
-        self.service.remove_user(user)
-        self.service.remove_group(group)
 
     @attr(env=['test'], priority=1)
     def test_read_fail(self):
@@ -91,8 +82,6 @@ class GroupApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.remove_user(user)
-
     @attr(env=['test'], priority=1)
     def test_read_fail_invalid(self):
         """
@@ -107,8 +96,6 @@ class GroupApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.remove_user(user)
-
     @attr(env=['test'], priority=1)
     def test_create_success(self):
         """
@@ -117,7 +104,7 @@ class GroupApiTestCase(ApiTestCase):
         Successful test when creating group via API
         """
         user, session = self.login_random_user()
-        group = self.service.generate_group()
+        group = self.service.groups.generate()
 
         response = self.service.resource_request(
             'group', method='post', data=group.to_request_data(),
@@ -128,8 +115,8 @@ class GroupApiTestCase(ApiTestCase):
         group_data = json_data.get('data')
         self.assertGroupData(group.to_request_data(), group_data)
 
-        self.service.remove_user(user)
-        self.service.remove_group(group)
+        # explicit deletion since DAO cache doesn't contain it
+        self.service.groups.remove(group)
 
     @attr(env=['test'], priority=1)
     def test_create_fail_empty(self):
@@ -139,7 +126,7 @@ class GroupApiTestCase(ApiTestCase):
         Negative test when giving no group data
         """
         user, session = self.login_random_user()
-        group = self.service.generate_group()
+        group = self.service.groups.generate()
         group.name = None
 
         response = self.service.resource_request(
@@ -147,8 +134,6 @@ class GroupApiTestCase(ApiTestCase):
             session=session)
 
         self.assertResponseFail(response)
-
-        self.service.remove_user(user)
 
     @attr(env=['test'], priority=1)
     def test_create_fail_invalidname(self):
@@ -158,15 +143,13 @@ class GroupApiTestCase(ApiTestCase):
         Negative test when sending invalid group name
         """
         user, session = self.login_random_user()
-        group = self.service.generate_group(name=self.util.random_str(51))
+        group = self.service.groups.generate(name=self.util.random_str(51))
 
         response = self.service.resource_request(
             'group', method='post', data=group.to_request_data(),
             session=session)
 
         self.assertResponseFail(response)
-
-        self.service.remove_user(user)
 
     @attr(env=['test'], priority=1)
     def test_create_fail_permissions(self):
@@ -176,15 +159,13 @@ class GroupApiTestCase(ApiTestCase):
         Negative test when attempting create with non-admin user
         """
         user, session = self.login_random_user(level=User.LEVEL_STANDARD)
-        group = self.service.generate_group(name=self.util.random_str(51))
+        group = self.service.groups.generate(name=self.util.random_str(51))
 
         response = self.service.resource_request(
             'group', method='post', data=group.to_request_data(),
             session=session)
 
         self.assertEqual(response.status_code, requests.codes.forbidden)
-
-        self.service.remove_user(user)
 
     @attr(env=['test'], priority=1)
     def test_update_success(self):
@@ -194,7 +175,7 @@ class GroupApiTestCase(ApiTestCase):
         Successful test when updating group via API
         """
         user, session = self.login_random_user()
-        group = self.service.create_random_group(name='oldname')
+        group = self.service.groups.create_random(name='oldname')
         group.name = 'newname'
 
         response = self.service.resource_request(
@@ -206,9 +187,6 @@ class GroupApiTestCase(ApiTestCase):
         group_data = json_data.get('data')
         self.assertGroupData(group.to_request_data(), group_data)
 
-        self.service.remove_user(user)
-        self.service.remove_group(group)
-
     @attr(env=['test'], priority=1)
     def test_update_success_awscredentials(self):
         """
@@ -218,8 +196,8 @@ class GroupApiTestCase(ApiTestCase):
         """
         user, session = self.login_random_user()
         credentials = self.service.generate_group_credentials()
-        group = self.service.create_random_group(name='oldname',
-                                                 credentials=credentials)
+        group = self.service.groups.create_random(
+            name='oldname', upload_credentials=credentials)
         group.name = 'newname'
         group.upload_credentials = \
             self.service.generate_group_credentials(public_key='totallyrandom')
@@ -233,9 +211,6 @@ class GroupApiTestCase(ApiTestCase):
         group_data = json_data.get('data')
         self.assertGroupData(group.to_request_data(), group_data)
 
-        self.service.remove_user(user)
-        self.service.remove_group(group)
-
     @attr(env=['test'], priority=1)
     def test_update_fail_empty(self):
         """
@@ -244,7 +219,7 @@ class GroupApiTestCase(ApiTestCase):
         Negative test when updating group via API with no data
         """
         user, session = self.login_random_user()
-        group = self.service.create_random_group()
+        group = self.service.groups.create_random()
         old_name = group.name
         group.name = None
 
@@ -255,8 +230,6 @@ class GroupApiTestCase(ApiTestCase):
         self.assertResponseFail(response)
 
         group.name = old_name
-        self.service.remove_user(user)
-        self.service.remove_group(group)
 
     @attr(env=['test'], priority=1)
     def test_update_fail_invalidname(self):
@@ -266,7 +239,7 @@ class GroupApiTestCase(ApiTestCase):
         Negative test when updating group via API with no data
         """
         user, session = self.login_random_user()
-        group = self.service.create_random_group()
+        group = self.service.groups.create_random()
         old_name = group.name
         group.name = None
 
@@ -277,8 +250,6 @@ class GroupApiTestCase(ApiTestCase):
         self.assertResponseFail(response)
 
         group.name = old_name
-        self.service.remove_user(user)
-        self.service.remove_group(group)
 
     @attr(env=['test'], priority=1)
     def test_update_fail_permissions(self):
@@ -288,7 +259,7 @@ class GroupApiTestCase(ApiTestCase):
         Negative test when updating group via API with missing permissions
         """
         user, session = self.login_random_user(level=User.LEVEL_STANDARD)
-        group = self.service.create_random_group()
+        group = self.service.groups.create_random()
         old_name = group.name
         group.name = None
 
@@ -299,8 +270,6 @@ class GroupApiTestCase(ApiTestCase):
         self.assertEqual(response.status_code, requests.codes.forbidden)
 
         group.name = old_name
-        self.service.remove_user(user)
-        self.service.remove_group(group)
 
     @attr(env=['test'], priority=1)
     def test_delete_success(self):
@@ -310,17 +279,15 @@ class GroupApiTestCase(ApiTestCase):
         Successful test when deleting group via API
         """
         user, session = self.login_random_user()
-        group = self.service.create_random_group()
+        group = self.service.groups.create_random()
 
-        self.assertTrue(self.service.group_exists(group))
+        self.assertTrue(self.service.groups.exists(group))
         response = self.service.resource_request(
             'group', method='delete', parameters={'group_id': group.group_id},
             session=session)
 
         self.assertResponseSuccess(response)
-        self.assertFalse(self.service.group_exists(group))
-
-        self.service.remove_user(user)
+        self.assertFalse(self.service.groups.exists(group))
 
     @attr(env=['test'], priority=1)
     def test_delete_fail(self):
@@ -337,8 +304,6 @@ class GroupApiTestCase(ApiTestCase):
 
         self.assertResponseSuccess(response)
 
-        self.service.remove_user(user)
-
     @attr(env=['test'], priority=1)
     def test_delete_fail_invalid(self):
         """
@@ -354,8 +319,6 @@ class GroupApiTestCase(ApiTestCase):
 
         self.assertResponseFail(response)
 
-        self.service.remove_user(user)
-
     @attr(env=['test'], priority=1)
     def test_delete_fail_permissions(self):
         """
@@ -370,5 +333,3 @@ class GroupApiTestCase(ApiTestCase):
             session=session)
 
         self.assertEqual(response.status_code, requests.codes.forbidden)
-
-        self.service.remove_user(user)
