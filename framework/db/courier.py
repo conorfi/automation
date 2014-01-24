@@ -1,8 +1,8 @@
 """
 DB access functionality for Courier service DBs.
 """
-from model.courier import *
-from model import ModelCrud
+from .model.courier import *
+from .model import ModelCrud
 
 
 class CourierDao(object):
@@ -29,3 +29,15 @@ class CourierDao(object):
                                  klass=Client,
                                  id='client_uuid',
                                  unique_key='name')
+
+        self.content_servers = ModelCrud(db=self.db,
+                                         tablify=self.tablify,
+                                         klass=ContentServer,
+                                         id='content_server_id',
+                                         unique_key='id')
+
+        self.content = ModelCrud(db=self.db,
+                                 tablify=self.tablify,
+                                 klass=Content,
+                                 id='content_id',
+                                 unique_key='uuid')

@@ -37,7 +37,7 @@ class ApiTestCase(unittest.TestCase):
         Creates a random user and authenticates them on the service.
         Returns the newly created user object and the associated session.
         """
-        user = self.service.create_random_user(level=level)
+        user = self.service.users.create_random(level=level)
         response, session = self.service.authenticate(user.username,
                                                       user.password)
         self.assertTrue(session is not None)

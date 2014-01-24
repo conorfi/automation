@@ -119,3 +119,36 @@ class Client(BaseModel):
         self.version = version
         self.created = created or time.time()
         self.last_modified = last_modified or self.created
+
+
+class ContentServer(BaseModel):
+
+    TABLE_NAME = 'content_server'
+
+    def __init__(self, id=None, content_server_id=None,
+                 type=None, source=None):
+
+        super(ContentServer, self).__init__(alias={'content_server_id': 'id'})
+        self.content_server_id = id or content_server_id
+        self.type = type
+        self.source = source
+
+
+class Content(BaseModel):
+
+    TABLE_NAME = 'content'
+
+    def __init__(self, uuid=None, content_id=None, name=None, size=None,
+                 cpl_id=None, cpl_uri=None, tags=None, deleted=False,
+                 created=None, last_modified=None):
+
+        super(Content, self).__init__(alias={'content_id': 'uuid'})
+        self.content_server_id = uuid or content_id
+        self.name = name
+        self.size = size
+        self.cpl_id = cpl_id
+        self.cpl_uri = cpl_uri
+        self.tags = tags
+        self.deleted = deleted
+        self.created = created or time.time()
+        self.last_modified = last_modified or self.created
