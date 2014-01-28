@@ -63,6 +63,7 @@ def get_default_service_config():
     Returns the default service configuration options.
     """
     return {
+        'scheme': 'https',
         'host': 'localhost',
         'ip': '127.0.0.1',
         'port': '8070',
@@ -259,8 +260,6 @@ def set_courier_config(config, **kwargs):
     config['api'][name]['user_v1']['default'] = 'rest/user'
     config['api'][name]['client_v1'] = {}
     config['api'][name]['client_v1']['default'] = 'rest/client/'
-    config['api'][name]['feed_v1'] = {}
-    config['api'][name]['feed_v1']['default'] = 'rest/client/'
 
 
 def set_courier_test_sets(test_sets):

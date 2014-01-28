@@ -112,55 +112,68 @@ class Client(BaseModel):
         self.ping = ping
         self.download = download
         self.upload = upload
-        self.speedtest_pending = speedtest_pending
+        self.speedtest_pending = speedtest_pending or False
         self.remaining_disk_space = remaining_disk_space
         self.used_disk_space = used_disk_space
         self.total_disk_space = total_disk_space
-        self.version = version
+        self.version = version or ''
         self.created = created or time.time()
         self.last_modified = last_modified or self.created
-
-
-
-class Feed(BaseModel):
-
-    TABLE_NAME = 'feed'
-
-
-    def __init__(self, id=None, feed_id=None, name=None,
-                 type=None,uri=None,hash=None,
-                 created=None, last_modified=None
-                 ):
-        super(Feed, self).__init__(alias={'feed_id': 'id'})
-        self.feed_id = id or feed_id
-        self.name = name
-        self.type = type
-        self.uri = uri
-        self.hash = hash
-        self.created = created or time.time()
-        self.last_modified = last_modified or self.created
-
 
     def to_request_data(self):
-        """
-        Feed data sent to server
-        """
-        data = super(Feed, self).to_request_data()
-        del data['type']
-        del data['uri']
-        del data['name']
-        del data['created']
-        del data['last_modified']
+        filter_fields = ['name', 'client_uuid', 'group_id', 'approved']
+        data = super(Client, self).to_request_data()
+
+        data['client_uuid'] = data['uuid']
+        for k in [k for k in data.keys() if k not in filter_fields]:
+            data.pop(k)
+
         return data
 
-    def to_response_data(self):
-        """
-        Response from server for user data doesn't contain some fields
-        """
-        data = super(Feed, self).to_response_data()
-        del data['password']
-        del data['hash']
-        del data['created']
-        del data['last_modified']
-        return data
+
+class ContentServer(BaseModel):
+
+    TABLE_NAME = 'content_server'
+
+    def __init__(self, id=None, content_server_id=None,
+                 type=None, source=None):
+
+        super(ContentServer, self).__init__(alias={'content_server_id': 'id'})
+        self.content_server_id = id or content_server_id
+        self.type = type
+        self.source = source
+
+
+class Content(BaseModel):
+
+    TABLE_NAME = 'content'
+
+    def __init__(self, uuid=None, content_id=None, name=None, size=None,
+                 cpl_id=None, cpl_uri=None, tags=None, deleted=False,
+                 created=None, last_modified=None):
+
+        super(Content, self).__init__(alias={'content_id': 'uuid'})
+        self.content_server_id = uuid or content_id
+        self.name = name
+        self.size = size
+        self.cpl_id = cpl_id
+        self.cpl_uri = cpl_uri
+        self.tags = tags
+        self.deleted = deleted
+
+        self.created = created or time.time()
+        self.last_modified = last_modified or self.created
+
+class ContentServers(BaseModel):
+
+    TABLE_NAME = 'content_content_server'
+
+    def __init__(self, id=None, content_server_id=None,
+                 content_id=None, content_uuid=None):
+
+        super(ContentServers, self).__init__(
+            alias={'content_id': 'content_uuid'})
+        self.id = id
+        self.content_server_id = content_server_id
+        self.content_id = content_uuid or content_id
 

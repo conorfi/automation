@@ -32,12 +32,16 @@ class ApiTestCase(unittest.TestCase):
         self.service = CourierService(self.dao)
         self.util = Utility()
 
+    def tearDown(self):
+        super(ApiTestCase, self).tearDown()
+        self.dao.clear_cache()
+
     def login_random_user(self, level=User.LEVEL_ADMIN):
         """
         Creates a random user and authenticates them on the service.
         Returns the newly created user object and the associated session.
         """
-        user = self.service.create_random_user(level=level)
+        user = self.service.users.create_random(level=level)
         response, session = self.service.authenticate(user.username,
                                                       user.password)
         self.assertTrue(session is not None)
@@ -77,24 +81,33 @@ class ApiTestCase(unittest.TestCase):
             "messages": []
         }
         """
-        self.assertEqual(response.status_code, requests.codes.ok,
-                         'Invalid status code "%d"' % response.status_code)
+
+        msg_on_fail = lambda msg: '%s\nFull Response:\n %s\n' %\
+                                  (msg, response.content)
+
+        self.assertEqual(
+            response.status_code, requests.codes.ok,
+            msg_on_fail('Invalid status code "%d"' % response.status_code)
+        )
         try:
             json_data = response.json()
         except ValueError:
             json_data = None
-        self.assertTrue(json_data is not None, 'Response not in JSON format')
+        self.assertTrue(json_data is not None,
+                        msg_on_fail('Response not in JSON format'))
         messages = json_data.get('messages')
         self.assertIsInstance(messages, list,
-                              'Messages non-existent or not list')
+                              msg_on_fail('Messages non-existent or not list'))
         if len(messages) > 0:
             self.assertEqual(len(messages), 1,
-                             'Messages must be list of length 1')
+                             msg_on_fail('Messages must be list of length 1'))
             message = messages[0]
-            self.assertIsInstance(message, dict, 'Message must be dict')
+            self.assertIsInstance(message, dict,
+                                  msg_on_fail('Message must be dict'))
             # default to success if it doesn't exist
             type_message = message.get('type', 'success')
-            self.assertEqual(type_message, 'success', 'Message type is error')
+            self.assertEqual(type_message, 'success',
+                             msg_on_fail('Message type is error'))
 
     def assertResponseFail(self, response):
         """

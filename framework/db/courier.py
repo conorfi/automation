@@ -1,36 +1,54 @@
 """
 DB access functionality for Courier service DBs.
 """
-from model.courier import *
-from model import ModelCrud
+from .model.courier import *
+from .model import ModelCrud
 
 
 class CourierDao(object):
+    """
+    Data access object for Courier DB data.
+    """
 
     def __init__(self, db, tablify):
         super(CourierDao, self).__init__()
         self.db = db
         self.tablify = tablify
 
-        self.users = ModelCrud(db=self.db,
-                               tablify=self.tablify,
-                               klass=User,
-                               id='user_id',
-                               unique_key='username')
+        self.model_cruds = {
+            'users': {
+                'args': [User, 'user_id', 'username']
+            },
+            'groups': {
+                'args': [Group, 'group_id', 'name']
+            },
+            'clients': {
+                'args': [Client, 'client_uuid', 'name']
+            },
+            'content_servers': {
+                'args': [ContentServer, 'content_server_id', 'id']
+            },
+            'content': {
+                'args': [Content, 'content_id', 'uuid']
+            },
+            'content_server_links': {
+                'args': [ContentServers, 'id']
+            }
+        }
+        # dynamically generate the ModelCruds described in the dict and
+        # bind to this DAO instance
+        for attr, func_args in self.model_cruds.iteritems():
+            model_crud = ModelCrud(
+                self.db, self.tablify, *func_args.get('args', []),
+                **func_args.get('kwargs', {})
+            )
+            setattr(self, attr, model_crud)
 
-        self.groups = ModelCrud(db=self.db,
-                                tablify=self.tablify,
-                                klass=Group,
-                                id='group_id',
-                                unique_key='name')
+    def clear_cache(self):
+        """
+        Clears the cache of DB instances generated via this DAO instance.
+        Removes the underlying DB data.
+        """
+        for attr in self.model_cruds.iterkeys():
+            getattr(self, attr).clear_cache()
 
-        self.clients = ModelCrud(db=self.db,
-                                 tablify=self.tablify,
-                                 klass=Client,
-                                 id='client_uuid',
-                                 unique_key='name')
-        self.feeds = ModelCrud(db=self.db,
-                                 tablify=self.tablify,
-                                 klass=Feed,
-                                 id='feed_id',
-                                 unique_key='name')

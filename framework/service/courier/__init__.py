@@ -9,6 +9,7 @@ from testconfig import config
 from framework.utility.utility import Utility
 from framework.common_env import SERVICE_NAME_COURIER as SERVICE_NAME
 from framework.db.model.courier import *
+from framework.service import ModelService
 
 
 class CourierService(object):
@@ -24,6 +25,46 @@ class CourierService(object):
         self.util = Utility()
         self.dao = dao
         self.api_version = api_version
+        self.users = ModelService(
+            User, self.dao.users,
+            {
+                'username': lambda: self.util.random_str(10),
+                'password': self.DEFAULT_PASSWORD,
+                'hash': self._DEFAULT_PASSWORD_HASH,
+                'level': User.LEVEL_ADMIN
+            }
+        )
+        self.groups = ModelService(
+            Group, self.dao.groups,
+            {
+                'name': lambda: self.util.random_str(10)
+            }
+        )
+        self.clients = ModelService(
+            Client, self.dao.clients,
+            {
+                'client_uuid': lambda: self.util.random_uuid(),
+                'name': lambda: self.util.random_str(10),
+                'approved': False
+            }
+        )
+        self.content_servers = ModelService(
+            ContentServer, self.dao.content_servers,
+            {
+                'type': lambda: self.util.random_str(10),
+                'source': lambda: self.util.random_url(10)
+            }
+        )
+        self.content = ModelService(
+            Content, self.dao.content,
+            {
+                'content_id': lambda: self.util.random_uuid(),
+                'name': lambda: self.util.random_url(10),
+                'size': lambda: self.util.random_int(),
+                'cpl_id': lambda: self.util.random_uuid(),
+                'cpl_uri': lambda: self.util.random_url(30)
+            }
+        )
 
     def _get_resource_url(self, resource, method='get'):
         method = method.lower()
@@ -66,53 +107,6 @@ class CourierService(object):
                 (url, params=parameters, data=data, verify=False,
                  headers=headers))
 
-    def generate_user(self, username=None, level=User.LEVEL_ADMIN,
-                      group_id=None):
-        """
-        Randomly generates and returns a valid user. By default, creates an
-        admin user with no linked group and default password.
-
-        :param level:
-        :param group_id:
-        """
-        return User(username=username or self.util.random_str(10),
-                    hash=self._DEFAULT_PASSWORD_HASH,
-                    password=self.DEFAULT_PASSWORD,
-                    level=level,
-                    group_id=group_id)
-
-    def create_random_user(self, username=None, level=User.LEVEL_ADMIN,
-                           group_id=None):
-        """
-        Creates a random user in the DB.
-        Returns the newly created user object.
-
-        :param level:
-        :param group_id:
-        """
-        user = self.generate_user(username=username, level=level,
-                                  group_id=group_id)
-        self.dao.users.create(user)
-        return user
-
-    def remove_user(self, user):
-        """
-        Deletes the user defined by the given user, if possible
-
-        :param user:
-        """
-        self.dao.users.delete(user)
-
-    def generate_group(self, name=None, credentials=None):
-        """
-        Randomly generates and returns a valid group.
-
-        :param name:
-        :param credentials:
-        """
-        return Group(name=(name or self.util.random_str(10)),
-                     upload_credentials=credentials)
-
     def generate_group_credentials(self, public_key=None):
         """
         Returns randomly generated payload for group upload credentials
@@ -124,35 +118,6 @@ class CourierService(object):
             Group.CREDENTIALS_KEY_PRIVATE: self.util.random_str(),
             Group.CREDENTIALS_KEY_BUCKET: self.util.random_str()
         })
-
-    def create_random_group(self, name=None, credentials=None):
-        """
-        Creates a random group in the DB. Returns the newly created group
-        object.
-
-        :param name:
-        :param credentials:
-        """
-        group = self.generate_group(name=name, credentials=credentials)
-        self.dao.groups.create(group)
-        return group
-
-    def group_exists(self, group):
-        """
-        Returns True if group exists, False otherwise.
-
-        :param group:
-        """
-        db_group = self.dao.groups.read(group)
-        return db_group is not None
-
-    def remove_group(self, group):
-        """
-        Deletes the group, if possible
-
-        :param group:
-        """
-        self.dao.groups.delete(group)
 
     def authenticate(self, username, password):
         """
@@ -216,37 +181,3 @@ class CourierService(object):
         :param client:
         """
         self.dao.clients.delete(client)
-
-    def generate_feed(self, name=None, uri=None,
-                      type=None):
-        """
-        Randomly generates and returns a valid feed.
-        :param name:
-        :param uri:
-        :param type:
-        """
-        return Feed(name=self.util.random_str(),
-                    type=self.util.random_str(),
-                    uri=self.util.random_url())
-
-    def create_random_feed(self, username=None, level=User.LEVEL_ADMIN,
-                           group_id=None):
-        """
-        Creates a random user in the DB.
-        Returns the newly created user object.
-
-        :param level:
-        :param group_id:
-        """
-        user = self.generate_feed(username=username, level=level,
-                                  group_id=group_id)
-        self.dao.feeds.create(feed)
-        return feed
-
-    def remove_feed(self, feed):
-        """
-        Deletes the feed defined by the given feed, if possible
-
-        :param feed:
-        """
-        self.dao.feeds.delete(feed)
