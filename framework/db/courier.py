@@ -51,3 +51,4 @@ class CourierDao(object):
         """
         for attr in self.model_cruds.iterkeys():
             getattr(self, attr).clear_cache()
+

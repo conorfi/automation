@@ -26,7 +26,7 @@ class Utility(object):
         email = self.random_str(len) + '@' + self.random_str(len) + '.com'
         return email
 
-    def random_url(self, len):
+    def random_url(self, len=5):
         url = 'http://www.' + self.random_str(len) + '.com'
         return url
 

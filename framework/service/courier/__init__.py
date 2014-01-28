@@ -149,3 +149,35 @@ class CourierService(object):
                                 value=cookie[cookie_name].value)
 
         return response, session
+
+    def generate_client(self,
+                        group_id=None):
+        """
+        Randomly generates and returns a valid client.
+
+        :param group_id:
+        """
+        return Client(client_uuid=self.util.random_str(10),
+                      name=self.util.random_str(10),
+                      speedtest_pending=False,
+                      version='',
+                      group_id=group_id)
+
+    def create_random_client(self, group_id=None):
+        """
+        Creates a random client in the DB.
+        Returns the newly created client object.
+
+        :param group_id:
+        """
+        client = self.generate_client(group_id=group_id)
+        self.dao.clients.create(client)
+        return client
+
+    def remove_client(self, client):
+        """
+        Deletes the client defined by the given client, if possible
+
+        :param client:
+        """
+        self.dao.clients.delete(client)

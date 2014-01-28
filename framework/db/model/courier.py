@@ -160,9 +160,9 @@ class Content(BaseModel):
         self.cpl_uri = cpl_uri
         self.tags = tags
         self.deleted = deleted
+
         self.created = created or time.time()
         self.last_modified = last_modified or self.created
-
 
 class ContentServers(BaseModel):
 
@@ -176,3 +176,4 @@ class ContentServers(BaseModel):
         self.id = id
         self.content_server_id = content_server_id
         self.content_id = content_uuid or content_id
+

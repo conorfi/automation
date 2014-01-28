@@ -27,6 +27,7 @@ class GroupApiTestCase(ApiTestCase):
 
         self.assertResponseSuccess(response)
         json_data = response.json()
+        print json_data
         self.assertIsInstance(json_data.get('data'), list)
         for group_data in json_data['data']:
             group = groups.get(group_data['id'])

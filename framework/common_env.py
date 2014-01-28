@@ -63,6 +63,7 @@ def get_default_service_config():
     Returns the default service configuration options.
     """
     return {
+        'scheme': 'https',
         'host': 'localhost',
         'ip': '127.0.0.1',
         'port': '8070',
