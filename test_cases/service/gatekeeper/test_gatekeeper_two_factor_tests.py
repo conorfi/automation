@@ -8,7 +8,8 @@ project - 2 factor authentication test cases
 import requests
 from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import GateKeeperService
+from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
+    GateKeeperService
 from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
@@ -21,7 +22,7 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         '''Things that need to be done once.'''
-        cls.db = BaseDAO(config['gatekeeper']['db']['connection'])
+        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
 
     @classmethod
     def tearDownClass(cls):
@@ -221,9 +222,9 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
 
         # attempt to access gatekeeper app
         gk_url = '{0}://{1}:{2}/'.format(
-            config['gatekeeper']['scheme'],
-            config['gatekeeper']['host'],
-            config['gatekeeper']['port']
+            config[SERVICE_NAME]['scheme'],
+            config[SERVICE_NAME]['host'],
+            config[SERVICE_NAME]['port']
         )
         response = self.gk_service.validate_url_with_cookie(
             session,
@@ -234,9 +235,9 @@ class TestGateKeeper2FaAPI(unittest.TestCase):
 
         # attempt to access dummy app
         gk_url = '{0}://{1}:{2}/'.format(
-            config['gatekeeper']['scheme'],
-            config['gatekeeper']['dummy']['host'],
-            config['gatekeeper']['dummy']['port']
+            config[SERVICE_NAME]['scheme'],
+            config[SERVICE_NAME]['dummy']['host'],
+            config[SERVICE_NAME]['dummy']['port']
         )
         response = self.gk_service.validate_url_with_cookie(
             session,
