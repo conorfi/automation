@@ -18,7 +18,6 @@ from . import ApiTestCase
 
 
 class TestGateApplicationAPI(ApiTestCase):
-
     @attr(env=['test'], priority=1)
     def test_application_api_create(self):
         """
@@ -40,24 +39,14 @@ class TestGateApplicationAPI(ApiTestCase):
 
         app_id = create_response.json()['application_id']
         appname = create_response.json()['name']
+
         # get app data
         app_data = self.gk_dao.get_app_by_app_name(
             self.db,
             appname
         )
         # verify the post data againist the db data
-        self.assertEquals(
-            create_response.json()['application_id'],
-            app_data['application_id']
-        )
-        self.assertEquals(
-            create_response.json()['name'],
-            app_data['name']
-        )
-        self.assertEquals(
-            create_response.json()['default_url'],
-            app_data['default_url']
-        )
+        self.assertAppData(create_response.json(), app_data)
 
         # clean up - delete the application
         del_response = self.gk_service.gk_crud(
@@ -65,14 +54,6 @@ class TestGateApplicationAPI(ApiTestCase):
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_create_json(self):
@@ -102,18 +83,7 @@ class TestGateApplicationAPI(ApiTestCase):
             appname
         )
         # verify the post data againist the db data
-        self.assertEquals(
-            create_response.json()['application_id'],
-            app_data['application_id']
-        )
-        self.assertEquals(
-            create_response.json()['name'],
-            app_data['name']
-        )
-        self.assertEquals(
-            create_response.json()['default_url'],
-            app_data['default_url']
-        )
+        self.assertAppData(create_response.json(), app_data)
 
         # clean up - delete the application
         del_response = self.gk_service.gk_crud(
@@ -121,14 +91,6 @@ class TestGateApplicationAPI(ApiTestCase):
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_create_dup_name(self):
@@ -139,7 +101,7 @@ class TestGateApplicationAPI(ApiTestCase):
         clean up the data (implictly tests DELETE and GET)
         """
 
-         # login and create session
+        # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
@@ -200,7 +162,6 @@ class TestGateApplicationAPI(ApiTestCase):
         ]
 
         for app_dict in missing_data:
-
             app_data = self.gk_service.create_app_data(app_dict)
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="application", data=app_data
@@ -232,8 +193,6 @@ class TestGateApplicationAPI(ApiTestCase):
 
         # blank dict
         missing_data = {'name': None}
-
-        app_data = self.gk_service.create_app_data(missing_data)
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="application", data=missing_data
         )
@@ -287,18 +246,7 @@ class TestGateApplicationAPI(ApiTestCase):
         )
 
         # verify the post data againist the db data
-        self.assertEquals(
-            update_response.json()['application_id'],
-            app_data['application_id']
-        )
-        self.assertEquals(
-            update_response.json()['name'],
-            app_data['name']
-        )
-        self.assertEquals(
-            update_response.json()['default_url'],
-            app_data['default_url']
-        )
+        self.assertAppData(update_response.json(), app_data)
 
         # clean up - delete the application
         del_response = self.gk_service.gk_crud(
@@ -306,14 +254,6 @@ class TestGateApplicationAPI(ApiTestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_update_individually(self):
@@ -359,26 +299,15 @@ class TestGateApplicationAPI(ApiTestCase):
                 requests.codes.accepted
             )
 
-        appname = update_response.json()['name']
+        app_name = update_response.json()['name']
         # get app data from db
         app_data = self.gk_dao.get_app_by_app_name(
             self.db,
-            appname
+            app_name
         )
 
-        # verify the update data againist the db data
-        self.assertEquals(
-            update_response.json()['application_id'],
-            app_data['application_id']
-        )
-        self.assertEquals(
-            update_response.json()['name'],
-            app_data['name']
-        )
-        self.assertEquals(
-            update_response.json()['default_url'],
-            app_data['default_url']
-        )
+        # verify the update data against the db data
+        self.assertAppData(update_response.json(), app_data)
 
         # clean up - delete the application
         del_response = self.gk_service.gk_crud(
@@ -386,14 +315,6 @@ class TestGateApplicationAPI(ApiTestCase):
         )
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_update_dup_name(self):
@@ -503,18 +424,7 @@ class TestGateApplicationAPI(ApiTestCase):
         )
 
         # verify the post data againist the db data
-        self.assertEquals(
-            read_response.json()['application_id'],
-            app_data['application_id']
-        )
-        self.assertEquals(
-            read_response.json()['name'],
-            app_data['name']
-        )
-        self.assertEquals(
-            read_response.json()['default_url'],
-            app_data['default_url']
-        )
+        self.assertAppData(read_response.json(), app_data)
 
         # clean up - delete the application
         del_response = self.gk_service.gk_crud(
@@ -522,14 +432,6 @@ class TestGateApplicationAPI(ApiTestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_application_api_update_not_existant_app_id(self):
@@ -686,8 +588,8 @@ class TestGateApplicationAPI(ApiTestCase):
             {'name': ''},
             {'name': self.util.random_str(101)},
             {'name': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
-            {'default_url':  self.util.random_str()},
-            {'default_url':  self.util.random_str(513)},
+            {'default_url': self.util.random_str()},
+            {'default_url': self.util.random_str(513)},
             {'fake': self.util.random_str()}
         ]
 
@@ -701,17 +603,17 @@ class TestGateApplicationAPI(ApiTestCase):
                 create_response.status_code, requests.codes.bad_request
             )
 
-            if('name' in dict.keys()):
+            if 'name' in dict.keys():
                 self.assertTrue(
                     self.gk_service.NAME_VALIDATION
                     in create_response.json()['error']
                 )
-            elif('default_url' in dict.keys()):
+            elif 'default_url' in dict.keys():
                 self.assertTrue(
                     self.gk_service.DEFAULT_URL_VALIDATION
                     in create_response.json()['error']
                 )
-            elif('fake' in dict.keys()):
+            elif 'fake' in dict.keys():
                 self.assertTrue(
                     self.gk_service.PARAM_NOT_ALLOWED
                     in create_response.json()['error']
@@ -730,7 +632,7 @@ class TestGateApplicationAPI(ApiTestCase):
 
         # list of dicts with missing data
         bad_data = [
-            {'name': '', 'default_url':  self.util.random_str()},
+            {'name': '', 'default_url': self.util.random_str()},
         ]
 
         for user_dict in bad_data:

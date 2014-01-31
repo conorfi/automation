@@ -17,8 +17,8 @@ import requests
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
-class TestGateKeeperUsersAppsListingAPI(ApiTestCase):
 
+class TestGateKeeperUsersAppsListingAPI(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_user_apps_api(self):
         """
@@ -95,8 +95,7 @@ class TestGateKeeperUsersAppsListingAPI(ApiTestCase):
             self.assertEquals(len(response.json()[0]), 2)
 
             # verify the contents of the users API
-            self.assertEquals(response.json()[0]['user_id'], user_id)
-            self.assertEquals(response.json()[0]['application_id'], app_id)
+            self.assertUserAppData(response.json()[0], user_app_data)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
@@ -135,8 +134,6 @@ class TestGateKeeperUsersAppsListingAPI(ApiTestCase):
         app_id = create_response.json()['application_id']
         # set user_id
         user_id = create_response.json()['user_id']
-
-        rand_int = self.util.random_int()
 
         dict_matrix = [
             {'user_id': ''},

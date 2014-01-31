@@ -79,20 +79,11 @@ class TestGateUsersAPI(ApiTestCase):
         self.assertEquals(response.status_code, requests.codes.ok)
 
         # field count check form read
-        # 4 fields should be returned
+        # 7 fields should be returned
         self.assertEquals(len(response.json()[0]), 7)
 
         # verify the contents of the users API
-        self.assertEquals(
-            response.json()[0]['username'], user_info['username']
-        )
-        self.assertEquals(response.json()[0]['user_id'], user_info['user_id'])
-        self.assertEquals(response.json()[0]['name'], user_info['name'])
-        self.assertEquals(response.json()[0]['phone'], user_info['phone'])
-        self.assertEquals(response.json()[0]['email'], user_info['email'])
-        self.assertEquals(
-            response.json()[0]['last_logged_in'], user_info['last_logged_in']
-        )
+        self.assertUserData(response.json()[0], user_info)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(

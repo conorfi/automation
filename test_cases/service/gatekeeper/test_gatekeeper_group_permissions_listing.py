@@ -96,10 +96,8 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
             self.assertEquals(len(response.json()[0]), 2)
 
             # verify the contents of the users API
-            self.assertEquals(
-                response.json()[0]['permission_id'],
-                permission_id)
-            self.assertEquals(response.json()[0]['group_id'], group_id)
+            self.assertGroupPermData(response.json()[0],grp_perm_data)
+
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(

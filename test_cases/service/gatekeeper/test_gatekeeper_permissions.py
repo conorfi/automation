@@ -51,44 +51,40 @@ class TestGatePermissionsAPI(ApiTestCase):
         GATEKEEPER_PERMISSIONS_API_002 test_permissions_api_name_filter
         Ensure the name filer works correctly
         """
+
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
 
-        # get an application id
-        app_db_data = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-            )
-        app_id = app_db_data['application_id']
-        app_name = app_db_data['name']
-        app_default_url = app_db_data['default_url']
-
-        # create data
-        perms_dict = {'application_id': app_id}
-        permission_data = self.gk_service.create_permission_data(
-            session,
-            dict=perms_dict
-        )
-
         # create a new permission
         create_response = self.gk_service.gk_crud(
-            session, method='POST', resource="permission", data=permission_data
+            session=session,
+            method='POST',
+            resource="permission"
         )
+
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
+        # get app data from the db
+        app_db_data = self.gk_dao.get_app_by_app_name(
+            self.db, create_response.json()['application']['name']
+            )
+
+        #set app id
+        app_id = app_db_data['application_id']
+
         # set permission name
         permission_name = create_response.json()['name']
-         # set permission_id
-        permission_id = create_response.json()['permission_id']
+
         # get permission data directly from database
-        permission_info = self.gk_dao.get_permission_by_name(
+        perm_db_data = self.gk_dao.get_permission_by_name(
             self.db, permission_name, app_id
         )
 
         # return just the newly created user fron the list of users
-        response = self.gk_service.gk_listing(
+        read_response = self.gk_service.gk_listing(
             session,
             resource="permission",
             name=permission_name
@@ -96,46 +92,22 @@ class TestGatePermissionsAPI(ApiTestCase):
 
         # field count check form read
         # 4 fields should be returned
-        self.assertEquals(len(response.json()[0]), 4)
+        self.assertEquals(len(read_response.json()[0]), 4)
 
         # 200
-        self.assertEquals(response.status_code, requests.codes.ok)
+        self.assertEquals(read_response.status_code, requests.codes.ok)
 
         # ensure only one result is returned
-        api_count = response.json().__len__()
+        api_count = read_response.json().__len__()
         self.assertEquals(api_count, 1, "count mismatch")
-
-        # verify the contents of the permissions API
-        self.assertEquals(
-            create_response.json()['name'], permission_info['name']
-        )
-        self.assertEquals(
-            create_response.json()['permission_id'],
-            permission_info['permission_id']
-        )
-        self.assertEquals(
-            create_response.json()['application_id'],
-            permission_info['application_id']
-        )
-
         # verify the creation of the permission POST action
-        self.assertEquals(
-            create_response.json()['application']['name'],
-            app_db_data['name']
-        )
-        self.assertEquals(
-            create_response.json()['application']['default_url'],
-            app_db_data['default_url']
-        )
-
-        self.assertEquals(
-            create_response.json()['application']['application_id'],
-            app_db_data['application_id']
-        )
-
-        # clean up - delete the user
+        print read_response.json()[0]
+        print perm_db_data
+        self.assertPermData(read_response.json()[0],perm_db_data)
+        self.assertAppData(read_response.json()[0]['application'],app_db_data)
+        # clean up - delete the application(and related permission)
         del_response = self.gk_service.gk_crud(
-            session, method='DELETE', resource="permission", id=permission_id
+            session, method='DELETE', resource="application", id=app_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)

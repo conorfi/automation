@@ -41,16 +41,8 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         )
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
-
-        self.assertEquals(
-            grp_perm_data['permission_id'],
-            create_response.json()['permission_id']
-            )
-        self.assertEquals(
-            grp_perm_data['group_id'],
-            create_response.json()['group_id']
-            )
-
+        #verify
+        self.assertGroupPermData(create_response.json(),grp_perm_data)
         # clean up
         del_response = self.gk_service.gk_crud(
             session,
@@ -61,18 +53,6 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new association
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_perm",
-            id2=grp_perm_data['permission_id'],
-            id=grp_perm_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_grp_perm_assoc_api_miss_params(self):
@@ -182,17 +162,6 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # read
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_perm",
-            id2=grp_perm_data['permission_id'],
-            id=grp_perm_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_grp_perm_assoc_api_no_update(self):
@@ -245,18 +214,6 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # read
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_perm",
-            id2=grp_perm_data['permission_id'],
-            id=grp_perm_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
     @attr(env=['test'], priority=1)
     def test_grp_perm_assoc_api_read(self):
         """
@@ -290,16 +247,8 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         # field count
         # 2 fields should be returned
         self.assertEquals(len(read_response.json()), 2)
-
-        # verify that the data is correct
-        self.assertEquals(
-            grp_perm_data['permission_id'],
-            read_response.json()['permission_id']
-            )
-        self.assertEquals(
-            grp_perm_data['group_id'],
-            read_response.json()['group_id']
-            )
+        #verify
+        self.assertGroupPermData(read_response.json(),grp_perm_data)
 
         # clean up
         del_response = self.gk_service.gk_crud(
@@ -312,22 +261,10 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # read
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_perm",
-            id2=grp_perm_data['permission_id'],
-            id=grp_perm_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
     @attr(env=['test'], priority=1)
-    def test_grp_perm_assoc_api_read_not_exis(self):
+    def test_grp_perm_assoc_api_read_not_exist(self):
         """
-        GATEKEEPER_GRP_PERM_ASSOC_API_007 test_grp_perm_assoc_api_read_not_exis
+        GATEKEEPER_GRP_PERM_ASSOC_API_007 test_grp_perm_assoc_api_read_not_exist
         attempt to read data that dosen't exist
         clean up the data (implictly tests DELETE)
         """
@@ -347,63 +284,31 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
 
         # list of dicts non existant data
         non_existant_data = [
-            {'group_id': self.util.random_int()},
-            {'permission_id': self.util.random_int()}
+            {'group_id': self.util.random_int(),
+             'permission_id': self.util.random_int()},
+            {'group_id': self.util.random_int(),
+             'permission_id': grp_perm_data['permission_id']},
+            {'group_id': grp_perm_data['group_id'],
+             'permission_id': self.util.random_int()},
         ]
+        for dict in non_existant_data:
+            # read
+            read_response = self.gk_service.gk_crud(
+                session,
+                method='GET',
+                resource="grp_perm",
+                id=dict['group_id'],
+                id2=dict['permission_id']
+            )
 
-        # read id 1 with a non existant id
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_perm",
-            id2=self.util.random_int(),
-            id=grp_perm_data['group_id']
-        )
-
-        # 404 response
-        self.assertEquals(
-            read_response.status_code, requests.codes.not_found
-        )
-        # verify that the error message is correct
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
-        # read with a non existant id2
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_perm",
-            id2=grp_perm_data['permission_id'],
-            id=self.util.random_int(),
-        )
-
-        # 404 response
-        self.assertEquals(
-            read_response.status_code, requests.codes.not_found
-        )
-        # verify that the error message is correct
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
-        # read with 2 non existant ids
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_perm",
-            id2=self.util.random_int(),
-            id=self.util.random_int(),
-        )
-
-        # 404 response
-        self.assertEquals(
-            read_response.status_code, requests.codes.not_found
-        )
-        # verify that the error message is correct
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
+            # 404 response
+            self.assertEquals(
+                read_response.status_code, requests.codes.not_found
+            )
+            # verify that the error message is correct
+            self.assertTrue(
+                self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+            )
 
         # clean up
         del_response = self.gk_service.gk_crud(
@@ -415,18 +320,6 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_perm",
-            id2=grp_perm_data['permission_id'],
-            id=grp_perm_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_grp_perm_assoc_api_read_no_data(self):
@@ -511,6 +404,7 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         attempt to delete the data when no data is provided
         clean up the data (implictly tests DELETE and GET)
         """
+
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
@@ -540,6 +434,7 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         GATEKEEPER_GRP_PERM_ASSOC_API_011 test_grp_perm_assoc_api_del_not_exist
         attempt to delete identifiers that do not exist
         """
+
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
@@ -547,7 +442,7 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
 
         grp_perm_data = self.gk_service.create_grp_perm_data(session)
 
-        # create assocation
+        # create a new association
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="grp_perm", data=grp_perm_data
         )
@@ -556,63 +451,31 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
 
         # list of dicts non existant data
         non_existant_data = [
-            {'group_id': self.util.random_int()},
-            {'permission_id': self.util.random_int()}
+            {'group_id': self.util.random_int(),
+             'permission_id': self.util.random_int()},
+            {'group_id': self.util.random_int(),
+             'permission_id': grp_perm_data['permission_id']},
+            {'group_id': grp_perm_data['group_id'],
+             'permission_id': self.util.random_int()},
         ]
+        for dict in non_existant_data:
+            # read
+            read_response = self.gk_service.gk_crud(
+                session,
+                method='DELETE',
+                resource="grp_perm",
+                id=dict['group_id'],
+                id2=dict['permission_id']
+            )
 
-        # read id 1 with a non existant id
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='DELETE',
-            resource="grp_perm",
-            id2=self.util.random_int(),
-            id=grp_perm_data['group_id']
-        )
-
-        # 404 response
-        self.assertEquals(
-            read_response.status_code, requests.codes.not_found
-        )
-        # verify that the error message is correct
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
-        # read with a non existant id2
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='DELETE',
-            resource="grp_perm",
-            id2=grp_perm_data['permission_id'],
-            id=self.util.random_int(),
-        )
-
-        # 404 response
-        self.assertEquals(
-            read_response.status_code, requests.codes.not_found
-        )
-        # verify that the error message is correct
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
-        # read with 2 non existant ids
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='DELETE',
-            resource="grp_perm",
-            id2=self.util.random_int(),
-            id=self.util.random_int(),
-        )
-
-        # 404 response
-        self.assertEquals(
-            read_response.status_code, requests.codes.not_found
-        )
-        # verify that the error message is correct
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
+            # 404 response
+            self.assertEquals(
+                read_response.status_code, requests.codes.not_found
+            )
+            # verify that the error message is correct
+            self.assertTrue(
+                self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+            )
 
         # clean up
         del_response = self.gk_service.gk_crud(
@@ -624,15 +487,3 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new permission data
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_perm",
-            id2=grp_perm_data['permission_id'],
-            id=grp_perm_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )

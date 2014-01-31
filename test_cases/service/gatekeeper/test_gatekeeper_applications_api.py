@@ -81,10 +81,6 @@ class TestGateUsersAPI(ApiTestCase):
             name=appname
         )
 
-        # field count check form read
-        # 3 fields should be returned
-        self.assertEquals(len(response.json()[0]), 3)
-
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)
 
@@ -92,19 +88,12 @@ class TestGateUsersAPI(ApiTestCase):
         api_count = response.json().__len__()
         self.assertEquals(api_count, 1, "count mismatch")
 
+        # field count check form read
+        # 3 fields should be returned
+        self.assertEquals(len(response.json()[0]), 3)
+
         # verify the users API against the db data
-        self.assertEquals(
-            response.json()[0]['application_id'],
-            app_data['application_id']
-        )
-        self.assertEquals(
-            response.json()[0]['name'],
-            app_data['name']
-        )
-        self.assertEquals(
-            response.json()[0]['default_url'],
-            app_data['default_url']
-        )
+        self.assertAppData(response.json()[0],app_data)
 
         # clean up - delete the application
         del_response = self.gk_service.gk_crud(

@@ -19,10 +19,10 @@ from nose.plugins.attrib import attr
 from . import ApiTestCase
 from testconfig import config
 from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-      GateKeeperService
+    GateKeeperService
+
 
 class TestGateKeeperUserApplicationAPI(ApiTestCase):
-
     @attr(env=['test'], priority=1)
     def test_user_app_and_auth_app_perms(self):
         """
@@ -34,24 +34,31 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         can access when the user only has access to the dummy app
         """
 
-        # create a user and associate user with relevant
-        # pre confiured application for dummy app
-        username = 'automation_' + self.util.random_str(5)
-        appname = self.gk_service.ANOTHER_TEST_APP
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
-
-        # create basic user - no permisssions
-        self.assertTrue(
-            self.gk_dao.set_gk_user(
-                self.db,
-                username,
-                self.gk_service.HASH_PASSWORD_TEST,
-                email,
-                fullname,
-                '123-456-789123456'
-            )
+        # admin - login and create session
+        a_session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
         )
+
+        #username
+        username = self.util.random_str(8)
+        password = self.util.random_str(8)
+        app_name = self.gk_service.ANOTHER_TEST_APP
+
+        # credentials
+        credentials_payload = {
+            'username': username,
+            'password': password
+        }
+        user_data = self.gk_service.create_user_data(
+            user_dict=credentials_payload)
+
+        # create a new user
+        create_response = self.gk_service.gk_crud(
+            a_session, method='POST', resource="user", data=user_data
+        )
+
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # get user_id
         user_id = self.gk_dao.get_user_by_username(
@@ -62,14 +69,14 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         # get app id
         app_id = self.gk_dao.get_app_by_app_name(
             self.db,
-            appname
+            app_name
         )['application_id']
+
+        # get user data directly from database
+        user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # associate user with app
         self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
-
-        # create a session for the user
-        credentials_payload = {'username': username, 'password': 'test'}
 
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
@@ -78,25 +85,15 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         )
 
         # Verify the user API
-        response = self.gk_service.user_app(session, user_id, appname)
+        response = self.gk_service.user_app(session, user_id, app_name)
         self.assertEquals(response.status_code, requests.codes.ok)
 
-        # field count
-        # 2 fields should be returned
-        self.assertEquals(len(response.json()), 7)
-
-        self.assertTrue(username in response.json()['username'])
-        self.assertEquals([], response.json()['organizations'])
-        self.assertTrue(str(user_id) in response.json()['user_id'])
-        self.assertEquals([], response.json()['groups'])
-        self.assertTrue(fullname in response.json()['fullname'])
-        self.assertTrue(email in response.json()['email'])
-        self.assertEquals([], response.json()['permissions'])
+        self.assertUserAppDisplay(response.json(), user_info)
 
         # Using the dummy application verify the permissions
         # the user is authorized for
 
-        # verify the dummy applcation can be accessed
+        # verify the dummy application can be accessed
         response = self.gk_service.validate_end_point(session)
         self.assertEquals(response.status_code, requests.codes.ok)
 
@@ -133,20 +130,34 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         # create a user and associate user with relevant
         # pre confiured application for dummy app
 
-        username = 'automation_' + self.util.random_str(5)
+        # create a user and associate user with relevant
+        # pre confiured application for dummy app
+
+        #username
+        username = self.util.random_str(8)
+        password = self.util.random_str(8)
         appname = self.gk_service.ANOTHER_TEST_APP
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
+
+        # credentials
+        credentials_payload = {
+            'username': username,
+            'password': password
+        }
+        user_data = self.gk_service.create_user_data(
+            user_dict=credentials_payload
+        )
+        # admin - login and create session
+        a_session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
 
         # create basic user - no permisssions
-        self.assertTrue(
-            self.gk_dao.set_gk_user(
-                self.db, username,
-                self.gk_service.HASH_PASSWORD_TEST,
-                email,
-                fullname,
-                '123-456-789123456')
+        response = self.gk_service.gk_crud(
+            a_session, method='POST', resource="user", data=user_data
         )
+
+        # ensure a 201 is returned
+        self.assertEquals(response.status_code, requests.codes.created)
 
         # get user_id
         user_id = self.gk_dao.get_user_by_username(
@@ -160,21 +171,29 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
             appname
         )['application_id']
 
+        # get user data directly from database
+        user_info = self.gk_dao.get_user_by_username(self.db, username)
+
         # get permissions
         user_permission = self.gk_dao.get_permission_by_name(
             self.db,
-            self.gk_service.DEFAULT_ADFUSER_USER, app_id
+            self.gk_service.DEFAULT_ADFUSER_USER,
+            app_id
         )['permission_id']
+
         admin_permission = self.gk_dao.get_permission_by_name(
             self.db,
-            self.gk_service.DEFAULT_ADFUSER_ADMIN, app_id
+            self.gk_service.DEFAULT_ADFUSER_ADMIN,
+            app_id
         )['permission_id']
+
+        perm_info = [
+            self.gk_service.DEFAULT_ADFUSER_ADMIN,
+            self.gk_service.DEFAULT_ADFUSER_USER
+        ]
 
         # associate user with app
         self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
-
-        # create a session for the user
-        credentials_payload = {'username': username, 'password': 'test'}
 
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
@@ -245,24 +264,20 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
             end_point=config[SERVICE_NAME]['dummy']['admin_endpoint'],
             parameters=parameters
         )
+
         self.assertEquals(response.status_code, requests.codes.ok)
 
         # Verify the user API
-        response = self.gk_service.user_app(session, user_id, appname)
-        self.assertEquals(response.status_code, requests.codes.ok)
-        self.assertTrue(username in response.json()['username'])
-        self.assertEquals([], response.json()['organizations'])
-        self.assertTrue(str(user_id) in response.json()['user_id'])
-        self.assertEquals([], response.json()['groups'])
-        self.assertTrue(fullname in response.json()['fullname'])
-        self.assertTrue(email in response.json()['email'])
-        self.assertEquals(
-            self.gk_service.DEFAULT_ADFUSER_ADMIN,
-            response.json()['permissions'][0]
+        response = self.gk_service.user_app(
+            session,
+            user_id,
+            appname
         )
-        self.assertEquals(
-            self.gk_service.DEFAULT_ADFUSER_USER,
-            response.json()['permissions'][1]
+        self.assertEquals(response.status_code, requests.codes.ok)
+
+        # Verify the user API
+        self.assertUserAppDisplay(
+            response.json(), user_info, expected_perm_data=perm_info,
         )
 
         # delete user - cascade delete by default
@@ -284,24 +299,30 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         # create a user and associate user with relevant
         # pre confiured application for dummy app
 
-        username = 'automation_' + self.util.random_str(5)
+        #username
+        username = self.util.random_str(8)
+        password = self.util.random_str(8)
         appname = self.gk_service.ANOTHER_TEST_APP
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
-        grp_name = 'automation_' + self.util.random_str(5)
-        grp_name_2 = 'automation_' + self.util.random_str(5)
+
+        # credentials
+        credentials_payload = {
+            'username': username,
+            'password': password
+        }
+        user_data = self.gk_service.create_user_data(
+            user_dict=credentials_payload
+        )
+        # admin - login and create session
+        a_session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
 
         # create basic user - no permisssions
-        self.assertTrue(
-            self.gk_dao.set_gk_user(
-                self.db,
-                username,
-                self.gk_service.HASH_PASSWORD_TEST,
-                email,
-                fullname,
-                '123-456-789123456'
-            )
+        response = self.gk_service.gk_crud(
+            a_session, method='POST', resource="user", data=user_data
         )
+        # ensure a 201 is returned
+        self.assertEquals(response.status_code, requests.codes.created)
 
         # get user_id
         user_id = self.gk_dao.get_user_by_username(
@@ -314,6 +335,9 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
             self.db,
             appname
         )['application_id']
+
+        # get user data directly from database
+        user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # get permissions
         user_permission = self.gk_dao.get_permission_by_name(
@@ -328,16 +352,25 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
             app_id
         )['permission_id']
 
-        # associate user with app
-        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
+        perm_info = [
+            self.gk_service.DEFAULT_ADFUSER_ADMIN,
+            self.gk_service.DEFAULT_ADFUSER_USER
+        ]
+        # create a new group
+        create_grp_response = self.gk_service.gk_crud(
+            a_session, method='POST', resource="group"
+        )
 
-        # creat gatekeeper group
-        self.assertTrue(self.gk_dao.set_gk_group(self.db, grp_name))
+        grp_name = create_grp_response.json()['name']
         # get group id
         group_id = self.gk_dao.get_group_by_name(
             self.db,
             grp_name
         )['group_id']
+        grp_info = [grp_name]
+
+        # associate user with app
+        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
 
         # associate user with group
         self.assertTrue(self.gk_dao.set_user_group(self.db, user_id, group_id))
@@ -346,10 +379,6 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         self.assertTrue(
             self.gk_dao.set_group_app_id(self.db, app_id, group_id)
         )
-
-        # create a session for the user
-
-        credentials_payload = {'username': username, 'password': 'test'}
 
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
@@ -434,31 +463,19 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         )
         self.assertEquals(response.status_code, requests.codes.ok)
 
-        self.assertTrue(username in response.json()['username'])
-        self.assertEquals([], response.json()['organizations'])
-        self.assertTrue(str(user_id) in response.json()['user_id'])
-        self.assertTrue(grp_name in response.json()['groups'][0])
-        self.assertTrue(fullname in response.json()['fullname'])
-        self.assertTrue(email in response.json()['email'])
-        self.assertEquals(
-            self.gk_service.DEFAULT_ADFUSER_ADMIN,
-            response.json()['permissions'][0]
-        )
-        self.assertEquals(
-            self.gk_service.DEFAULT_ADFUSER_USER,
-            response.json()['permissions'][1]
+        self.assertUserAppDisplay(
+            response.json(), user_info, grp_info, perm_info,
         )
 
         # create another group, associate with the user but not the application
         # this group should NOT be retured by the API
 
-        # create gatekeeper group
-        self.assertTrue(
-            self.gk_dao.set_gk_group(
-                self.db,
-                grp_name_2
-            )
+        # create a new group
+        create_grp2_response = self.gk_service.gk_crud(
+            a_session, method='POST', resource="group"
         )
+
+        grp_name_2 = create_grp2_response.json()['name']
         # get group id
         group_id_2 = self.gk_dao.get_group_by_name(
             self.db,
@@ -477,9 +494,9 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         self.assertEquals(1, len(response.json()['groups']))
 
         # delete the group and user
-        # delete the group
+        # delete the groups
         self.assertTrue(self.gk_dao.del_gk_group(self.db, group_id))
-
+        self.assertTrue(self.gk_dao.del_gk_group(self.db, group_id_2))
         # delete user - cascade delete by default
         self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
@@ -588,11 +605,11 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_user_app_with_no_args(self):
-        '''
+        """
         GATEKEEPER_USER_SESSION_API_007 test_user_app_with_no_args
         Ensures user info CANNOT be return from the user api when no
         user id or application name is provided
-        '''
+        """
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
@@ -610,11 +627,11 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_user_app_with_no_application_name(self):
-        '''
+        """
         GATEKEEPER_USER_SESSION_API_008 test_user_app_with_no_application_name
         Ensures user info CANNOT be return from the user api when no
         application name is provided
-        '''
+        """
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
@@ -636,11 +653,11 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_user_app_with_no_user_id(self):
-        '''
+        """
         GATEKEEPER_USER_SESSION_API_009 test_user_app_with_no_user_id
         Ensures user info CANNOT be return from the user api when no
         application id is provided
-        '''
+        """
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,

@@ -89,14 +89,7 @@ class TestGateUsersAPI(ApiTestCase):
         self.assertEquals(api_count, 1, "count mismatch")
 
         # verify the groups API against the db data
-        self.assertEquals(
-            response.json()[0]['group_id'],
-            group_data['group_id']
-        )
-        self.assertEquals(
-            response.json()[0]['name'],
-            group_data['name']
-        )
+        self.assertGroupData(create_response.json(), group_data)
 
         # clean up - delete the group
         del_response = self.gk_service.gk_crud(

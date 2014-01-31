@@ -90,14 +90,7 @@ class TestGateUsersAPI(ApiTestCase):
         self.assertEquals(api_count, 1, "count mismatch")
 
         # verify the organizations API against the db data
-        self.assertEquals(
-            response.json()[0]['organization_id'],
-            org_data['organization_id']
-        )
-        self.assertEquals(
-            response.json()[0]['name'],
-            org_data['name']
-        )
+        self.assertOrgData(response.json()[0], org_data)
 
         # clean up - delete the organization
         del_response = self.gk_service.gk_crud(

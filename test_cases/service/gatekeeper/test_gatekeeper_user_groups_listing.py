@@ -97,8 +97,8 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
             self.assertEquals(len(response.json()[0]), 2)
 
             # verify the contents of the users API
-            self.assertEquals(response.json()[0]['user_id'], user_id)
-            self.assertEquals(response.json()[0]['group_id'], app_id)
+            #verify API
+            self.assertUserGrpData(response.json()[0], user_grp_data)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
@@ -137,8 +137,6 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         app_id = create_response.json()['group_id']
         # set user_id
         user_id = create_response.json()['user_id']
-
-        rand_int = self.util.random_int()
 
         dict_matrix = [
             {'user_id': ''},

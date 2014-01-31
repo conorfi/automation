@@ -17,8 +17,8 @@ import requests
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
-class TestGatekeeperUsersListingAPI(ApiTestCase):
 
+class TestGatekeeperUsersListingAPI(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_grp_apps_api(self):
         """
@@ -47,7 +47,7 @@ class TestGatekeeperUsersListingAPI(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_grp_apps_filter(self):
         """
-        ATEKEEPER_GRP_APPS_API_002 test_grp_apps_filter
+        GATEKEEPER_GRP_APPS_API_002 test_grp_apps_filter
         Ensure the name filer works correctly
         """
 
@@ -135,8 +135,6 @@ class TestGatekeeperUsersListingAPI(ApiTestCase):
         app_id = create_response.json()['application_id']
         # set group_id
         group_id = create_response.json()['group_id']
-
-        rand_int = self.util.random_int()
 
         dict_matrix = [
             {'group_id': ''},
