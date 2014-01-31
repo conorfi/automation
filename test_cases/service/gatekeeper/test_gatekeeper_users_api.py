@@ -14,38 +14,10 @@ and application_name is adfuser
 """
 
 import requests
-from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-    GateKeeperService
-from framework.db.base_dao import BaseDAO
-from framework.db.gate_keeper_dao import GateKeeperDAO
-from framework.utility.utility import Utility
-import unittest
+from . import ApiTestCase
 
-
-class TestGateUsersAPI(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        # Things that need to be done once
-        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
-
-    @classmethod
-    def tearDownClass(cls):
-        # Things that need to be done once.
-        cls.db.close()
-
-    def setUp(self):
-        # Things to run before each test.
-
-        self.gk_service = GateKeeperService()
-        self.gk_dao = GateKeeperDAO()
-        self.default_test_user = self.gk_dao.get_user_by_username(
-            self.db,
-            self.gk_service.ADMIN_USER
-        )['user_id']
-        self.util = Utility()
+class TestGateUsersAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_users_api(self):
@@ -107,20 +79,11 @@ class TestGateUsersAPI(unittest.TestCase):
         self.assertEquals(response.status_code, requests.codes.ok)
 
         # field count check form read
-        # 4 fields should be returned
+        # 7 fields should be returned
         self.assertEquals(len(response.json()[0]), 7)
 
         # verify the contents of the users API
-        self.assertEquals(
-            response.json()[0]['username'], user_info['username']
-        )
-        self.assertEquals(response.json()[0]['user_id'], user_info['user_id'])
-        self.assertEquals(response.json()[0]['name'], user_info['name'])
-        self.assertEquals(response.json()[0]['phone'], user_info['phone'])
-        self.assertEquals(response.json()[0]['email'], user_info['email'])
-        self.assertEquals(
-            response.json()[0]['last_logged_in'], user_info['last_logged_in']
-        )
+        self.assertUserData(response.json()[0], user_info)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(

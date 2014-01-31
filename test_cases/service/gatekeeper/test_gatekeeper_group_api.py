@@ -14,37 +14,11 @@ and application_name is adfuser
 """
 
 import requests
-from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-    GateKeeperService
-from framework.db.base_dao import BaseDAO
-from framework.db.gate_keeper_dao import GateKeeperDAO
-from framework.utility.utility import Utility
-import Cookie
-from multiprocessing import Process
-import time
-import unittest
+from . import ApiTestCase
 
 
-class TestGateGroupAPI(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        # Things that need to be done once
-        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
-
-    @classmethod
-    def tearDownClass(cls):
-        # Things that need to be done once.
-        cls.db.close()
-
-    def setUp(self):
-        # Things to run before each test.
-
-        self.gk_service = GateKeeperService()
-        self.gk_dao = GateKeeperDAO()
-        self.util = Utility()
+class TestGateGroupAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_group_api_create(self):
@@ -74,10 +48,7 @@ class TestGateGroupAPI(unittest.TestCase):
         group_info = self.gk_dao.get_group_by_name(self.db, groupname)
 
         # verify the creation of the group POST action
-        self.assertEquals(create_response.json()['name'], group_info['name'])
-        self.assertEquals(
-            create_response.json()['group_id'], group_info['group_id']
-        )
+        self.assertGroupData(create_response.json(), group_info)
 
         # clean up - delete the group
         del_response = self.gk_service.gk_crud(
@@ -85,14 +56,6 @@ class TestGateGroupAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new group data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="group", id=group_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_group_api_create_json(self):
@@ -124,10 +87,7 @@ class TestGateGroupAPI(unittest.TestCase):
         group_info = self.gk_dao.get_group_by_name(self.db, groupname)
 
         # verify the creation of the group POST action
-        self.assertEquals(create_response.json()['name'], group_info['name'])
-        self.assertEquals(
-            create_response.json()['group_id'], group_info['group_id']
-        )
+        self.assertGroupData(create_response.json(), group_info)
 
         # clean up - delete the group
         del_response = self.gk_service.gk_crud(
@@ -135,14 +95,6 @@ class TestGateGroupAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new group data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="group", id=group_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_group_api_create_no_data(self):
@@ -271,13 +223,7 @@ class TestGateGroupAPI(unittest.TestCase):
         group_info = self.gk_dao.get_group_by_name(self.db, groupname)
 
         # verify the update of the group POST action
-        self.assertEquals(
-            update_response.json()['name'], group_info['name']
-        )
-        self.assertEquals(
-            update_response.json()['group_id'],
-            group_info['group_id']
-        )
+        self.assertGroupData(update_response.json(), group_info)
 
         # clean up - delete the group
         del_response = self.gk_service.gk_crud(
@@ -285,14 +231,6 @@ class TestGateGroupAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new group data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="group", id=group_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_group_api_update_duplicate_name(self):
@@ -357,14 +295,6 @@ class TestGateGroupAPI(unittest.TestCase):
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # read the new group data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="group", id=group_id_one
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
     @attr(env=['test'], priority=1)
     def test_group_api_update_non_existant_group_id(self):
         """
@@ -427,11 +357,7 @@ class TestGateGroupAPI(unittest.TestCase):
         self.assertEquals(len(read_response.json()), 2)
 
         # verify the creation of the group POST action
-        self.assertEquals(
-            read_response.json()['group_id'],
-            group_info['group_id']
-        )
-        self.assertEquals(read_response.json()['name'], group_info['name'])
+        self.assertGroupData(read_response.json(), group_info)
 
         # clean up - delete the group
         del_response = self.gk_service.gk_crud(
@@ -439,14 +365,6 @@ class TestGateGroupAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new group data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="group", id=group_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_group_api_read_non_existant_group_id(self):

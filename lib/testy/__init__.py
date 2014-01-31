@@ -141,6 +141,17 @@ class TestCase(unittest.TestCase):
 
         self.fail(self._formatMessage(msg, standard_msg))
 
+    def assertDictContains(self, data, key, message=None):
+        """
+        Asserts that the given data is a dict and contains the given key.
+
+        :param data:
+        :param key:
+        """
+        self.assertIsInstance(data, dict, message)
+        if message is None:
+            message = 'Data does not contain "%s"' % key
+        self.assertTrue(key in data, message)
 
 class _AssertRaisesContext(object):
     """A context manager used to implement TestCase.assertRaises* methods."""

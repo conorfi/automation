@@ -14,37 +14,11 @@ and application_name is adfuser
 """
 
 import requests
-from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-    GateKeeperService
-from framework.db.base_dao import BaseDAO
-from framework.db.gate_keeper_dao import GateKeeperDAO
-from framework.utility.utility import Utility
-import Cookie
-from multiprocessing import Process
-import time
-import unittest
+from . import ApiTestCase
 
 
-class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        # Things that need to be done once
-        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
-
-    @classmethod
-    def tearDownClass(cls):
-        # Things that need to be done once.
-        cls.db.close()
-
-    def setUp(self):
-        # Things to run before each test.
-
-        self.gk_service = GateKeeperService()
-        self.gk_dao = GateKeeperDAO()
-        self.util = Utility()
+class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_grp_perms_api(self):
@@ -122,10 +96,8 @@ class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
             self.assertEquals(len(response.json()[0]), 2)
 
             # verify the contents of the users API
-            self.assertEquals(
-                response.json()[0]['permission_id'],
-                permission_id)
-            self.assertEquals(response.json()[0]['group_id'], group_id)
+            self.assertGroupPermData(response.json()[0],grp_perm_data)
+
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(

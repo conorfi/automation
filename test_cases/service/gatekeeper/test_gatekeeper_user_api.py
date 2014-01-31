@@ -14,42 +14,11 @@ and application_name is adfuser
 """
 
 import requests
-from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-    GateKeeperService
-from framework.db.base_dao import BaseDAO
-from framework.db.gate_keeper_dao import GateKeeperDAO
-from framework.utility.utility import Utility
-import Cookie
-from multiprocessing import Process
-import time
-import unittest
+from . import ApiTestCase
 
 
-class TestGateUserAPI(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        # Things that need to be done once
-        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
-
-    @classmethod
-    def tearDownClass(cls):
-        # Things that need to be done once.
-        cls.db.close()
-
-    def setUp(self):
-        # Things to run before each test.
-
-        self.gk_service = GateKeeperService()
-        self.gk_dao = GateKeeperDAO()
-        self.default_test_user = self.gk_dao.get_user_by_username(
-            self.db,
-            self.gk_service.ADMIN_USER
-        )['user_id']
-        self.util = Utility()
-
+class TestGateUserAPI(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_user_api_create(self):
         """
@@ -72,40 +41,21 @@ class TestGateUserAPI(unittest.TestCase):
 
         # set username
         username = create_response.json()['username']
+        # set user_id
+        user_id = create_response.json()['user_id']
+
         # get user data directly from database
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # verify the creation of the user POST action
-        self.assertEquals(
-            create_response.json()['username'], user_info['username']
-        )
-        self.assertEquals(
-            create_response.json()['user_id'], user_info['user_id']
-        )
-        self.assertEquals(create_response.json()['name'], user_info['name'])
-        self.assertEquals(create_response.json()['phone'], user_info['phone'])
-        self.assertEquals(create_response.json()['email'], user_info['email'])
-        self.assertEquals(
-            create_response.json()['last_logged_in'],
-            user_info['last_logged_in']
-        )
+        self.assertUserData(create_response.json(), user_info)
 
-        # set user_id
-        user_id = create_response.json()['user_id']
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
             session, method='DELETE', resource="user", id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_create_json(self):
@@ -129,40 +79,22 @@ class TestGateUserAPI(unittest.TestCase):
 
         # set username
         username = create_response.json()['username']
+
+        # set user_id
+        user_id = create_response.json()['user_id']
+
         # get user data directly from database
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # verify the creation of the user POST action
-        self.assertEquals(
-            create_response.json()['username'], user_info['username']
-        )
-        self.assertEquals(
-            create_response.json()['user_id'], user_info['user_id']
-        )
-        self.assertEquals(create_response.json()['name'], user_info['name'])
-        self.assertEquals(create_response.json()['phone'], user_info['phone'])
-        self.assertEquals(create_response.json()['email'], user_info['email'])
-        self.assertEquals(
-            create_response.json()['last_logged_in'],
-            user_info['last_logged_in']
-        )
+        self.assertUserData(create_response.json(), user_info)
 
-        # set user_id
-        user_id = create_response.json()['user_id']
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
             session, method='DELETE', resource="user", id=user_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_create_missing_params(self):
@@ -185,7 +117,6 @@ class TestGateUserAPI(unittest.TestCase):
         ]
 
         for user_dict in no_data:
-
             user_data = self.gk_service.create_user_data(user_dict)
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="user", data=user_data
@@ -247,6 +178,8 @@ class TestGateUserAPI(unittest.TestCase):
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="user"
         )
+        # set user_id
+        user_id = create_response.json()['user_id']
 
         user_dict = [
             {'username': create_response.json()['username']},
@@ -270,6 +203,13 @@ class TestGateUserAPI(unittest.TestCase):
                 self.gk_service.DUPLICATE_KEY
                 in create_response.json()['error']
             )
+
+        #clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_user_api_update(self):
@@ -305,25 +245,7 @@ class TestGateUserAPI(unittest.TestCase):
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # verify the creation of the user POST action
-        self.assertEquals(
-            update_response.json()['username'], user_info['username']
-        )
-        self.assertEquals(
-            update_response.json()['user_id'], user_info['user_id']
-        )
-        self.assertEquals(
-            update_response.json()['name'], user_info['name']
-        )
-        self.assertEquals(
-            update_response.json()['phone'], user_info['phone']
-        )
-        self.assertEquals(
-            update_response.json()['email'], user_info['email']
-        )
-        self.assertEquals(
-            update_response.json()['last_logged_in'],
-            user_info['last_logged_in']
-        )
+        self.assertUserData(update_response.json(), user_info)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
@@ -331,14 +253,6 @@ class TestGateUserAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_update_duplicate_fields(self):
@@ -353,8 +267,6 @@ class TestGateUserAPI(unittest.TestCase):
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
-
-        rand_username = self.util.random_str(5)
         user_one_data = self.gk_service.create_user_data()
         user_two_data = self.gk_service.create_user_data()
         # create user one
@@ -407,14 +319,6 @@ class TestGateUserAPI(unittest.TestCase):
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id_one
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
     @attr(env=['test'], priority=1)
     def test_user_api_update_individually(self):
         """
@@ -433,13 +337,11 @@ class TestGateUserAPI(unittest.TestCase):
 
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
+
         # set user_id
         user_id = create_response.json()['user_id']
 
         # create individual dicts for updating each paramater
-        rand_str = self.util.random_str(5)
-        phone = self.util.phone_number()
-        email = self.util.random_email()
         user_dict = [
             {'username': self.util.random_str(4)},
             {'name': self.util.random_str(1)},
@@ -465,23 +367,7 @@ class TestGateUserAPI(unittest.TestCase):
         user_info = self.gk_dao.get_user_by_username(self.db, username)
 
         # verify the creation of the user POST action
-        self.assertEquals(
-            update_response.json()['username'], user_info['username']
-        )
-        self.assertEquals(
-            update_response.json()['user_id'], user_info['user_id']
-        )
-        self.assertEquals(
-            update_response.json()['name'], user_info['name']
-        )
-        self.assertEquals(
-            update_response.json()['phone'], user_info['phone']
-        )
-        self.assertEquals(update_response.json()['email'], user_info['email'])
-        self.assertEquals(
-            update_response.json()['last_logged_in'],
-            user_info['last_logged_in']
-        )
+        self.assertUserData(update_response.json(), user_info)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
@@ -489,14 +375,6 @@ class TestGateUserAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_update_non_existant_user_id(self):
@@ -556,23 +434,9 @@ class TestGateUserAPI(unittest.TestCase):
         )
 
         # field count check form read
-        # 4 fields should be returned
+        # 11 fields should be returned
         self.assertEquals(len(read_response.json()), 11)
-
-        # verify the creation of the user POST action
-        self.assertEquals(
-            read_response.json()['username'], user_info['username']
-        )
-        self.assertEquals(
-            read_response.json()['user_id'], user_info['user_id']
-        )
-        self.assertEquals(read_response.json()['name'], user_info['name'])
-        self.assertEquals(read_response.json()['phone'], user_info['phone'])
-        self.assertEquals(read_response.json()['email'], user_info['email'])
-        self.assertEquals(
-            create_response.json()['last_logged_in'],
-            user_info['last_logged_in']
-        )
+        self.assertUserData(read_response.json(), user_info)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
@@ -580,14 +444,6 @@ class TestGateUserAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new user data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="user", id=user_id
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_user_api_read_existant_user_id(self):
@@ -690,8 +546,7 @@ class TestGateUserAPI(unittest.TestCase):
             allow_redirects=False
         )
 
-        # create username and apssword
-        rand_str = self.util.random_str()
+        # create username and password
         credentials = {
             'username': self.util.random_str(4),
             'password': self.util.random_str(8)
@@ -742,12 +597,11 @@ class TestGateUserAPI(unittest.TestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # login in as new user
-
+        # login in as deleted user
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=False, credentials=credentials
         )
-        assert response.status_code, requests.codes
+        assert response.status_code, requests.codes.found
 
     @attr(env=['test'], priority=1)
     def test_user_data_validation_individual(self):
@@ -791,33 +645,33 @@ class TestGateUserAPI(unittest.TestCase):
                 create_response.status_code, requests.codes.bad_request
             )
 
-            if('username' in dict.keys()):
+            if 'username' in dict.keys():
                 self.assertTrue(
                     self.gk_service.USERNAME_VALIDATION
                     in create_response.json()['error']
                 )
-            elif('name' in dict.keys()):
+            elif 'name' in dict.keys():
                 self.assertTrue(
                     self.gk_service.NAME_VALIDATION
                     in create_response.json()['error']
                 )
-            elif('password' in dict.keys()):
+            elif 'password' in dict.keys():
                 self.assertTrue(
                     self.gk_service.PASSWORD_VALIDATION
                     in create_response.json()['error']
                 )
-            elif('phone' in dict.keys()):
+            elif 'phone' in dict.keys():
                 self.assertTrue(
                     self.gk_service.PHONE_VALIDATION
                     in create_response.json()['error']
                 )
 
-            elif('email' in dict.keys()):
+            elif 'email' in dict.keys():
                 self.assertTrue(
                     self.gk_service.EMAIL_VALIDATION
                     in create_response.json()['error']
                 )
-            elif('fake' in dict.keys()):
+            elif 'fake' in dict.keys():
                 self.assertTrue(
                     self.gk_service.PARAM_NOT_ALLOWED
                     in create_response.json()['error']
@@ -838,13 +692,13 @@ class TestGateUserAPI(unittest.TestCase):
         bad_data = [
             {'username': self.util.random_str(3), 'name': ''},
             {'password': self.util.random_str(101),
-                'email': self.util.random_str()},
+             'email': self.util.random_str()},
             {'username': self.util.random_str(65),
-                'phone': 123,
-                'password': self.util.random_str(7)},
+             'phone': 123,
+             'password': self.util.random_str(7)},
             {'name': self.util.random_str(101),
-                'email': self.util.random_email(len=127),
-                'password': self.util.random_str(101)}
+             'email': self.util.random_email(len=127),
+             'password': self.util.random_str(101)}
         ]
 
         for dict in bad_data:
@@ -861,8 +715,8 @@ class TestGateUserAPI(unittest.TestCase):
             # if this defect is resolved this verification
             # will have to be altered if seperate error message per field
 
-            if('username' in dict.keys()
-                    and 'name' in dict.keys()):
+            if ('username' in dict.keys()
+                and 'name' in dict.keys()):
                 self.assertTrue(
                     self.gk_service.USERNAME_VALIDATION
                     in create_response.json()['error']
@@ -873,8 +727,8 @@ class TestGateUserAPI(unittest.TestCase):
                 )
 
             elif ('username' in dict.keys()
-                    and 'phone' in dict.keys()
-                    and 'password' in dict.keys()):
+                  and 'phone' in dict.keys()
+                  and 'password' in dict.keys()):
 
                 self.assertTrue(
                     self.gk_service.USERNAME_VALIDATION
@@ -889,8 +743,8 @@ class TestGateUserAPI(unittest.TestCase):
                     in create_response.json()['error'])
 
             elif ('name' in dict.keys()
-                    and 'email' in dict.keys()
-                    and 'password' in dict.keys()):
+                  and 'email' in dict.keys()
+                  and 'password' in dict.keys()):
 
                 self.assertTrue(
                     self.gk_service.NAME_VALIDATION
@@ -904,8 +758,8 @@ class TestGateUserAPI(unittest.TestCase):
                     self.gk_service.PASSWORD_VALIDATION
                     in create_response.json()['error'])
 
-            elif('password' in dict.keys()
-                    and 'email' in dict.keys()):
+            elif ('password' in dict.keys()
+                  and 'email' in dict.keys()):
                 self.assertTrue(
                     self.gk_service.PASSWORD_VALIDATION
                     in create_response.json()['error']

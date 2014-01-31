@@ -12,36 +12,11 @@ and application_name is adfuser
 @since: Created on 4th January 2014
 @author: Conor Fitzgerald
 """
-
 import requests
-from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-    GateKeeperService
-from framework.db.base_dao import BaseDAO
-from framework.db.gate_keeper_dao import GateKeeperDAO
-from framework.utility.utility import Utility
-import unittest
+from . import ApiTestCase
 
-
-class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        # Things that need to be done once
-        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
-
-    @classmethod
-    def tearDownClass(cls):
-        # Things that need to be done once.
-        cls.db.close()
-
-    def setUp(self):
-        # Things to run before each test.
-
-        self.gk_service = GateKeeperService()
-        self.gk_dao = GateKeeperDAO()
-        self.util = Utility()
+class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_user_perms_api(self):
@@ -119,10 +94,8 @@ class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
             self.assertEquals(len(response.json()[0]), 2)
 
             # verify the contents of the users API
-            self.assertEquals(
-                response.json()[0]['permission_id'], permission_id
-            )
-            self.assertEquals(response.json()[0]['user_id'], user_id)
+            #verify API
+            self.assertUserPermData(response.json()[0], user_perm_data)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
@@ -161,8 +134,6 @@ class TestGateKeeperUsersGroupsListingAPI(unittest.TestCase):
         user_id = create_response.json()['user_id']
         # set permission_id
         permission_id = create_response.json()['permission_id']
-
-        rand_int = self.util.random_int()
 
         dict_matrix = [
             {'permission_id': ''},

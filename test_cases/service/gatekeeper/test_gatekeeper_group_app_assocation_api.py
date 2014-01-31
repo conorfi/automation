@@ -15,39 +15,12 @@ and application_name is adfuser
 @author: Conor Fitzgerald
 """
 
-import requests
-from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-    GateKeeperService
-from framework.db.base_dao import BaseDAO
-from framework.db.gate_keeper_dao import GateKeeperDAO
-from framework.utility.utility import Utility
-import Cookie
-from multiprocessing import Process
-import time
-import unittest
+import requests
+from . import ApiTestCase
 
 
-class TestGateGrpAppAssocationAPI(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        # Things that need to be done once
-        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
-
-    @classmethod
-    def tearDownClass(cls):
-        # Things that need to be done once.
-        cls.db.close()
-
-    def setUp(self):
-        # Things to run before each test.
-
-        self.gk_service = GateKeeperService()
-        self.gk_dao = GateKeeperDAO()
-        self.util = Utility()
-
+class TestGateGrpAppAssocationAPI(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_create(self):
         """
@@ -69,14 +42,8 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        self.assertEquals(
-            grp_app_data['application_id'],
-            create_response.json()['application_id']
-            )
-        self.assertEquals(
-            grp_app_data['group_id'],
-            create_response.json()['group_id']
-            )
+        #verify
+        self.assertGroupAppData(create_response.json(), grp_app_data)
 
         # clean up
         del_response = self.gk_service.gk_crud(
@@ -88,18 +55,6 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new association
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_app",
-            id2=grp_app_data['application_id'],
-            id=grp_app_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_miss_params(self):
@@ -209,18 +164,6 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # read
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_app",
-            id2=grp_app_data['application_id'],
-            id=grp_app_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_no_update(self):
         """
@@ -276,18 +219,6 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # read
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_app",
-            id2=grp_app_data['application_id'],
-            id=grp_app_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_read(self):
         """
@@ -323,14 +254,7 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
         self.assertEquals(len(read_response.json()), 2)
 
         # verify that the data is correct
-        self.assertEquals(
-            grp_app_data['application_id'],
-            read_response.json()['application_id']
-            )
-        self.assertEquals(
-            grp_app_data['group_id'],
-            read_response.json()['group_id']
-            )
+        self.assertGroupAppData(grp_app_data, create_response.json())
 
         # clean up
         del_response = self.gk_service.gk_crud(
@@ -342,18 +266,6 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_app",
-            id2=grp_app_data['application_id'],
-            id=grp_app_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_read_not_exis(self):
@@ -446,18 +358,6 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_app",
-            id2=grp_app_data['application_id'],
-            id=grp_app_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_read_no_data(self):
@@ -585,65 +485,33 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        # list of dicts non existant data
-        non_existant_data = [
-            {'group_id': self.util.random_int()},
-            {'application_id': self.util.random_int()}
+        not_exist = [
+            {'id': grp_app_data['group_id'], 'id2': self.util.random_int()},
+            {'id': self.util.random_int(),
+             'id2': grp_app_data['application_id']},
+            {'id': self.util.random_int(), 'id2': self.util.random_int()},
+
         ]
 
-        # read id 1 with a non existant id
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='DELETE',
-            resource="grp_app",
-            id2=self.util.random_int(),
-            id=grp_app_data['group_id']
-        )
+        for dict in not_exist:
+            # read id 1 with a non existant id
+            read_response = self.gk_service.gk_crud(
+                session,
+                method='DELETE',
+                resource="grp_app",
+                id=dict['id'],
+                id2=dict['id2']
 
-        # 404 response
-        self.assertEquals(
-            read_response.status_code, requests.codes.not_found
-        )
-        # verify that the error message is correct
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
+            )
 
-        # read with a non existant id2
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='DELETE',
-            resource="grp_app",
-            id2=grp_app_data['application_id'],
-            id=self.util.random_int(),
-        )
-
-        # 404 response
-        self.assertEquals(
-            read_response.status_code, requests.codes.not_found
-        )
-        # verify that the error message is correct
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
-
-        # read with 2 non existant ids
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='DELETE',
-            resource="grp_app",
-            id2=self.util.random_int(),
-            id=self.util.random_int(),
-        )
-
-        # 404 response
-        self.assertEquals(
-            read_response.status_code, requests.codes.not_found
-        )
-        # verify that the error message is correct
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
+            # 404 response
+            self.assertEquals(
+                read_response.status_code, requests.codes.not_found
+            )
+            # verify that the error message is correct
+            self.assertTrue(
+                self.gk_service.NO_DATA_ERROR in read_response.json()['error']
+            )
 
         # clean up
         del_response = self.gk_service.gk_crud(
@@ -655,15 +523,3 @@ class TestGateGrpAppAssocationAPI(unittest.TestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-
-        # read the new permission data
-        read_response = self.gk_service.gk_crud(
-            session,
-            method='GET',
-            resource="grp_app",
-            id2=grp_app_data['application_id'],
-            id=grp_app_data['group_id']
-        )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )

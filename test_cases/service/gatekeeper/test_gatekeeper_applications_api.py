@@ -13,42 +13,13 @@ and application_name is adfuser
 @author: Conor Fitzgerald
 """
 
-import requests
-from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-    GateKeeperService
-from framework.db.base_dao import BaseDAO
-from framework.db.gate_keeper_dao import GateKeeperDAO
-from framework.utility.utility import Utility
-import Cookie
-from multiprocessing import Process
-import time
-import unittest
+import requests
+
+from . import ApiTestCase
 
 
-class TestGateUsersAPI(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        # Things that need to be done once
-        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
-
-    @classmethod
-    def tearDownClass(cls):
-        # Things that need to be done once.
-        cls.db.close()
-
-    def setUp(self):
-        # Things to run before each test.
-
-        self.gk_service = GateKeeperService()
-        self.gk_dao = GateKeeperDAO()
-        self.default_test_user = self.gk_dao.get_user_by_username(
-            self.db,
-            self.gk_service.ADMIN_USER
-        )['user_id']
-        self.util = Utility()
+class TestGateUsersAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_users_api(self):
@@ -110,10 +81,6 @@ class TestGateUsersAPI(unittest.TestCase):
             name=appname
         )
 
-        # field count check form read
-        # 3 fields should be returned
-        self.assertEquals(len(response.json()[0]), 3)
-
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)
 
@@ -121,19 +88,12 @@ class TestGateUsersAPI(unittest.TestCase):
         api_count = response.json().__len__()
         self.assertEquals(api_count, 1, "count mismatch")
 
+        # field count check form read
+        # 3 fields should be returned
+        self.assertEquals(len(response.json()[0]), 3)
+
         # verify the users API against the db data
-        self.assertEquals(
-            response.json()[0]['application_id'],
-            app_data['application_id']
-        )
-        self.assertEquals(
-            response.json()[0]['name'],
-            app_data['name']
-        )
-        self.assertEquals(
-            response.json()[0]['default_url'],
-            app_data['default_url']
-        )
+        self.assertAppData(response.json()[0],app_data)
 
         # clean up - delete the application
         del_response = self.gk_service.gk_crud(

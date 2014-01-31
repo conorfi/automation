@@ -4,47 +4,22 @@ project - 2 factor authentication test cases
 @since: Created on November 28th 2013
 @author: Conor Fitzgerald
 """
-
 import requests
-from testconfig import config
 from nose.plugins.attrib import attr
+from . import ApiTestCase
+from testconfig import config
 from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
     GateKeeperService
-from framework.db.base_dao import BaseDAO
-from framework.db.gate_keeper_dao import GateKeeperDAO
-from framework.utility.utility import Utility
 import Cookie
-import unittest
 
-
-class TestGateKeeper2FaAPI(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        '''Things that need to be done once.'''
-        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
-
-    @classmethod
-    def tearDownClass(cls):
-        '''Things that need to be done once.'''
-        cls.db.close()
-
-    def setUp(self):
-        # Things to run before each test
-        self.gk_service = GateKeeperService()
-        self.gk_dao = GateKeeperDAO()
-        self.default_test_user = self.gk_dao.get_user_by_username(
-            self.db,
-            self.gk_service.ADMIN_USER
-        )['user_id']
-        self.util = Utility()
+class TestGateKeeper2FaAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_can_login_two_factor(self):
-        '''
+        """
         GATEKEEPER-2FA-API001 test_can_login_two_factor
         verify basic 2FA functionality from gatekeeper application
-        '''
+        """
 
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(

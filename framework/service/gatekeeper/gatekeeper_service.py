@@ -19,7 +19,6 @@ from framework.common_env import SERVICE_NAME_GATEKEEPER as SERVICE_NAME
 
 
 class GateKeeperService(object):
-
     def __init__(self):
         # initialize utility class
         self.util = Utility()
@@ -45,19 +44,19 @@ class GateKeeperService(object):
         # hash of the password test - using this rather than implementing the
         # gatekeeper hashing function if the hashing function ever change sit
         # will break a number of these functions
-        self.HASH_PASSWORD_TEST = "pbkdf2_sha256$12000$m5uwpzIW9qaO$88p"\
-            "IM25AqnXu4Fgt/Xgtpp3AInYgk5sxaxJmxxpcR8A="
+        self.HASH_PASSWORD_TEST = "pbkdf2_sha256$12000$m5uwpzIW9qaO$88p" \
+                                  "IM25AqnXu4Fgt/Xgtpp3AInYgk5sxaxJmxxpcR8A="
 
-        self.GATEKEEPER_TITLE = "<title>Gatekeeper /"\
-            " Arts Alliance Media</title>"
+        self.GATEKEEPER_TITLE = "<title>Gatekeeper /" \
+                                " Arts Alliance Media</title>"
 
         # Error messages
         self.USER_ERROR = (
             "User is either not logged in or not the same"
             " user as the user described in the resource URI"
         )
-        self.SESSION_FORBIDDEN = "Forbidden session with cookie %s"\
-            " for application fake"
+        self.SESSION_FORBIDDEN = "Forbidden session with cookie %s" \
+                                 " for application fake"
         self.SESSION_NOT_ALLOWED = 'User not allowed access this session!'
         self.MISSING_PARAMETERS = "Missing parameters: "
         self.MISSING_APP_NAME = "Missing parameters: application_name"
@@ -74,31 +73,37 @@ class GateKeeperService(object):
         self.PARAM_NOT_ALLOWED = "not allowed"
         self.NO_PARAM_SUPPLIED = "No parameter(s) supplied."
         self.METHOD_NOT_AVAILABLE = "not currently available"
-        self.USERNAME_VALIDATION = "Alphanumeric characters required with a"\
-            " minimum length of 4 and maximum length of 64"
-        self.NAME_VALIDATION = "Word characters required with a"\
-            " minimum length of 1 and maximum length of 100"
-        self.PASSWORD_VALIDATION = "Alphanumeric characters required with"\
-            " a minimum length of 8 and maximum length of 100"
+        self.USERNAME_VALIDATION = "Alphanumeric characters required with a" \
+                                   " minimum length of 4 and maximum length " \
+                                   "of 64"
+        self.NAME_VALIDATION = "Word characters required with a" \
+                               " minimum length of 1 and maximum length of 100"
+        self.PASSWORD_VALIDATION = "Alphanumeric characters required with" \
+                                   " a minimum length of 8 and maximum length" \
+                                   " " \
+                                   "of 100"
         self.PHONE_VALIDATION = "E.164 formatted number required" \
-            " e.g. +44 20 7751 7500"
-        self.EMAIL_VALIDATION = "Valid email format required, maximum"\
-            " 254 characters in length e.g. test@test.com"
-        self.EMAIL_VALIDATION_HTML = "Valid+email+format+required%2C"\
-            "+maximum+254+characters+in+length+e.g.+test%40test.com"
-        self.DEFAULT_URL_VALIDATION = "A valid http/https"\
-            " URL e.g. http://localhost/test"
-        self.PERM_NAME_VALIDATION = "Alphanumeric characters required with"\
-            " a minimum length of 1 and maximum length of 512"
+                                " e.g. +44 20 7751 7500"
+        self.EMAIL_VALIDATION = "Valid email format required, maximum" \
+                                " 254 characters in length e.g. test@test.com"
+        self.EMAIL_VALIDATION_HTML = "Valid+email+format+required%2C" \
+                                     "+maximum+254+characters+in+length+e.g" \
+                                     ".+test%40test.com"
+        self.DEFAULT_URL_VALIDATION = "A valid http/https" \
+                                      " URL e.g. http://localhost/test"
+        self.PERM_NAME_VALIDATION = "Alphanumeric characters required with" \
+                                    " a minimum length of 1 and maximum " \
+                                    "length of 512"
         self.APP_ID_VALIDATION = "Valid application ID required"
         self.PARAM_NOT_ALLOWED = "not allowed"
         self.DELETE_THEMSELVES = "Users are not allowed to delete themselves."
         self.DELETE_DATA = "Cannot delete data"
         self.NOT_PRESENT = "is not present"
-        self.LOGIN_ATTEMPTS = "Username or password not valid."\
-            " Attempts left: %d"
+        self.LOGIN_ATTEMPTS = "Username or password not valid." \
+                              " Attempts left: %d"
         self.LOGIN_ATTEMPTS_EXCEEDED = "Exceeded maximum login attempts." \
-            " Please reset your password or contact the site administrator."
+                                       " Please reset your password or " \
+                                       "contact the site administrator."
         self.RECOVER_RESPONSE = "you should now have received the email with"
         self.UNEXPECTED_PARAM = "Unexpected body parameters"
 
@@ -120,7 +125,7 @@ class GateKeeperService(object):
         @param verify: boolean to determine if SSL cert will be verified
         @param allow_redirects: boolean determines if SSL cert will be verified
         @param credentials: username and password
-        @paratm type: json or urlencoded
+        @param type: json or urlencoded
         @return: a request object
 
         """
@@ -173,9 +178,9 @@ class GateKeeperService(object):
             config['api'][SERVICE_NAME]['session']['validate_v1'])
 
         request_url = url + '/%s'
-        request_url = request_url % (cookie_id)
+        request_url = request_url % cookie_id
 
-        if (application is not None):
+        if application is not None:
             request_url = request_url + '/?application_name=%s'
             request_url = request_url % (application)
         response = session.get(request_url, verify=False)
@@ -204,7 +209,7 @@ class GateKeeperService(object):
             verify=None,
             allow_redirects=None,
             parameters=None
-            ):
+    ):
 
         """
         Validates whether a particular user with session and associated cookie
@@ -222,14 +227,14 @@ class GateKeeperService(object):
 
         if parameters is None:
             parameters = {}
-        if(url is None):
+        if url is None:
             url = self._create_url(
                 config['api'][SERVICE_NAME]['session']['create_v1'])
-        if(redirect_url is not None):
+        if redirect_url is not None:
             url = url + redirect_url
-        if(verify is None):
+        if verify is None:
             verify = False
-        if(allow_redirects is None):
+        if allow_redirects is None:
             allow_redirects = True
         response = session.get(
             url=url,
@@ -252,7 +257,7 @@ class GateKeeperService(object):
 
         """
 
-        if(url is None):
+        if url is None:
             url = self._create_url(
                 config['api'][SERVICE_NAME]['session']['logout_v1'])
         response = session.post(url, verify=False)
@@ -271,7 +276,7 @@ class GateKeeperService(object):
 
         """
 
-        if(url is None):
+        if url is None:
             url = self._create_url(
                 config['api'][SERVICE_NAME]['session']['logout_v1'])
         response = session.get(url, verify=False)
@@ -288,16 +293,15 @@ class GateKeeperService(object):
         @param user_id: user id we are querying
         @param application: application that we will filter on
         @param verify: boolean to determine if SSL cert will be verified
-        @param allow_redirects:  boolean to determine if redirects are allowed
         @return: a request session object containg the user info
 
         """
 
-        if(url is None):
+        if url is None:
             url = self._create_url(
                 config['api'][SERVICE_NAME]['session']['user_info_v1'])
         request_url = url % (user_id, application)
-        if(verify is None):
+        if verify is None:
             verify = False
 
         response = session.get(url=request_url, verify=verify)
@@ -311,7 +315,7 @@ class GateKeeperService(object):
             verify=None,
             parameters=None,
             allow_redirects=None
-            ):
+    ):
 
         """
         Returns user info for a valid user id and session cookie on dummyapp
@@ -329,14 +333,14 @@ class GateKeeperService(object):
         if parameters is None:
             parameters = {}
 
-        if(url is None):
+        if (url is None):
             url = self._create_url('',
                                    host=config[SERVICE_NAME]['dummy']['host'],
                                    port=config[SERVICE_NAME]['dummy']['port'])
-        if(end_point is not None):
+        if end_point is not None:
             url = url + end_point
 
-        if(verify is None):
+        if verify is None:
             verify = False
 
         if allow_redirects is None:
@@ -358,7 +362,7 @@ class GateKeeperService(object):
             verify=None,
             allow_redirects=None,
             redirect_url=None
-            ):
+    ):
 
         """
         submits the verification_code for two factor authentication
@@ -372,17 +376,18 @@ class GateKeeperService(object):
         @return: a request object
 
         """
-        if(url is None):
+        if (url is None):
             url = self._create_url(
-                config['api'][SERVICE_NAME]['session']['submit_verification_v1'])
-        if(redirect_url is not None):
+                config['api'][SERVICE_NAME]['session'][
+                    'submit_verification_v1'])
+        if (redirect_url is not None):
             url = url + redirect_url
 
         # requests is url-encoded by default
-        if(verify is None):
+        if (verify is None):
             verify = False
 
-        if(allow_redirects is None):
+        if (allow_redirects is None):
             allow_redirects = True
 
         # url encoded
@@ -484,7 +489,7 @@ class GateKeeperService(object):
             cookie_type="SSO",
             cookie_value=None,
             **kwargs
-            ):
+    ):
 
         """
         login user and create session
@@ -501,18 +506,18 @@ class GateKeeperService(object):
         assert response.status_code == requests.codes.found
 
         # SSO cookie
-        if(cookie_type == "SSO"):
+        if cookie_type == "SSO":
             cookie_id = self.extract_sso_cookie_value(response.headers)
 
-            if(cookie_value is not None):
+            if cookie_value is not None:
                 cookie_id = cookie_value
 
             my_cookie = dict(name='sso_cookie', value=cookie_id)
 
-        elif(cookie_type == "CRED"):
+        elif cookie_type == "CRED":
             cookie_id = self.extract_cred_cookie_value(response.headers)
 
-            if(cookie_value is not None):
+            if cookie_value is not None:
                 cookie_id = cookie_value
 
             my_cookie = dict(name='sso_credentials', value=cookie_id)
@@ -549,8 +554,8 @@ class GateKeeperService(object):
         return group_data
 
     def _http_method_generator(
-        self, session, method, request_url, verify, data, headers=None
-            ):
+            self, session, method, request_url, verify, data, headers=None
+    ):
 
         if method == 'GET':
             response = session.get(url=request_url, verify=verify,
@@ -562,7 +567,7 @@ class GateKeeperService(object):
         if method == 'PUT':
             response = session.put(
                 url=request_url, data=data, verify=verify, headers=headers
-                )
+            )
         if method == 'DELETE':
             response = session.delete(url=request_url, verify=verify,
                                       headers=headers)
@@ -570,15 +575,15 @@ class GateKeeperService(object):
         return response
 
     def gk_crud(
-        self,
-        session,
-        method,
-        resource,
-        id=None,
-        id2=None,
-        data=None,
-        verify=None,
-        type='urlencoded'
+            self,
+            session,
+            method,
+            resource,
+            id=None,
+            id2=None,
+            data=None,
+            verify=None,
+            type='urlencoded'
     ):
         """
         test function for GK API CRUD operations
@@ -595,7 +600,7 @@ class GateKeeperService(object):
         @return: a request session object containing the user info
 
         """
-        if(method == 'POST'):
+        if (method == 'POST'):
             # check the resource and set the post URI
             request_url = self._set_post_url(resource)
         else:
@@ -603,11 +608,11 @@ class GateKeeperService(object):
             request_url = self._set_put_del_read_url(resource, id, id2)
 
         # if data must be created
-        if((method == 'POST' or method == 'PUT') and data is None):
+        if ((method == 'POST' or method == 'PUT') and data is None):
             # check the resource so that the data can be set
             data = self._set_data(resource, session)
 
-        if(verify is None):
+        if (verify is None):
             verify = False
 
         headers = {}
@@ -751,7 +756,7 @@ class GateKeeperService(object):
         elif resource == "user_org":
             data = self.create_user_org_data()
         elif resource == "grp_perm":
-            data = self.create_grp_perm_data()
+            data = self.create_grp_perm_data(session)
         elif resource == "user_perm":
             data = self.create_user_perm_data()
         elif resource == "grp_app":
@@ -764,7 +769,7 @@ class GateKeeperService(object):
             resource,
             name=None,
             verify=None
-            ):
+    ):
         """
         Test function for listing results from gk APIs
         @param session:  session object and associated cookie
@@ -776,11 +781,11 @@ class GateKeeperService(object):
 
         request_url = self._set_listing_url(resource)
 
-        if (name is not None):
+        if name is not None:
             request_url = request_url + '/?name=%s'
             request_url = request_url % (name)
 
-        if(verify is None):
+        if verify is None:
             verify = False
 
         response = session.get(url=request_url, verify=verify)
@@ -967,7 +972,7 @@ class GateKeeperService(object):
             resource,
             params=None,
             verify=None
-            ):
+    ):
         """
         Test function for listing results from gk APIs
         @param session:  session object and associated cookie
@@ -979,7 +984,7 @@ class GateKeeperService(object):
 
         request_url = self._set_assocation_listing_url(resource)
 
-        if(verify is None):
+        if verify is None:
             verify = False
 
         response = session.get(url=request_url, verify=verify, params=params)
@@ -1022,7 +1027,7 @@ class GateKeeperService(object):
         @param session: python-request session
         @param url: recover account url
         @param email: users email
-        @return: a confritamtion message
+        @return: a confirmation message
 
         """
         url = self._create_url(
@@ -1032,7 +1037,7 @@ class GateKeeperService(object):
         if allow_redirects is None:
             allow_redirects = True
 
-        if(verify is None):
+        if verify is None:
             verify = False
         response = requests.post(
             url, data=email, verify=verify, allow_redirects=allow_redirects
@@ -1041,28 +1046,28 @@ class GateKeeperService(object):
         return response
 
     def change_password(
-        self, token, password, verify=None, allow_redirects=None
+            self, token, password, verify=None, allow_redirects=None
     ):
 
         """
-        Used to change a users psssword
+        Used to change a users password
 
         @param session: python-request session
-        @param password: authnerication style token
+        @param password: authentication style token
         @param password: new password
-        @return: a confritamtion message
+        @return: a confirmation message
 
         """
 
         url = self._create_url(
             config['api'][SERVICE_NAME]['change_password_v1']['post']
         )
-        url = url % (token)
+        url = url % token
 
         if allow_redirects is None:
             allow_redirects = True
 
-        if(verify is None):
+        if verify is None:
             verify = False
 
         response = requests.post(

@@ -12,39 +12,11 @@ and group_name is adfuser
 @since: Created on 4th January 2014
 @author: Conor Fitzgerald
 """
-
 import requests
-from testconfig import config
 from nose.plugins.attrib import attr
-from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-    GateKeeperService
-from framework.db.base_dao import BaseDAO
-from framework.db.gate_keeper_dao import GateKeeperDAO
-from framework.utility.utility import Utility
-import Cookie
-from multiprocessing import Process
-import time
-import unittest
+from . import ApiTestCase
 
-
-class TestGateUsersAPI(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        # Things that need to be done once
-        cls.db = BaseDAO(config[SERVICE_NAME]['db']['connection'])
-
-    @classmethod
-    def tearDownClass(cls):
-        # Things that need to be done once.
-        cls.db.close()
-
-    def setUp(self):
-        # Things to run before each test.
-
-        self.gk_service = GateKeeperService()
-        self.gk_dao = GateKeeperDAO()
-        self.util = Utility()
+class TestGateUsersAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_groups_api(self):
@@ -117,14 +89,7 @@ class TestGateUsersAPI(unittest.TestCase):
         self.assertEquals(api_count, 1, "count mismatch")
 
         # verify the groups API against the db data
-        self.assertEquals(
-            response.json()[0]['group_id'],
-            group_data['group_id']
-        )
-        self.assertEquals(
-            response.json()[0]['name'],
-            group_data['name']
-        )
+        self.assertGroupData(create_response.json(), group_data)
 
         # clean up - delete the group
         del_response = self.gk_service.gk_crud(
