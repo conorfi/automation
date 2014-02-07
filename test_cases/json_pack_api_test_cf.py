@@ -1,11 +1,9 @@
 import json
-import urllib
-import urllib2
 import requests
 from testconfig import config
 from nose.plugins.attrib import attr
 from sqlalchemy import create_engine
-
+from framework.common_env import SERVICE_NAME_SCREEN_WRITER as SERVICE_NAME
 
 @attr(env=['test'], priority=1)
 def test_pack():
@@ -42,13 +40,13 @@ def test_pack():
             "name":"VM2DB2 - Monsters University",
             "print_no":""
     }
-
+    print config
     # save a pack
     url = 'http://{0}:{1}/{2}'.format(
-         config['tms']['ip'], config['tms']['port'],
-         config['api']['core']['pack']['save']
+         config[SERVICE_NAME]['ip'], config[SERVICE_NAME]['port'],
+         config['api'][SERVICE_NAME]['pack']['save']
     )
-
+    print url
     payload = {
         'username': 'admin',
         'password': 'admin',
@@ -62,7 +60,7 @@ def test_pack():
     assert 'Saved' in response['messages'][0]['message']
 
     # db - find the UUID
-    db = create_engine(config['tms']['db_type'] + config['tms']['db'])
+    db = create_engine(config[SERVICE_NAME]['db']['db_type'] + config[SERVICE_NAME]['db']['db_name'])
     connection = db.connect()
     result = connection.execute("select uuid from pack")
     row = result.fetchone()
@@ -72,8 +70,8 @@ def test_pack():
 
 # last modified (401?)
 
-    '''url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'],config['tms']['port']
-                                           ,config['api']['core']['pack']['last_modified'])
+    '''url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'],config[SERVICE_NAME]['port']
+                                           ,config['api'][SERVICE_NAME][['pack']['last_modified'])
 
     payload = {
         'username': 'admin',
@@ -90,8 +88,8 @@ def test_pack():
 
 # pack name exists
     pack_name = 'VM2DB2 - Monsters University'
-    url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'], config['tms']['port']
-                                           , config['api']['core']['pack']['pack_name_exists'])
+    url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'], config[SERVICE_NAME]['port']
+                                           , config['api'][SERVICE_NAME]['pack']['pack_name_exists'])
 
     payload = {
         'username': 'admin',
@@ -117,9 +115,9 @@ def test_pack():
     assert json.loads(r_exists.text) == False
 
 
-# find a pack
-    url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'], config['tms']['port']
-                                           , config['api']['core']['pack']['find_pack'])
+    # find a pack
+    url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'], config[SERVICE_NAME]['port']
+                                           , config['api'][SERVICE_NAME]['pack']['find_pack'])
 
     cpls = 'abb5f47f-014d-4a11-8d1e-a820470f01a7'
 
@@ -136,8 +134,8 @@ def test_pack():
     assert 'abb5f47f-014d-4a11-8d1e-a820470f01a7' in  response['data']
 
     # packs
-    url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'], config['tms']['port']
-                                           , config['api']['core']['pack']['packs'])
+    url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'], config[SERVICE_NAME]['port']
+                                           , config['api'][SERVICE_NAME]['pack']['packs'])
 
     payload = {
         'username': 'admin',
@@ -151,7 +149,7 @@ def test_pack():
     r_packs_length = r_packs['data'].__len__()
 
     # db - find the number of packs that exist and assert
-    db = create_engine(config['tms']['db_type'] + config['tms']['db'])
+    db = create_engine(config[SERVICE_NAME]['db']['db_type'] + config[SERVICE_NAME]['db']['db_name'])
     connection = db.connect()
     result = connection.execute("select count(uuid) from pack")
     row = result.fetchone()
@@ -161,7 +159,7 @@ def test_pack():
     assert number_of_packs == r_packs_length
 
     # db - before edit find a real screen(API seems to still work with fake screen ids)
-    db = create_engine(config['tms']['db_type'] + config['tms']['db'])
+    db = create_engine(config[SERVICE_NAME]['db']['db_type'] + config[SERVICE_NAME]['db']['db_name'])
     connection = db.connect()
     result = connection.execute("select uuid from screen")
     # fetch one - any will do
@@ -170,9 +168,9 @@ def test_pack():
     connection.close()
 
     # edit(i.e. edit associated screens with pack)
-    url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'],
-	   config['tms']['port'],
-    	config['api']['core']['pack']['edit']
+    url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'],
+	   config[SERVICE_NAME]['port'],
+    	config['api'][SERVICE_NAME]['pack']['edit']
     )
 
     pack_uuids = [uuid]
@@ -195,8 +193,8 @@ def test_pack():
 
     # delete a pack
     url = 'http://{0}:{1}/{2}'.format(
-	   config['tms']['ip'], config['tms']['port'],
-	   config['api']['core']['pack']['delete']
+	   config[SERVICE_NAME]['ip'], config[SERVICE_NAME]['port'],
+	   config['api'][SERVICE_NAME]['pack']['delete']
 	)
     pack_uuids = [uuid]
 
@@ -254,9 +252,9 @@ def test_pack_xml():
 
     # save an xml pack
     url = 'http://{0}:{1}/{2}'.format(
-	config['tms']['ip'],
-	config['tms']['port'],
-    config['api']['core']['pack']['add_pack_xml']
+	config[SERVICE_NAME]['ip'],
+	config[SERVICE_NAME]['port'],
+    config['api'][SERVICE_NAME]['pack']['add_pack_xml']
     )
 
     payload = {
@@ -272,18 +270,18 @@ def test_pack_xml():
     assert 'Saved' in response['messages'][0]['message']
 
     # db - find the UUID
-    db = create_engine(config['tms']['db_type'] + config['tms']['db'])
+    db = create_engine(config[SERVICE_NAME]['db_type'] + config[SERVICE_NAME]['db_name'])
     connection = db.connect()
     result = connection.execute("select uuid from pack")
     row = result.fetchone()
     uuid = row['uuid']
     connection.close()
 
-# delete a pack
+    # delete a pack
     url = 'http://{0}:{1}/{2}'.format(
-	   	config['tms']['ip'],
-	   	config['tms']['port'],
-	   	config['api']['core']['pack']['delete']
+	   	config[SERVICE_NAME]['ip'],
+	   	config[SERVICE_NAME]['port'],
+	   	config['api'][SERVICE_NAME]['pack']['delete']
     )
     pack_uuids = [uuid]
 

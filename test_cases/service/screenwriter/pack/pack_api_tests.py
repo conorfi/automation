@@ -7,14 +7,10 @@ gate keeper(single sign on) project
 @author: Conor Fitzgerald
 
 '''
-import json
-import requests
-from testconfig import config
+
 from nose.plugins.attrib import attr
-from sqlalchemy import create_engine
 from framework.service.packs.pack_service import PackService
-# from framework.db.base_dao import BaseDAO
-# from framework.db.gate_keeper_dao import GateKeeperDAO
+
 
 
 class TestGateKeeperAPI:
