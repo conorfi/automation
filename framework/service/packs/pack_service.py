@@ -1,6 +1,7 @@
 import requests
 from testconfig import config
 import json
+from framework.common_env import SERVICE_NAME_SCREEN_WRITER as SERVICE_NAME
 
 class PackService(object):
 
@@ -40,11 +41,11 @@ class PackService(object):
         }
     
         if(url==None):
-            url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'],config['tms']['port']
-                                           ,config['api']['core']['pack']['save'])
+            url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'],config[SERVICE_NAME]['port']
+                                           ,config['api'][SERVICE_NAME]['pack']['save'])
         
         #create dict with credentials  
-        payload = config['tms']['credentials']     
+        payload = config[SERVICE_NAME]['credentials']
         #update dict with a dict 'packs' and the json payload 'ads'   
         payload.update({'packs':[ads]}) 
         
@@ -88,8 +89,8 @@ class PackService(object):
     </AAMPack>'''
         
         #save an xml pack    
-        url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'],config['tms']['port']
-                                               ,config['api']['core']['pack']['add_pack_xml'])
+        url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'],config[SERVICE_NAME]['port']
+                                               ,config['api'][SERVICE_NAME]['pack']['add_pack_xml'])
         
         payload = {
             'username': 'admin',
@@ -103,10 +104,10 @@ class PackService(object):
 
         '''
         #save an xml pack    
-        url = 'http://{0}:{1}/{2}'.format(config['tms']['ip'],config['tms']['port']
-                                               ,config['api']['core']['pack']['add_pack_xml'])
+        url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'],config[SERVICE_NAME]['port']
+                                               ,config['api'][SERVICE_NAME]['pack']['add_pack_xml'])
         #create dict with credentials  
-        payload = config['tms']['credentials']     
+        payload = config[SERVICE_NAME]['credentials']
         #update dict with a dict 'packs' and the json payload 'ads'   
         payload.update({'pack':[ads_xml]}) 
             
