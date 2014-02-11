@@ -3,6 +3,7 @@ Base configuration for all automation tests
 """
 SERVICE_NAME_GATEKEEPER = 'gatekeeper'
 SERVICE_NAME_COURIER = 'courier'
+SERVICE_NAME_SCREEN_WRITER = 'screen_writer'
 
 TEST_ENVIRONMENT = 'test'
 DEV_ENVIRONMENT = 'dev'
@@ -14,7 +15,6 @@ def get_common_config():
     """
     config = {'api': {}}
     set_google_config(config)
-    set_tms_config(config)
     return config
 
 
@@ -92,9 +92,8 @@ def set_base_service_config(config, name, **kwargs):
     :param name:
     :param kwargs:
     """
-    db_credentials = 'postgres:postgres'
     config[name] = {}
-    config[name]['scheme'] = 'https'
+    config[name]['scheme'] = kwargs['scheme']
     config[name]['host'] = kwargs['host']
     config[name]['ip'] = kwargs['ip']
     config[name]['port'] = kwargs['port']
@@ -103,42 +102,38 @@ def set_base_service_config(config, name, **kwargs):
         'password': 'admin'
     }
     config[name]['db'] = {}
-    config[name]['db']['type'] = 'postgresql'
-    config[name]['db']['credentials'] = db_credentials
+    config[name]['db']['db_type'] = kwargs['db_type']
     config[name]['db']['host'] = kwargs['db_host']
     config[name]['db']['port'] = kwargs['db_port']
     config[name]['db']['db_name'] = kwargs['db_name']
-    config[name]['db']['connection'] = "postgresql://%s@%s:%s/%s" % \
-        (db_credentials, kwargs['db_host'], kwargs['db_port'],
+    if(kwargs['db_type'] is 'postgresql'):
+        config[name]['db']['credentials'] = kwargs['db_credentials']
+        config[name]['db']['connection'] = "postgresql://%s@%s:%s/%s" % \
+        (kwargs['db_credentials'], kwargs['db_host'], kwargs['db_port'],
          kwargs['db_name'])
 
 
-def set_tms_config(config):
+def set_screenwriter_config(config, **kwargs):
     """
     Sets the configuration for TMS
 
     :param config:
     """
-    config['tms'] = {}
-    config['tms']['ip'] = '172.17.115.14'
-    config['tms']['port'] = 8080
-    config['tms']['db'] = 'C:\\aam-lms\\db\\cinema_services.db'
-    config['tms']['db_type'] = 'sqlite:///'
-    config['tms']['credentials'] = {'username': 'admin', 'password': 'admin'}
+    name = SERVICE_NAME_SCREEN_WRITER
+    set_base_service_config(config, name, **kwargs)
 
-    config['api']['core'] = {}
-    config['api']['core']['pack'] = {}
-    config['api']['core']['pack']['save'] = 'core/pack/save'
-    config['api']['core']['pack']['find_pack'] = 'core/pack/find_pack'
-    config['api']['core']['pack']['packs'] = 'core/pack/packs'
-    config['api']['core']['pack']['edit'] = 'core/pack/edit'
-    config['api']['core']['pack']['delete'] = 'core/pack/delete'
-    config['api']['core']['pack']['edit'] = 'core/pack/edit'
-    config['api']['core']['pack']['last_modified'] = 'core/pack/last_modified'
-    config['api']['core']['pack']['pack_name_exists'] = \
+    config['api'][name] = {}
+    config['api'][name]['pack'] = {}
+    config['api'][name]['pack']['save'] = 'core/pack/save'
+    config['api'][name]['pack']['find_pack'] = 'core/pack/find_pack'
+    config['api'][name]['pack']['packs'] = 'core/pack/packs'
+    config['api'][name]['pack']['edit'] = 'core/pack/edit'
+    config['api'][name]['pack']['delete'] = 'core/pack/delete'
+    config['api'][name]['pack']['edit'] = 'core/pack/edit'
+    config['api'][name]['pack']['last_modified'] = 'core/pack/last_modified'
+    config['api'][name]['pack']['pack_name_exists'] = \
         "core/pack/pack_name_exists"
-    config['api']['core']['pack']['add_pack_xml'] = 'core/pack/add_pack_xml'
-
+    config['api'][name]['pack']['add_pack_xml'] = 'core/pack/add_pack_xml'
 
 def set_gatekeeper_config(config, **kwargs):
     """
