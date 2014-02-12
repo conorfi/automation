@@ -111,7 +111,8 @@ def set_base_service_config(config, name, **kwargs):
         config[name]['db']['connection'] = "postgresql://%s@%s:%s/%s" % \
         (kwargs['db_credentials'], kwargs['db_host'], kwargs['db_port'],
          kwargs['db_name'])
-
+    if(kwargs['db_type'] is 'sqlite'):
+        config[name]['db']['connection'] = "sqlite:///%s" % kwargs['db_name']
 
 def set_screenwriter_config(config, **kwargs):
     """
