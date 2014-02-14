@@ -17,6 +17,7 @@ import requests
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
+
 class TestGateUsersAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)

@@ -20,6 +20,7 @@ from testconfig import config
 from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
     GateKeeperService
 
+
 class TestGateKeeperRecoverAccount(ApiTestCase):
 
     @attr(env=['test'], priority=1)
@@ -128,7 +129,10 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         GATEKEEPER_RECOVER_ACCOUNT_003 test_can_recover_acc_email_not_provided
         No token create if the email is not associated with a customer
         """
+        # TODO: update/add assertion after this defect is resolved
+        # BUG: - https://www.pivotaltracker.com/story/show/64051184
 
+        """
         email_dict = None
 
         # check token count in the database
@@ -138,10 +142,6 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         response = self.gk_service.recover_account(
             email_dict, allow_redirects=False
         )
-
-        # BUG - https://www.pivotaltracker.com/story/show/64051184
-        # TODO: update/add assertion after this defect is resolved
-        """
         # ensure a 400 is returned
         self.assertEquals(response.status_code, requests.codes.bad_request)
 
@@ -184,10 +184,11 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         # check token count in the database
         token_count_one = self.gk_dao.get_token_count(self.db)
 
-        for dict in bad_data:
+        for bad_dict in bad_data:
             # recover call
             response = self.gk_service.recover_account(
-                dict, allow_redirects=False
+                bad_dict,
+                allow_redirects=False
             )
             # ensure a 302 is returned
             self.assertEquals(response.status_code, requests.codes.found)
@@ -197,12 +198,12 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
                 response.headers['location']
             )
 
-            if('email' in dict.keys()):
+            if 'email' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.EMAIL_VALIDATION_HTML
                     in response.headers['location']
                 )
-            elif('fake' in dict.keys()):
+            elif 'fake' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.PARAM_NOT_ALLOWED
                     in urllib2.unquote(response.headers['location'])

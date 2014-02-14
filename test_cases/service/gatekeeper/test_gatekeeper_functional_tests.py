@@ -24,60 +24,8 @@ from . import ApiTestCase
 
 USER_TOTAL = 5
 
+
 class TestGateKeeperFunctional(ApiTestCase):
-
-    @attr(env=['test'], priority=1)
-    def test_ajax_no_redirect(self):
-        """
-        GATEKEEPER_FUNCTIONAL_001 test_ajax_no_redirect
-        If the user tries to reach a uri in a browser and that uri is
-        protected by the SSO tool, user will be redirected to the login page
-        If the user makes an AJAX request, user will get a 401 and the
-        redirection URL in the JSON response and won't be redirected
-        There's no configuration or query string option to modify
-        this behaviour. We reply with redirection to browsers and JSON
-        package to AJAX calls
-        """
-        # login and create session
-        session, cookie_id, response = self.gk_service.login_create_session(
-            allow_redirects=False
-        )
-
-        response = self.gk_service.validate_end_point(
-            session, allow_redirects=False
-        )
-        self.assertEquals(response.status_code, requests.codes.ok)
-        self.assertTrue(
-            self.gk_service.GATEKEEPER_TITLE not in response.text
-        )
-
-        # logout
-        response = self.gk_service.logout_user_session(session)
-        self.assertEquals(response.status_code, requests.codes.ok)
-
-        # must disable caching in dummyapp for this check
-        parameters = {'sso_cache_enabled': False}
-
-        # firstly browser call test - 303 redirect
-        response = self.gk_service.validate_end_point(
-            session, allow_redirects=False, parameters=parameters
-        )
-        self.assertEquals(response.status_code, requests.codes.found)
-        response = self.gk_service.validate_end_point(
-            session, parameters=parameters
-        )
-        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
-
-        # set header to emualte ajax call
-        session.headers.update({'X-Requested-With': 'XMLHttpRequest'})
-        response = response = self.gk_service.validate_end_point(
-            session, allow_redirects=False, parameters=parameters
-        )
-        # ajax call 401
-        self.assertEquals(response.status_code, requests.codes.unauthorized)
-        self.assertTrue(
-            self.gk_service.NOT_LOGGED_IN in response.json()['error']
-        )
 
     @attr(env=['test'], priority=1)
     def test_session_concurrency(self):
@@ -90,14 +38,14 @@ class TestGateKeeperFunctional(ApiTestCase):
         """
 
         # login and create session
-        session, cookie_id, response = self.gk_service.login_create_session(
+        a_session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
 
         # initial setup - create arbitrary number of users via REST API
-        # TODO: replace this code with the user API when the user API on
+        # TO DO: replace this code with the user API when the user API on
         # the develop branch is merged to master
-        user_data = []
+
         created_user_data = []
         for index in range(USER_TOTAL):
             user_data = {
@@ -116,7 +64,7 @@ class TestGateKeeperFunctional(ApiTestCase):
                     user_data['email'],
                     user_data['name'],
                     user_data['phone']
-                    )
+                )
             )
             # get user_id
             user_id = self.gk_dao.get_user_by_username(
@@ -124,11 +72,15 @@ class TestGateKeeperFunctional(ApiTestCase):
                 user_data['username']
             )['user_id']
 
-            # get app id
-            app_id = self.gk_dao.get_app_by_app_name(
-                self.db,
-                self.gk_service.ANOTHER_TEST_APP
-            )['application_id']
+            #create app
+            create_response = self.gk_service.gk_crud(
+                a_session, method='POST', resource='application'
+            )
+            # ensure correct status code is returned
+            self.assertEquals(
+                create_response.status_code, requests.codes.created
+            )
+            app_id = create_response.json()['application_id']
 
             # associate user with app
             self.assertTrue(
@@ -165,125 +117,9 @@ class TestGateKeeperFunctional(ApiTestCase):
             process.join()
 
     @attr(env=['test'], priority=1)
-    def test_validate_caching(self):
+    def test_invalid_gk_endpoint(self):
         """
-        GATEKEEPER_FUNCTIONAL_003 test_validate_caching
-        Caching is enabled by default in the dummy app
-        To ensure that caching is enabled this tests work in 3 parts
-        Part A) Ensure user cannnot access user end point
-        part B) Add user endpoint permission but as caching is enabled
-                the new permission will not have been cached
-        Part C) Disable caching, the new permission will now be retrieved
-                and the user can access the user end point
-        """
-
-        # create a user and associate user with relevant
-        # pre confiured application for dummy app
-        username = 'automation_' + self.util.random_str(5)
-        appname = self.gk_service.ANOTHER_TEST_APP
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
-
-        # create basic user - no permisssions
-        self.assertTrue(
-            self.gk_dao.set_gk_user(
-                self.db, username,
-                self.gk_service.HASH_PASSWORD_TEST,
-                email,
-                fullname,
-                '123-456-789123456')
-        )
-
-        # get user_id
-        user_id = self.gk_dao.get_user_by_username(
-            self.db,
-            username
-        )['user_id']
-
-        # get app id
-        app_id = self.gk_dao.get_app_by_app_name(
-            self.db,
-            appname
-        )['application_id']
-
-        # get permissions
-        user_permission = self.gk_dao.get_permission_by_name(
-            self.db,
-            self.gk_service.DEFAULT_ADFUSER_USER, app_id
-        )['permission_id']
-        admin_permission = self.gk_dao.get_permission_by_name(
-            self.db,
-            self.gk_service.DEFAULT_ADFUSER_ADMIN, app_id
-        )['permission_id']
-
-        # associate user with app
-        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
-
-        # create a session for the user
-        credentials_payload = {'username': username, 'password': 'test'}
-        # create a session - do not allow redirects - urlencoded post
-
-        # login and create session
-        session, cookie_id, response = self.gk_service.login_create_session(
-            allow_redirects=False,
-            credentials=credentials_payload
-        )
-
-        # Part A)
-        # verify the user end point dummy application cannot be accessed
-        response = self.gk_service.validate_end_point(session)
-        self.assertEquals(response.status_code, requests.codes.ok)
-
-        # verify the user end point cannot be accessed
-        response = self.gk_service.validate_end_point(
-            session,
-            end_point=config[SERVICE_NAME]['dummy']['user_endpoint']
-        )
-        # 403
-        self.assertEquals(response.status_code, requests.codes.forbidden)
-
-        # Part B)
-        # set the user permissions for the app
-        # i.e user can only access the dummy application and user end point
-        self.assertTrue(
-            self.gk_dao.set_user_permissions_id(
-                self.db,
-                user_id,
-                user_permission
-                )
-        )
-
-        # verify the user end point cannot be accessed due to caching,
-        # the updated permissions will not apply
-        response = self.gk_service.validate_end_point(
-            session,
-            end_point=config[SERVICE_NAME]['dummy']['user_endpoint']
-        )
-        # 403
-        self.assertEquals(response.status_code, requests.codes.forbidden)
-
-        # Part C)
-        # must disable caching in dummyapp for this check
-        parameters = {'sso_cache_enabled': False}
-        # verify the dummy application can be accessed
-        # when caching is disabled as the new permission can now
-        # be retreived
-
-        response = self.gk_service.validate_end_point(
-            session,
-            end_point=config[SERVICE_NAME]['dummy']['user_endpoint'],
-            parameters=parameters
-        )
-        # 200
-        self.assertEquals(response.status_code, requests.codes.ok)
-
-        # delete user - cascade delete by default
-        self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
-
-    @attr(env=['test'], priority=1)
-    def test_invalid_endpoint(self):
-        """
-        GATEKEEPER_FUNCTIONAL_004 test_invalid_endpoint
+        GATEKEEPER_FUNCTIONAL_003 test_invalid_gk_endpoint
         - test an invalid endpoint on gatekeeper
         - test an invlaid endpoint on the dummy app
         """
@@ -304,18 +140,10 @@ class TestGateKeeperFunctional(ApiTestCase):
         # 404
         self.assertEquals(response.status_code, requests.codes.not_found)
 
-        # validate a fake dummy app endpoint
-        response = self.gk_service.validate_end_point(
-            session,
-            end_point="fake"
-        )
-        # 404
-        self.assertEquals(response.status_code, requests.codes.not_found)
-
     @attr(env=['test'], priority=1)
     def test_expired_client_cookie(self):
         """
-        GATEKEEPER_FUNCTIONAL_005 test_expired_client_cookie
+        GATEKEEPER_FUNCTIONAL_004 test_expired_client_cookie
         creates a session through a POST to the login API and then verifies
         that a user cannot access an url using an expired cookie
         on the client side
@@ -346,7 +174,7 @@ class TestGateKeeperFunctional(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_expired_server_cookie(self):
         """
-        GATEKEEPER_FUNCTIONAL_006 test_expired_server_cookie
+        GATEKEEPER_FUNCTIONAL_005 test_expired_server_cookie
         creates a session through a POST to the login API and then verifies
         that a user cannot access an url using an expired cookie on the
         server side
@@ -370,7 +198,7 @@ class TestGateKeeperFunctional(ApiTestCase):
         self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
 
         # User login causes expired cookie to be deleted
-        response = self.gk_service.create_session_urlencoded(
+        self.gk_service.create_session_urlencoded(
             allow_redirects=False
         )
 
@@ -384,7 +212,7 @@ class TestGateKeeperFunctional(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_validate_user_access_gk_route(self):
         """
-        GATEKEEPER_FUNCTIONAL_007 test_validate_user_access_gk_route
+        GATEKEEPER_FUNCTIONAL_006 test_validate_user_access_gk_route
         Ensure a user with the permission gatekeeper_all
         can access the admin endpoint on gatekeeper application
         The test ensure that the endpoint cannot be acccessed
@@ -491,7 +319,7 @@ class TestGateKeeperFunctional(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_validate_group_access_gk_route(self):
         """
-        GATEKEEPER_FUNCTIONAL_008 test_validate_group_access_gk_route
+        GATEKEEPER_FUNCTIONAL_007 test_validate_group_access_gk_route
         Ensure a group with the permission gatekeeper_all
         can access the admin endpoint on gatekeeper application
         The test ensure that the endpoint cannot be acccessed
@@ -621,7 +449,7 @@ class TestGateKeeperFunctional(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_validate_user_with_no_access_for_app(self):
         """
-        GATEKEEPER_FUNCTIONAL_009 test_validate_user_with_no_access_for_app
+        GATEKEEPER_FUNCTIONAL_008 test_validate_user_with_no_access_for_app
         Ensure that user returns 403 when it tries to access an application
         that it has association with
         """
@@ -653,22 +481,21 @@ class TestGateKeeperFunctional(ApiTestCase):
             credentials=credentials_payload
         )
 
-        # verify the end point cannot be accessed
+        # create a fake endpoint for the gk app
+        gk_url = self.gk_service._create_url('fake')
+
+        # validate a fake gatekeeper endpoint
         response = self.gk_service.validate_end_point(
             session,
-            end_point=config[SERVICE_NAME]['dummy']['user_endpoint']
+            url=gk_url
         )
-        self.assertEquals(response.status_code, requests.codes.forbidden)
-        response = self.gk_service.validate_end_point(
-            session,
-            end_point=config[SERVICE_NAME]['dummy']['admin_endpoint']
-        )
-        self.assertEquals(response.status_code, requests.codes.forbidden)
+        # 404
+        self.assertEquals(response.status_code, requests.codes.not_found)
 
     @attr(env=['test'], priority=1)
     def test_access_url_default_redirect(self):
         """
-        GATEKEEPER_FUNCTIONAL_010 test_access_url_default_redirect
+        GATEKEEPER_FUNCTIONAL_009 test_access_url_default_redirect
         - creates a session through a POST to the login API and then verifies
         that a user can access an url using a session with a valid cookie.
         Default redirect
@@ -686,7 +513,7 @@ class TestGateKeeperFunctional(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_access_url_with_invalid_cookie(self):
         """
-        GATEKEEPER_FUNCTIONAL_011 test_access_url_with_invalid_cookie
+        GATEKEEPER_FUNCTIONAL_010 test_access_url_with_invalid_cookie
         Creates a session through a POST to the login API and then verify
         that a user CANNOT access an url using a session with a invalid cookie.
         As the session cookie is invalid the user will be prompted
@@ -709,7 +536,7 @@ class TestGateKeeperFunctional(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_header_verification_urlencoded_session(self):
         """
-        GATEKEEPER_FUNCTIONAL_012 test_header_verification_urlencoded_session
+        GATEKEEPER_FUNCTIONAL_011 test_header_verification_urlencoded_session
         Creates a session through a POST to the login API and then validates
         the  user_id and session_id(cookie value).
         Ensure httponly header is present

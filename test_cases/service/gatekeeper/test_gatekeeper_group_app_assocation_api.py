@@ -74,8 +74,8 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
             {'application_id': None}
         ]
 
-        for dict in no_data:
-            data = self.gk_service.create_grp_app_data(session, dict)
+        for bad_dict in no_data:
+            data = self.gk_service.create_grp_app_data(session, bad_dict)
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="grp_app", data=data
             )
@@ -288,12 +288,6 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        # list of dicts non existant data
-        non_existant_data = [
-            {'group_id': self.util.random_int()},
-            {'application_id': self.util.random_int()}
-        ]
-
         # read id 1 with a non existant id
         read_response = self.gk_service.gk_crud(
             session,
@@ -493,14 +487,14 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
 
         ]
 
-        for dict in not_exist:
+        for bad_dict in not_exist:
             # read id 1 with a non existant id
             read_response = self.gk_service.gk_crud(
                 session,
                 method='DELETE',
                 resource="grp_app",
-                id=dict['id'],
-                id2=dict['id2']
+                id=bad_dict['id'],
+                id2=bad_dict['id2']
 
             )
 
