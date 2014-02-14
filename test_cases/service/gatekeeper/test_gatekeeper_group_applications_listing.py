@@ -31,7 +31,7 @@ class TestGatekeeperUsersListingAPI(ApiTestCase):
         )
 
         # return list of all users
-        response = self.gk_service.gk_assocation_listing(
+        response = self.gk_service.gk_association_listing(
             session, resource="grp_app"
         )
 
@@ -78,7 +78,7 @@ class TestGatekeeperUsersListingAPI(ApiTestCase):
 
         for params in dict_matrix:
             # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
+            response = self.gk_service.gk_association_listing(
                 session,
                 resource="grp_app",
                 params=params
@@ -144,7 +144,7 @@ class TestGatekeeperUsersListingAPI(ApiTestCase):
 
         for params in dict_matrix:
             # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
+            response = self.gk_service.gk_association_listing(
                 session,
                 resource="grp_app",
                 params=params
@@ -205,7 +205,7 @@ class TestGatekeeperUsersListingAPI(ApiTestCase):
 
         for params in dict_matrix:
             # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
+            response = self.gk_service.gk_association_listing(
                 session,
                 resource="grp_app",
                 params=params
