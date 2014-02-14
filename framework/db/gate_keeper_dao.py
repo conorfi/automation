@@ -518,6 +518,25 @@ class GateKeeperDAO(object):
         return result
 
     @staticmethod
+    def set_user_org_id(db,org_id,user_id):
+        """
+        associate a user with an organisation
+
+        @param db: the database connection that will be utilized
+
+        @param org_id: organisation identifier
+        @param user_id: user identifier
+        @return: boolean
+        """
+        query = """
+            INSERT INTO
+            user_organization(organization_id, user_id)
+            VALUES (%d,%d);
+            """ % (org_id, user_id)
+        result = db.trans(query)
+        return result
+
+    @staticmethod
     def set_group_app_id(db, app_id, grp_id):
         """
         associate a user with an application
@@ -617,5 +636,37 @@ class GateKeeperDAO(object):
             delete
             from application
             where application_id=%d""" % app_id
+        result = db.trans(query)
+        return result
+
+    @staticmethod
+    def del_perm(db, perm_id):
+        """
+        deletes an application
+        @param db: the database connection that will be utilized
+        @param perm_id: permission identifier
+        @return: boolean
+
+        """
+        query = """
+            delete
+            from permission
+            where permission_id=%d""" % perm_id
+        result = db.trans(query)
+        return result
+
+    @staticmethod
+    def del_org(db, org_id):
+        """
+        deletes an organization
+        @param db: the database connection that will be utilized
+        @param org_id: org identifier
+        @return: boolean
+
+        """
+        query = """
+            delete
+            from organization
+            where organization_id=%d""" % org_id
         result = db.trans(query)
         return result

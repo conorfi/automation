@@ -7,7 +7,7 @@ SERVICE_NAME_SCREEN_WRITER = 'screen_writer'
 
 TEST_ENVIRONMENT = 'test'
 DEV_ENVIRONMENT = 'dev'
-
+UAT_ENVIRONMENT = 'uat'
 
 def get_common_config():
     """
@@ -34,6 +34,9 @@ def get_environments():
 
     environments[TEST_ENVIRONMENT] = {}
     environments[TEST_ENVIRONMENT]['file'] = 'test_env.py'
+
+    environments[TEST_ENVIRONMENT] = {}
+    environments[TEST_ENVIRONMENT]['file'] = 'uat_env.py'
 
     return environments
 
@@ -226,15 +229,30 @@ def set_gatekeeper_test_sets(test_sets):
 
     # 1 fa tests
     test_sets['gatekeeper'] = {}
-    test_sets['gatekeeper']['ignore_filename'] = \
-        'test_gatekeeper_two_factor_tests.py'
+    test_sets['gatekeeper']['ignore_filename'] = [
+        'test_gatekeeper_two_factor_tests.py',
+        'test_gatekeeper_dummy_apps_two_factor.py'
+    ]
 
     # 2 fa tests
     test_sets['gatekeeper_2fa'] = {}
     test_sets['gatekeeper_2fa']['folder'] = 'gatekeeper'
     test_sets['gatekeeper_2fa']['filename'] = \
-        'test_gatekeeper_two_factor_tests.py'
+        ['test_gatekeeper_two_factor_tests.py',
+        'test_gatekeeper_dummy_apps_two_factor.py']
 
+    # UAT 1 fa tests
+    test_sets['gatekeeper_UAT'] = {}
+    test_sets['gatekeeper_UAT']['ignore_filename'] = \
+        ['test_gatekeeper_two_factor_tests.py',
+        'test_gatekeeper_dummy_apps_two_factor.py',
+        'test_gatekeeper_dummy_apps_one_factor.py']
+
+    # UAT 2 fa tests
+    test_sets['gatekeeper_2fa_UAT'] = {}
+    test_sets['gatekeeper_2fa_UAT']['folder'] = 'gatekeeper'
+    test_sets['gatekeeper_2fa_UAT']['filename'] = \
+        ['test_gatekeeper_two_factor_tests.py']
 
 def set_courier_config(config, **kwargs):
     """
