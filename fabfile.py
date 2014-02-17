@@ -80,11 +80,20 @@ def get_nose_command(test_set, test_set_map, folder, report=False):
     # select specific file to run tests from
     test_case_filename = test_set_map.get('filename', None)
     if test_case_filename:
-        service_location = os.path.join(service_location, test_case_filename)
-
+        for tc_file in test_case_filename:
+            service_location += os.path.join(
+                service_location,
+                tc_file
+            )
+            #add a space in between files
+            service_location += " "
     # ignore specific file
     ignore_file = test_set_map.get('ignore_filename', None)
-    ignore_config = '--ignore-file %s' % ignore_file if ignore_file else ''
+    ignore_config = ""
+
+    if ignore_file:
+        for ignore in ignore_file:
+            ignore_config += '--ignore-file %s' % ignore
 
     # nose command
     nose_command = 'nosetests {0} {2} {1}'.format(
