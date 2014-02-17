@@ -95,7 +95,7 @@ def get_nose_command(test_set, test_set_map, folder, report=False):
             ignore_config += '--ignore-files=%s ' % ignore
 
     # nose command
-    nose_command = 'nosetests --verbosity=2 {0} {1} {3} {2}'.format(
+    nose_command = 'nosetests {0} {1} {3} {2}'.format(
         service_location, test_locations, ignore_config, report_config
     )
 
