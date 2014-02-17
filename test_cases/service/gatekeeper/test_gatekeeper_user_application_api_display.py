@@ -58,11 +58,13 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         #verify the API response
         self.assertUserAppDisplay(response.json(), user_info)
 
-        self.gk_service.data_clean_up(
-            user_app_dict['user_id'],
-            user_app_dict['application_id'],
-            user_app_dict['group_id']
-        )
+        self.data_clean_up(**user_app_dict)
+        #'user_id', 'application_id', 'group_id')
+
+        #    user_id=user_app_dict['user_id'],
+        #    application_id=user_app_dict['application_id'],
+        #    group_id=user_app_dict['group_id']
+
 
     @attr(env=['test'], priority=1)
     def test_user_app_and_auth_user_perms(self):
@@ -97,11 +99,7 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         self.assertUserAppDisplay(
             response.json(), user_info, expected_perm_data=perm_info
         )
-        self.gk_service.data_clean_up(
-            user_app_dict['user_id'],
-            user_app_dict['application_id'],
-            user_app_dict['group_id']
-        )
+        self.data_clean_up(**user_app_dict)
 
     @attr(env=['test'], priority=1)
     def test_user_app_and_auth_group_perms(self):
@@ -142,11 +140,7 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
             response.json(), user_info, grp_info, perm_info,
         )
 
-        self.gk_service.data_clean_up(
-            user_app_dict['user_id'],
-            user_app_dict['application_id'],
-            user_app_dict['group_id']
-        )
+        self.data_clean_up(**user_app_dict)
 
     @attr(env=['test'], priority=1)
     def test_user_app_and_no_gp_app_association(self):
@@ -204,11 +198,7 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
             expected_user_data=user_info
         )
 
-        self.gk_service.data_clean_up(
-            user_app_dict['user_id'],
-            user_app_dict['application_id'],
-            user_app_dict['group_id']
-        )
+        self.data_clean_up(**user_app_dict)
 
     @attr(env=['test'], priority=1)
     def test_user_app_and_org(self):
@@ -250,12 +240,7 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
             expected_org_data=org_info
         )
 
-        self.gk_service.data_clean_up(
-            user_app_dict['user_id'],
-            user_app_dict['application_id'],
-            user_app_dict['group_id'],
-            user_app_dict['organization_id']
-        )
+        self.data_clean_up(**user_app_dict)
 
     @attr(env=['test'], priority=1)
     def test_user_app_invalid_cookie_session(self):
@@ -291,11 +276,7 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         self.assertEquals(response.status_code, requests.codes.forbidden)
         self.assertTrue(self.gk_service.USER_ERROR in response.json()['error'])
 
-        self.gk_service.data_clean_up(
-            user_app_dict['user_id'],
-            user_app_dict['application_id'],
-            user_app_dict['group_id']
-        )
+        self.data_clean_up(**user_app_dict)
 
     @attr(env=['test'], priority=1)
     def test_user_app_invalid_application(self):
@@ -329,11 +310,7 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         self.assertTrue("No user with id" in response.json()['error'])
         self.assertTrue("found for application" in response.json()['error'])
 
-        self.gk_service.data_clean_up(
-            user_app_dict['user_id'],
-            user_app_dict['application_id'],
-            user_app_dict['group_id']
-        )
+        self.data_clean_up(**user_app_dict)
 
     @attr(env=['test'], priority=1)
     def test_user_app_invalid_user_id(self):
@@ -366,17 +343,9 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         self.assertEquals(response.status_code, requests.codes.forbidden)
         self.assertTrue(self.gk_service.USER_ERROR in response.json()['error'])
 
-        self.gk_service.data_clean_up(
-            user1_data['user_id'],
-            user1_data['application_id'],
-            user1_data['group_id']
-        )
+        self.data_clean_up(**user1_data)
+        self.data_clean_up(**user2_data)
 
-        self.gk_service.data_clean_up(
-            user2_data['user_id'],
-            user2_data['application_id'],
-            user2_data['group_id']
-        )
 
     @attr(env=['test'], priority=1)
     def test_user_app_with_no_args(self):
@@ -452,8 +421,4 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         self.assertEqual(json_data['error'],
                          self.gk_service.MISSING_APP_ID)
 
-        self.gk_service.data_clean_up(
-            user_app_dict['user_id'],
-            user_app_dict['application_id'],
-            user_app_dict['group_id']
-        )
+        self.data_clean_up(**user_app_dict)

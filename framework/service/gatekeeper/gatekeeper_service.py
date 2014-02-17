@@ -14,13 +14,13 @@ from framework.utility.utility import Utility
 import Cookie
 import time
 import json
-import testy as unittest
 
 from framework.common_env import SERVICE_NAME_GATEKEEPER as SERVICE_NAME
 
 
-class GateKeeperService(unittest.TestCase):
+class GateKeeperService(object):
     def __init__(self):
+
         # initialize utility class
         self.util = Utility()
         # adfuser is the default test dummy application
@@ -1259,68 +1259,34 @@ class GateKeeperService(unittest.TestCase):
 
         return user_dict
 
-    def data_clean_up(self,
-                      user_id=None,
-                      application_id=None,
-                      group_id=None,
-                      org_id=None):
+    def data_clean_up(self, **kwargs):
+        """
+        Cleans resources.
+        :param kwargs: data to delete
+        """
+        # responses from the cleanup requests
+        del_responses = []
+
+        # map of resource ids and corresponding names
+        resources = {'user_id': 'user',
+                     'application_id': 'application',
+                     'group_id': 'group',
+                     'org_id': 'organization'}
 
         # admin - login and create session
         a_session, cookie_id, response = self.login_create_session(
             allow_redirects=False
         )
-        if user_id is not None:
-            #delete user - cascade delete by default
-            del_response = self.gk_crud(
-                a_session,
-                method='DELETE',
-                resource="user",
-                id=user_id
-            )
-            # ensure a 204 is returned
-            self.assertEquals(
-                del_response.status_code,
-                requests.codes.no_content
-            )
-        if application_id is not None:
-            #delete app - cascade delete by default
-            del_response = self.gk_crud(
-                a_session,
-                method='DELETE',
-                resource="application",
-                id=application_id
-            )
-            # ensure a 204 is returned
-            self.assertEquals(
-                del_response.status_code,
-                requests.codes.no_content
-            )
 
-        if group_id is not None:
+        for data_name, data_id in kwargs.iteritems():
+            if data_name in resources and data_id is not None:
+                #delete resource - cascade delete by default
+                del_response = self.gk_crud(
+                    a_session,
+                    method='DELETE',
+                    resource=resources.get(data_name),
+                    id=data_id
+                )
+                del_responses.append(del_response)
 
-            #delete group
-            del_response = self.gk_crud(
-                a_session,
-                method='DELETE',
-                resource="group",
-                id=group_id
-            )
-
-            # ensure a 204 is returned
-            self.assertEquals(
-                del_response.status_code,
-                requests.codes.no_content
-            )
-
-        if org_id is not None:
-            del_response = self.gk_crud(
-                a_session,
-                method='DELETE',
-                resource="organization",
-                id=org_id
-            )
-            # ensure a 204 is returned
-            self.assertEquals(
-                del_response.status_code,
-                requests.codes.no_content
-            )
+        return del_responses

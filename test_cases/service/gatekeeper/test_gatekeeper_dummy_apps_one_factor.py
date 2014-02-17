@@ -93,10 +93,8 @@ class TestDummyApps(ApiTestCase):
         self.assertEquals(response.status_code, requests.codes.forbidden)
 
         # delete all created data
-        self.gk_service.data_clean_up(
-            user_id=user_app_dict['user_id'],
-            group_id=user_app_dict['group_id']
-        )
+        self.data_clean_up(application_protected=True, **user_app_dict)
+
 
     @attr(env=['test'], priority=1)
     def test_user_app_and_auth_user_perms(self):
@@ -240,10 +238,7 @@ class TestDummyApps(ApiTestCase):
         )
 
         # delete all created data
-        self.gk_service.data_clean_up(
-            user_id=user_app_dict['user_id'],
-            group_id=user_app_dict['group_id']
-        )
+        self.data_clean_up(application_protected=True, **user_app_dict)
 
     @attr(env=['test'], priority=1)
     def test_user_app_and_auth_group_perms(self):
@@ -386,10 +381,7 @@ class TestDummyApps(ApiTestCase):
         )
 
         # delete all created data
-        self.gk_service.data_clean_up(
-            user_id=user_app_dict['user_id'],
-            group_id=user_app_dict['group_id']
-        )
+        self.data_clean_up(application_protected=True, **user_app_dict)
 
     @attr(env=['test'], priority=1)
     def test_validate_user_with_no_access_for_app(self):
