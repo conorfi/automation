@@ -17,6 +17,7 @@ import requests
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
+
 class TestGatekeeperOrgAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
@@ -244,7 +245,6 @@ class TestGatekeeperOrgAPI(ApiTestCase):
             allow_redirects=False
         )
 
-        rand_orgname = self.util.random_str(5)
         org_one_data = self.gk_service.create_org_data()
         org_two_data = self.gk_service.create_org_data()
         # create org one
@@ -457,20 +457,20 @@ class TestGatekeeperOrgAPI(ApiTestCase):
             {'fake': self.util.random_str()}
         ]
 
-        for dict in bad_data:
+        for bad_dict in bad_data:
             create_response = self.gk_service.gk_crud(
-                session, method='POST', resource="organization", data=dict
+                session, method='POST', resource="organization", data=bad_dict
             )
             self.assertEquals(
                 create_response.status_code, requests.codes.bad_request
             )
 
-            if('name' in dict.keys()):
+            if 'name' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.NAME_VALIDATION
                     in create_response.json()['error']
                 )
-            elif('fake' in dict.keys()):
+            elif'fake' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.PARAM_NOT_ALLOWED
                     in create_response.json()['error']
@@ -488,22 +488,29 @@ class TestGatekeeperOrgAPI(ApiTestCase):
             allow_redirects=False
         )
 
-        aam_org_id = self.gk_dao.get_org_by_orgname(
-            self.db, self.gk_service.ORG_AAM)['organization_id']
+        # verify if aam organisation is in the org db table
+        response = self.gk_dao.get_org_by_orgname(
+            self.db, self.gk_service.ORG_AAM)
 
-        # Attempt for the admin user to delete themselves
-        # self.default_test_user is the admin user id
-        del_response = self.gk_service.gk_crud(
-            session,
-            method='DELETE',
-            resource="organization",
-            id=aam_org_id
-        )
+        if response is not None:
+            aam_org_id = response['organization_id']
 
-        # ensure a 403 is returned
-        self.assertEquals(del_response.status_code, requests.codes.forbidden)
-        # correct error message
-        self.assertTrue(
-            self.gk_service.DELETE_DATA
-            in del_response.json()['error']
-        )
+            # Attempt for the admin user to delete themselves
+            # self.default_test_user is the admin user id
+            del_response = self.gk_service.gk_crud(
+                session,
+                method='DELETE',
+                resource="organization",
+                id=aam_org_id
+            )
+
+            # ensure a 403 is returned
+            self.assertEquals(
+                del_response.status_code,
+                requests.codes.forbidden
+            )
+            # correct error message
+            self.assertTrue(
+                self.gk_service.DELETE_DATA
+                in del_response.json()['error']
+            )

@@ -350,6 +350,7 @@ class TestGateUserAPI(ApiTestCase):
             {'password': self.util.random_str(8)}
         ]
 
+        update_response = None
         for data in user_dict:
             user_data = self.gk_service.create_user_data(data)
             update_response = self.gk_service.gk_crud(
@@ -571,10 +572,9 @@ class TestGateUserAPI(ApiTestCase):
         user_id = create_response.json()['user_id']
 
         # update username and password
-        rand_str = self.util.random_str()
         credentials = {
-            'username': rand_str,
-            'password': rand_str
+            'username': self.util.random_str(4),
+            'password': self.util.random_str(8)
         }
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
@@ -582,6 +582,9 @@ class TestGateUserAPI(ApiTestCase):
         update_response = self.gk_service.gk_crud(
             session, method='PUT', resource="user", id=user_id, data=user_data
         )
+
+        # ensure a 202 is returned
+        self.assertEquals(update_response.status_code, requests.codes.accepted)
 
         # login in as updated user
         response = self.gk_service.create_session_urlencoded(
@@ -636,8 +639,8 @@ class TestGateUserAPI(ApiTestCase):
             {'fake': self.util.random_str()},
         ]
 
-        for dict in bad_data:
-            user_data = self.gk_service.create_user_data(dict)
+        for bad_dict in bad_data:
+            user_data = self.gk_service.create_user_data(bad_dict)
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="user", data=user_data
             )
@@ -645,33 +648,33 @@ class TestGateUserAPI(ApiTestCase):
                 create_response.status_code, requests.codes.bad_request
             )
 
-            if 'username' in dict.keys():
+            if 'username' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.USERNAME_VALIDATION
                     in create_response.json()['error']
                 )
-            elif 'name' in dict.keys():
+            elif 'name' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.NAME_VALIDATION
                     in create_response.json()['error']
                 )
-            elif 'password' in dict.keys():
+            elif 'password' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.PASSWORD_VALIDATION
                     in create_response.json()['error']
                 )
-            elif 'phone' in dict.keys():
+            elif 'phone' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.PHONE_VALIDATION
                     in create_response.json()['error']
                 )
 
-            elif 'email' in dict.keys():
+            elif 'email' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.EMAIL_VALIDATION
                     in create_response.json()['error']
                 )
-            elif 'fake' in dict.keys():
+            elif 'fake' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.PARAM_NOT_ALLOWED
                     in create_response.json()['error']
@@ -701,8 +704,8 @@ class TestGateUserAPI(ApiTestCase):
              'password': self.util.random_str(101)}
         ]
 
-        for dict in bad_data:
-            data = self.gk_service.create_user_data(dict)
+        for bad_dict in bad_data:
+            data = self.gk_service.create_user_data(bad_dict)
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="user", data=data
             )
@@ -715,8 +718,11 @@ class TestGateUserAPI(ApiTestCase):
             # if this defect is resolved this verification
             # will have to be altered if seperate error message per field
 
-            if ('username' in dict.keys()
-                and 'name' in dict.keys()):
+            if (
+                'username' in bad_dict.keys()
+                and 'name' in bad_dict.keys()
+            ):
+
                 self.assertTrue(
                     self.gk_service.USERNAME_VALIDATION
                     in create_response.json()['error']
@@ -726,9 +732,9 @@ class TestGateUserAPI(ApiTestCase):
                     in create_response.json()['error']
                 )
 
-            elif ('username' in dict.keys()
-                  and 'phone' in dict.keys()
-                  and 'password' in dict.keys()):
+            elif ('username' in bad_dict.keys()
+                  and 'phone' in bad_dict.keys()
+                  and 'password' in bad_dict.keys()):
 
                 self.assertTrue(
                     self.gk_service.USERNAME_VALIDATION
@@ -742,9 +748,9 @@ class TestGateUserAPI(ApiTestCase):
                     self.gk_service.PASSWORD_VALIDATION
                     in create_response.json()['error'])
 
-            elif ('name' in dict.keys()
-                  and 'email' in dict.keys()
-                  and 'password' in dict.keys()):
+            elif ('name' in bad_dict.keys()
+                  and 'email' in bad_dict.keys()
+                  and 'password' in bad_dict.keys()):
 
                 self.assertTrue(
                     self.gk_service.NAME_VALIDATION
@@ -758,8 +764,8 @@ class TestGateUserAPI(ApiTestCase):
                     self.gk_service.PASSWORD_VALIDATION
                     in create_response.json()['error'])
 
-            elif ('password' in dict.keys()
-                  and 'email' in dict.keys()):
+            elif ('password' in bad_dict.keys()
+                  and 'email' in bad_dict.keys()):
                 self.assertTrue(
                     self.gk_service.PASSWORD_VALIDATION
                     in create_response.json()['error']

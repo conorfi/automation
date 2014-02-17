@@ -284,6 +284,8 @@ class TestGateApplicationAPI(ApiTestCase):
             {'default_url': rand_url},
         ]
 
+        update_response = None
+
         for app_dict in update_data:
             app_data = self.gk_service.create_app_data(app_dict)
             update_response = self.gk_service.gk_crud(
@@ -593,8 +595,8 @@ class TestGateApplicationAPI(ApiTestCase):
             {'fake': self.util.random_str()}
         ]
 
-        for dict in bad_data:
-            data = self.gk_service.create_app_data(dict)
+        for bad_dict in bad_data:
+            data = self.gk_service.create_app_data(bad_dict)
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="application", data=data
             )
@@ -603,17 +605,17 @@ class TestGateApplicationAPI(ApiTestCase):
                 create_response.status_code, requests.codes.bad_request
             )
 
-            if 'name' in dict.keys():
+            if 'name' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.NAME_VALIDATION
                     in create_response.json()['error']
                 )
-            elif 'default_url' in dict.keys():
+            elif 'default_url' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.DEFAULT_URL_VALIDATION
                     in create_response.json()['error']
                 )
-            elif 'fake' in dict.keys():
+            elif 'fake' in bad_dict.keys():
                 self.assertTrue(
                     self.gk_service.PARAM_NOT_ALLOWED
                     in create_response.json()['error']

@@ -32,7 +32,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         )
 
         # return list of all users
-        response = self.gk_service.gk_assocation_listing(
+        response = self.gk_service.gk_association_listing(
             session, resource="grp_perm"
         )
 
@@ -79,7 +79,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
 
         for params in dict_matrix:
             # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
+            response = self.gk_service.gk_association_listing(
                 session,
                 resource="grp_perm",
                 params=params
@@ -96,8 +96,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
             self.assertEquals(len(response.json()[0]), 2)
 
             # verify the contents of the users API
-            self.assertGroupPermData(response.json()[0],grp_perm_data)
-
+            self.assertGroupPermData(response.json()[0], grp_perm_data)
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
@@ -137,8 +136,6 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         # set permission_id
         permission_id = create_response.json()['permission_id']
 
-        rand_int = self.util.random_int()
-
         dict_matrix = [
             {'permission_id': ''},
             {'group_id': ''},
@@ -147,7 +144,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
 
         for params in dict_matrix:
             # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
+            response = self.gk_service.gk_association_listing(
                 session,
                 resource="grp_perm",
                 params=params
@@ -208,7 +205,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
 
         for params in dict_matrix:
             # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
+            response = self.gk_service.gk_association_listing(
                 session,
                 resource="grp_perm",
                 params=params
