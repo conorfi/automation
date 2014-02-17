@@ -14,51 +14,11 @@ and application_name is adfuser
 """
 
 import requests
-from testconfig import config
-from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
-    GateKeeperService
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
 
 class TestGateKeeperLogoutURI(ApiTestCase):
-
-    @attr(env=['test'], priority=1)
-    def test_can_logout_with_redirect(self):
-        """
-        GATEKEEPER_LOGOUT_URI_001 test_can_logout_with_redirect
-        Ensures a user session can be deleted using single logout
-        using POST
-        Specified redirect on logout
-        """
-
-         # login and create session
-        session, cookie_id, response = self.gk_service.login_create_session(
-            allow_redirects=False,
-            redirect_url=config[SERVICE_NAME]['redirect']
-        )
-
-        response = self.gk_service.validate_url_with_cookie(
-            session,
-            redirect_url=config[SERVICE_NAME]['redirect']
-        )
-        self.assertEquals(response.status_code, requests.codes.ok)
-        self.assertTrue('Example Domain' in response.text)
-
-        # logout with POST
-        response = self.gk_service.logout_user_session(session)
-        self.assertEquals(response.status_code, requests.codes.ok)
-
-        response = self.gk_service.validate_url_with_cookie(session)
-        self.assertEquals(response.status_code, requests.codes.ok)
-        self.assertTrue(self.gk_service.GATEKEEPER_TITLE in response.text)
-
-        # assert againist the database - ensure it no longer exists
-        db_response = self.gk_dao.get_session_by_cookie_id(
-            self.db,
-            cookie_id
-        )
-        self.assertEquals(db_response, None)
 
     @attr(env=['test'], priority=1)
     def test_can_logout_default_redirect(self):

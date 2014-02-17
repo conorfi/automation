@@ -246,7 +246,6 @@ class TestGateGroupAPI(ApiTestCase):
             allow_redirects=False
         )
 
-        rand_groupname = self.util.random_str(5)
         group_one_data = self.gk_service.create_group_data()
         group_two_data = self.gk_service.create_group_data()
         # create group one
@@ -449,22 +448,22 @@ class TestGateGroupAPI(ApiTestCase):
             {'fake': self.util.random_str()}
         ]
 
-        for dict in bad_data:
+        for bad_dict in bad_data:
 
             create_response = self.gk_service.gk_crud(
-                session, method='POST', resource="group", data=dict
+                session, method='POST', resource="group", data=bad_dict
             )
 
             self.assertEquals(
                 create_response.status_code, requests.codes.bad_request
             )
 
-            if('name' in dict.keys()):
+            if('name' in bad_dict.keys()):
                 self.assertTrue(
                     self.gk_service.NAME_VALIDATION
                     in create_response.json()['error']
                 )
-            elif('fake' in dict.keys()):
+            elif('fake' in bad_dict.keys()):
                 self.assertTrue(
                     self.gk_service.PARAM_NOT_ALLOWED
                     in create_response.json()['error']

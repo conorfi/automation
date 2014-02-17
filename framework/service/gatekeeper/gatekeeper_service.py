@@ -20,6 +20,7 @@ from framework.common_env import SERVICE_NAME_GATEKEEPER as SERVICE_NAME
 
 class GateKeeperService(object):
     def __init__(self):
+
         # initialize utility class
         self.util = Utility()
         # adfuser is the default test dummy application
@@ -32,7 +33,6 @@ class GateKeeperService(object):
         self.ADMIN_USER = 'admin'
         # default user permission configured for adfuser in the dummy app
         self.DEFAULT_ADFUSER_USER = 'ADFUSER_USER'
-        # default admin permission configured for adfuser in the dummy app
         self.DEFAULT_ADFUSER_ADMIN = 'ADFUSER_ADMIN'
         # special permission that allows acess to the gk admin end point
         self.GK_ALL_PERMISSION = "gatekeeper_all"
@@ -114,10 +114,16 @@ class GateKeeperService(object):
         return '{0}://{1}:{2}/{3}'.format(
             config[SERVICE_NAME]['scheme'], host, port, path)
 
-    def create_session_urlencoded(self, url=None, verify=None,
-                                  allow_redirects=None, redirect_url=None,
-                                  credentials=None, type='urlencoded',
-                                  headers=None):
+    def create_session_urlencoded(
+        self,
+        url=None,
+        verify=None,
+        allow_redirects=None,
+        redirect_url=None,
+        credentials=None,
+        type='urlencoded',
+        headers=None
+    ):
         """
         creates a session through the login API
         @param url: Optional. request url of API
@@ -166,27 +172,28 @@ class GateKeeperService(object):
 
         """
         validates a session_id
-
-        @param session_id: which is the cookie value
-
+        @param session: which is the cookie value
         @param url: Optional. request url of API
-
+        @param  application: app to use
         @return: a request object
 
         """
-        url = self._create_url(
-            config['api'][SERVICE_NAME]['session']['validate_v1'])
+
+        if url is None:
+            url = self._create_url(
+                config['api'][SERVICE_NAME]['session']['validate_v1'])
 
         request_url = url + '/%s'
         request_url = request_url % cookie_id
 
         if application is not None:
-            request_url = request_url + '/?application_name=%s'
-            request_url = request_url % (application)
+            request_url += '/?application_name=%s'
+            request_url = request_url % application
         response = session.get(request_url, verify=False)
         return response
 
-    def create_requests_session_with_cookie(self, cookie):
+    @staticmethod
+    def create_requests_session_with_cookie(cookie):
 
         """
         creates a requests session object and set an associated cookie value
@@ -293,7 +300,7 @@ class GateKeeperService(object):
         @param user_id: user id we are querying
         @param application: application that we will filter on
         @param verify: boolean to determine if SSL cert will be verified
-        @return: a request session object containg the user info
+        @return: a request session object containing the user info
 
         """
 
@@ -318,22 +325,22 @@ class GateKeeperService(object):
     ):
 
         """
-        Returns user info for a valid user id and session cookie on dummyapp
+        Returns user info for a valid user id and session cookie on dummy app
 
         @param session:  session object and associated cookie
 
         @param url: Optional. request url of API
-        @param user_id: user id we are querying
-        @param application: application that we will filter on
+        @param session: session
+        @param end_point: end point to be tested
         @param verify: boolean to determine if SSL cert will be verified
         @param allow_redirects: boolean to determine if redirects are allowed
-        @return: a request session object containg the user info
+        @return: a request session object containing the user info
 
         """
         if parameters is None:
             parameters = {}
 
-        if (url is None):
+        if url is None:
             url = self._create_url('',
                                    host=config[SERVICE_NAME]['dummy']['host'],
                                    port=config[SERVICE_NAME]['dummy']['port'])
@@ -376,18 +383,18 @@ class GateKeeperService(object):
         @return: a request object
 
         """
-        if (url is None):
+        if url is None:
             url = self._create_url(
                 config['api'][SERVICE_NAME]['session'][
                     'submit_verification_v1'])
-        if (redirect_url is not None):
+        if redirect_url is not None:
             url = url + redirect_url
 
         # requests is url-encoded by default
-        if (verify is None):
+        if verify is None:
             verify = False
 
-        if (allow_redirects is None):
+        if allow_redirects is None:
             allow_redirects = True
 
         # url encoded
@@ -428,7 +435,7 @@ class GateKeeperService(object):
 
         """
         Creation of a user dict
-        @param user_dict: optional dict - can be merged with a default dict
+        @param app_dict: optional dict - can be merged with a default dict
         @return: a user data dict
 
         """
@@ -441,7 +448,8 @@ class GateKeeperService(object):
 
         return app_data
 
-    def extract_sso_cookie_value(self, headers):
+    @staticmethod
+    def extract_sso_cookie_value(headers):
         """
         Extract data from cookie
         @return: cookie value
@@ -452,7 +460,8 @@ class GateKeeperService(object):
         cookie_id = cookie['sso_cookie'].value
         return cookie_id
 
-    def extract_cred_cookie_value(self, headers):
+    @staticmethod
+    def extract_cred_cookie_value(headers):
         """
         Extract data from cookie
         @return: cookie value
@@ -465,18 +474,14 @@ class GateKeeperService(object):
 
     def run_user_test(self, cookie, iterations=10, wait_time=0.1):
         """
-        Accesses the dummyapp page with a valid cookie n number of times
+        Accesses the dummy app page with a valid cookie n number of times
         @param cookie: cookie from logged in user
         @param iterations: cookie from logged in user
         @param cookie: cookie from logged in user
         @return: asserts true/false
 
         """
-        url = self._create_url(
-            '',
-            host=config[SERVICE_NAME]['dummy']['host'],
-            port=config[SERVICE_NAME]['dummy']['port']
-        )
+        url = self._create_url('/')
         session = requests.session()
         session.cookies['sso_cookie'] = cookie
         for index in range(iterations):
@@ -499,6 +504,8 @@ class GateKeeperService(object):
         @return: session, cookie_id, response
 
         """
+        cookie_id = " "
+        my_cookie = {}
 
         # login user
         response = self.create_session_urlencoded(**kwargs)
@@ -553,9 +560,11 @@ class GateKeeperService(object):
 
         return group_data
 
+    @staticmethod
     def _http_method_generator(
-            self, session, method, request_url, verify, data, headers=None
+            session, method, request_url, verify, data, headers=None
     ):
+        response = None
 
         if method == 'GET':
             response = session.get(url=request_url, verify=verify,
@@ -595,12 +604,11 @@ class GateKeeperService(object):
         @param id2: id for put,delete,get
         @param data: data for PUT and DELETE
         @param verify: boolean to determine if SSL cert will be verified
-        @param allow_redirects:  boolean to determine if redirects are allowed
         @param type: urlencoded or json
         @return: a request session object containing the user info
 
         """
-        if (method == 'POST'):
+        if method == 'POST':
             # check the resource and set the post URI
             request_url = self._set_post_url(resource)
         else:
@@ -608,11 +616,11 @@ class GateKeeperService(object):
             request_url = self._set_put_del_read_url(resource, id, id2)
 
         # if data must be created
-        if ((method == 'POST' or method == 'PUT') and data is None):
+        if (method == 'POST' or method == 'PUT') and data is None:
             # check the resource so that the data can be set
             data = self._set_data(resource, session)
 
-        if (verify is None):
+        if verify is None:
             verify = False
 
         headers = {}
@@ -632,6 +640,8 @@ class GateKeeperService(object):
         return response
 
     def _set_post_url(self, resource):
+
+        request_url = " "
 
         if resource == "application":
             request_url = self._create_url(
@@ -681,31 +691,33 @@ class GateKeeperService(object):
 
     def _set_put_del_read_url(self, resource, id, id2):
 
+        request_url = " "
+
         if resource == "application":
             request_url = self._create_url(
                 config['api'][SERVICE_NAME]['application_v1']['id']
             )
-            request_url = request_url % (id)
+            request_url = request_url % id
         elif resource == "organization":
             request_url = self._create_url(
                 config['api'][SERVICE_NAME]['org_v1']['id']
             )
-            request_url = request_url % (id)
+            request_url = request_url % id
         elif resource == "user":
             request_url = self._create_url(
                 config['api'][SERVICE_NAME]['user_v1']['id']
             )
-            request_url = request_url % (id)
+            request_url = request_url % id
         elif resource == "group":
             request_url = self._create_url(
                 config['api'][SERVICE_NAME]['group_v1']['id']
             )
-            request_url = request_url % (id)
+            request_url = request_url % id
         elif resource == "permission":
             request_url = self._create_url(
                 config['api'][SERVICE_NAME]['permission_v1']['id']
             )
-            request_url = request_url % (id)
+            request_url = request_url % id
         elif resource == "user_app":
             request_url = self._create_url(
                 config['api'][SERVICE_NAME]['user_app_v1']['id']
@@ -736,9 +748,13 @@ class GateKeeperService(object):
                 config['api'][SERVICE_NAME]['grp_app_v1']['id']
             )
             request_url = request_url % (id, id2)
+
         return request_url
 
     def _set_data(self, resource, session):
+
+        data = {}
+
         if resource == "application":
             data = self.create_app_data()
         elif resource == "organization":
@@ -750,17 +766,17 @@ class GateKeeperService(object):
         elif resource == "permission":
             data = self.create_permission_data(session)
         elif resource == "user_app":
-            data = self.create_user_app_data()
+            data = self.create_user_app_data(session)
         elif resource == "user_app":
-            data = self.create_user_grp_data()
+            data = self.create_user_grp_data(session)
         elif resource == "user_org":
-            data = self.create_user_org_data()
+            data = self.create_user_org_data(session)
         elif resource == "grp_perm":
             data = self.create_grp_perm_data(session)
         elif resource == "user_perm":
-            data = self.create_user_perm_data()
+            data = self.create_user_perm_data(session)
         elif resource == "grp_app":
-            data = self.create_grp_app_data()
+            data = self.create_grp_app_data(session)
         return data
 
     def gk_listing(
@@ -782,8 +798,8 @@ class GateKeeperService(object):
         request_url = self._set_listing_url(resource)
 
         if name is not None:
-            request_url = request_url + '/?name=%s'
-            request_url = request_url % (name)
+            request_url += '/?name=%s'
+            request_url = request_url % name
 
         if verify is None:
             verify = False
@@ -793,6 +809,8 @@ class GateKeeperService(object):
         return response
 
     def _set_listing_url(self, resource):
+
+        request_url = ""
 
         if resource == "application":
             request_url = self._create_url(
@@ -966,7 +984,7 @@ class GateKeeperService(object):
 
         return data
 
-    def gk_assocation_listing(
+    def gk_association_listing(
             self,
             session,
             resource,
@@ -976,13 +994,14 @@ class GateKeeperService(object):
         """
         Test function for listing results from gk APIs
         @param session:  session object and associated cookie
-        @param name: name to filter on
+        @param resource: resource under test
+        @param params: params
         @param verify: boolean to determine if SSL cert will be verified
         @return: a request session object containing the user info
 
         """
 
-        request_url = self._set_assocation_listing_url(resource)
+        request_url = self._set_association_listing_url(resource)
 
         if verify is None:
             verify = False
@@ -991,7 +1010,9 @@ class GateKeeperService(object):
 
         return response
 
-    def _set_assocation_listing_url(self, resource):
+    def _set_association_listing_url(self, resource):
+
+        request_url = ""
 
         if resource == "user_app":
             request_url = self._create_url(
@@ -1023,10 +1044,9 @@ class GateKeeperService(object):
 
         """
         Used to recover a users account
-
-        @param session: python-request session
-        @param url: recover account url
         @param email: users email
+        @param verify: verify secure connections
+        @param allow_redirects: allow_redirects
         @return: a confirmation message
 
         """
@@ -1039,6 +1059,7 @@ class GateKeeperService(object):
 
         if verify is None:
             verify = False
+
         response = requests.post(
             url, data=email, verify=verify, allow_redirects=allow_redirects
         )
@@ -1052,9 +1073,10 @@ class GateKeeperService(object):
         """
         Used to change a users password
 
-        @param session: python-request session
-        @param password: authentication style token
-        @param password: new password
+        @param token: cookie session
+        @param password: password
+        @param verify: verify secure connections
+        @param allow_redirects: allow_redirects
         @return: a confirmation message
 
         """
@@ -1075,3 +1097,196 @@ class GateKeeperService(object):
         )
 
         return response
+
+    def create_user_app_api_display_data(
+            self,
+            app_id=None,
+            **kwargs
+    ):
+
+        """
+        Used to create date for the user application display api
+
+        @param app_id: specified application id
+        @param kwargs: 'user_permission' - associate user with permission
+        @param kwargs: 'user_group' - associate user with group
+        @param kwargs: 'group_permission' - associate permission with group
+        @param kwargs: 'user_organization' - associate user with org
+        @return: a dict of user app data
+
+        """
+
+        # admin - login and create session
+        a_session, cookie_id, response = self.login_create_session(
+            allow_redirects=False
+        )
+
+        response = self.gk_crud(
+            session=a_session,
+            method='POST',
+            resource="permission"
+        )
+        permission_id = response.json()['permission_id']
+        permission_name = response.json()['name']
+        application_id = response.json()['application_id']
+        application_name = response.json()['application']['name']
+
+        # credentials
+        credentials_payload = {
+            'username': self.util.random_str(8),
+            'password': self.util.random_str(8)
+        }
+        user_data = self.create_user_data(user_dict=credentials_payload)
+
+        # create a new user
+        create_response = self.gk_crud(
+            a_session, method='POST', resource="user", data=user_data
+        )
+
+        # get user_id
+        user_id = create_response.json()['user_id']
+
+        if app_id is not None:
+            #delete created app and related permission
+            self.data_clean_up(application_id=application_id)
+            #use the specified  application identifier
+            application_id = app_id
+            application_name = None
+
+        # associate user with app
+        user_app_data = {'user_id': user_id, 'application_id': application_id}
+        self.gk_crud(
+            a_session,
+            method='POST',
+            resource="user_app",
+            data=user_app_data
+        )
+
+        # create a new group
+        response = self.gk_crud(
+            session=a_session,
+            method='POST',
+            resource="group"
+        )
+        group_id = response.json()["group_id"]
+        group_name = response.json()["name"]
+
+        user_dict = {
+            'application_id': application_id,
+            'application_name': application_name,
+            'user_id': user_id,
+            'credentials_payload': credentials_payload,
+            'permission_name': permission_name,
+            'permission_id': permission_id,
+            'group_id': group_id,
+            'group_name': group_name
+        }
+
+        if 'user_permission' in kwargs:
+            # create a new permission
+            user_perm_data = {
+                'user_id': user_id,
+                'permission_id': permission_id
+            }
+            # create an association
+            self.gk_crud(
+                a_session,
+                method='POST',
+                resource="user_perm",
+                data=user_perm_data
+
+            )
+
+        if 'user_group' in kwargs:
+
+            # associate user with group
+            user_grp_data = {'user_id': user_id, 'group_id': group_id}
+            self.gk_crud(
+                a_session,
+                method='POST',
+                resource="user_grp",
+                data=user_grp_data
+            )
+            # associate group with application
+            grp_app_data = {
+                'group_id': group_id,
+                'application_id': application_id
+            }
+            self.gk_crud(
+                a_session,
+                method='POST',
+                resource="grp_app",
+                data=grp_app_data
+            )
+
+        if 'group_permission' in kwargs:
+
+            # create an association
+            grp_perm_data = {
+                'group_id': group_id,
+                'permission_id': permission_id
+            }
+            self.gk_crud(
+                a_session,
+                method='POST',
+                resource="grp_perm",
+                data=grp_perm_data
+            )
+
+        if 'user_organization' in kwargs:
+            # create a new org
+            create_response = self.gk_crud(
+                a_session, method='POST', resource="organization"
+            )
+
+            organization_name = create_response.json()['name']
+            organization_id = create_response.json()['organization_id']
+
+            user_dict['organization_name'] = organization_name
+            user_dict['organization_id'] = organization_id
+
+            # create an association
+            user_org_data = {
+                'user_id': user_id,
+                'organization_id': organization_id
+            }
+            self.gk_crud(
+                a_session,
+                method='POST',
+                resource="user_org",
+                data=user_org_data
+            )
+
+        return user_dict
+
+    def data_clean_up(self, **kwargs):
+        """
+        Cleans resources.
+        :param kwargs: data to delete
+        """
+        # responses from the cleanup requests
+        del_responses = []
+
+        # map of resource ids and corresponding names
+        resources = {'user_id': 'user',
+                     'application_id': 'application',
+                     'group_id': 'group',
+                     'org_id': 'organization'}
+
+        # admin - login and create session
+        a_session, cookie_id, response = self.login_create_session(
+            allow_redirects=False
+        )
+
+        for data_name, data_id in kwargs.iteritems():
+            if data_name in resources and data_id is not None:
+                #delete resource - cascade delete by default
+                del_response = self.gk_crud(
+                    a_session,
+                    method='DELETE',
+                    resource=resources.get(data_name),
+                    id=data_id
+                )
+                del_responses.append(del_response)
+
+        return del_responses

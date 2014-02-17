@@ -21,34 +21,8 @@ from framework.service.gatekeeper.gatekeeper_service import SERVICE_NAME, \
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
+
 class TestGateKeeperLoginURI(ApiTestCase):
-
-    @attr(env=['test'], priority=1)
-    def test_can_login_with_redirect(self):
-        """
-        GATEKEEPER_LOGIN_URI_001 test_can_login_with_redirect
-        Creates a session through a POST to the login API
-        using urlencoded body. Specified redirect
-        """
-        # login and create session - allow_redirects=False
-        session, cookie_id, response = self.gk_service.login_create_session(
-            allow_redirects=False,
-            redirect_url=config[SERVICE_NAME]['redirect']
-        )
-
-        # assert against database
-        db_response = self.gk_dao.get_session_by_cookie_id(self.db, cookie_id)
-        self.assertEquals(db_response['cookie_id'], cookie_id)
-        self.assertEquals(db_response['user_id'], self.default_test_user)
-
-        # create a session - allow_redirects=True
-        response = self.gk_service.create_session_urlencoded(
-            allow_redirects=True,
-            redirect_url=config[SERVICE_NAME]['redirect']
-        )
-        # 200 response
-        self.assertEquals(response.status_code, requests.codes.ok)
-        self.assertTrue('Example Domain' in response.text)
 
     @attr(env=['test'], priority=1)
     def test_can_login_default_redirect(self):
@@ -105,28 +79,6 @@ class TestGateKeeperLoginURI(ApiTestCase):
         )
 
     @attr(env=['test'], priority=1)
-    def test_login_with_redirect_validate_url(self):
-        """
-        GATEKEEPER_LOGIN_URI_004 test_login_with_redirect_validate_url
-        Creates a session through a POST to the login API and then verifies
-        that a user can access an url using a session with a valid cookie.
-        Specified redirect
-        """
-
-        # login and create session
-        session, cookie_id, response = self.gk_service.login_create_session(
-            allow_redirects=False,
-            redirect_url=config[SERVICE_NAME]['redirect']
-        )
-
-        response = self.gk_service.validate_url_with_cookie(
-            session=session,
-            redirect_url=config[SERVICE_NAME]['redirect']
-        )
-        self.assertEquals(response.status_code, requests.codes.ok)
-        self.assertTrue('Example Domain' in response.text)
-
-    @attr(env=['test'], priority=1)
     def test_login_with_invalid_data(self):
         """
         GATEKEEPER_LOGIN_URI_005 test_login_with_invalid_data
@@ -143,14 +95,14 @@ class TestGateKeeperLoginURI(ApiTestCase):
                 'password': self.util.random_str()}
         ]
 
-        for dict in bad_data:
+        for bad_dict in bad_data:
 
             # create a session - allow_redirects=FALSE
             response = self.gk_service.create_session_urlencoded(
                 allow_redirects=False,
                 redirect_url=config[SERVICE_NAME]['redirect'],
-                credentials=dict
-                )
+                credentials=bad_dict
+            )
             self.assertTrue(
                 self.gk_service.INVALID_USERNAME_PASSWORD in response.text
             )
@@ -161,8 +113,8 @@ class TestGateKeeperLoginURI(ApiTestCase):
             response = self.gk_service.create_session_urlencoded(
                 allow_redirects=True,
                 redirect_url=config[SERVICE_NAME]['redirect'],
-                credentials=dict
-                )
+                credentials=bad_dict
+            )
 
             self.assertTrue(
                 self.gk_service.INVALID_USERNAME_PASSWORD_HTML
@@ -210,15 +162,15 @@ class TestGateKeeperLoginURI(ApiTestCase):
         ]
 
         headers = {'Content-Length': 0}
-        for dict in bad_data:
+        for bad_dict in bad_data:
 
             # create a session - allow_redirects=FALSE
             response = self.gk_service.create_session_urlencoded(
                 allow_redirects=False,
                 redirect_url=config['gatekeeper']['redirect'],
-                credentials=dict,
+                credentials=bad_dict,
                 headers=headers
-                )
+            )
             self.assertTrue(
                 self.gk_service.INVALID_USERNAME_PASSWORD in response.text
             )
@@ -238,7 +190,6 @@ class TestGateKeeperLoginURI(ApiTestCase):
         )
 
         # create username and apssword
-        rand_str = self.util.random_str()
         credentials = {
             'username': self.util.random_str(4),
             'password': self.util.random_str(8)
@@ -281,16 +232,18 @@ class TestGateKeeperLoginURI(ApiTestCase):
 
             # 5th and 4th attempt
             # just invalid user name and password error message
-            if (attempt_login > self.gk_service.THREE_ATTEMPTS_LOGIN):
+            if attempt_login > self.gk_service.THREE_ATTEMPTS_LOGIN:
                 self.assertTrue(self.gk_service.INVALID_USERNAME_PASSWORD_HTML
                                 in response.text)
             # 3rd and 2nd attempt
             # user informed of final two attempts
-            elif(attempt_login <= self.gk_service.THREE_ATTEMPTS_LOGIN
-                    and attempt_login > 1):
+            elif(
+                (attempt_login <= self.gk_service.THREE_ATTEMPTS_LOGIN)
+                and (attempt_login > 1)
+            ):
                 error_message = self.gk_service.LOGIN_ATTEMPTS % (
                     attempt_login - 1
-                    )
+                )
                 self.assertTrue(error_message in response.text)
             # last attempt
             # user informed that attempts has been exceeded

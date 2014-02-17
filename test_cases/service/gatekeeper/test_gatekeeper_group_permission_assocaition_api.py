@@ -19,7 +19,8 @@ import requests
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
-class TestGateGrpPermAssocationAPI(ApiTestCase):
+
+class TestGateGrpPermAssociationAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
     def test_grp_perm_assoc_api_create(self):
@@ -42,7 +43,7 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
         #verify
-        self.assertGroupPermData(create_response.json(),grp_perm_data)
+        self.assertGroupPermData(create_response.json(), grp_perm_data)
         # clean up
         del_response = self.gk_service.gk_crud(
             session,
@@ -72,8 +73,8 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
             {'permission_id': None}
         ]
 
-        for dict in no_data:
-            data = self.gk_service.create_grp_perm_data(session, dict)
+        for bad_dict in no_data:
+            data = self.gk_service.create_grp_perm_data(session, bad_dict)
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="grp_perm", data=data
             )
@@ -162,7 +163,6 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-
     @attr(env=['test'], priority=1)
     def test_grp_perm_assoc_api_no_update(self):
         """
@@ -248,7 +248,7 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
         # 2 fields should be returned
         self.assertEquals(len(read_response.json()), 2)
         #verify
-        self.assertGroupPermData(read_response.json(),grp_perm_data)
+        self.assertGroupPermData(read_response.json(), grp_perm_data)
 
         # clean up
         del_response = self.gk_service.gk_crud(
@@ -291,14 +291,14 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
             {'group_id': grp_perm_data['group_id'],
              'permission_id': self.util.random_int()},
         ]
-        for dict in non_existant_data:
+        for bad_dict in non_existant_data:
             # read
             read_response = self.gk_service.gk_crud(
                 session,
                 method='GET',
                 resource="grp_perm",
-                id=dict['group_id'],
-                id2=dict['permission_id']
+                id=bad_dict['group_id'],
+                id2=bad_dict['permission_id']
             )
 
             # 404 response
@@ -458,14 +458,14 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
             {'group_id': grp_perm_data['group_id'],
              'permission_id': self.util.random_int()},
         ]
-        for dict in non_existant_data:
+        for bad_dict in non_existant_data:
             # read
             read_response = self.gk_service.gk_crud(
                 session,
                 method='DELETE',
                 resource="grp_perm",
-                id=dict['group_id'],
-                id2=dict['permission_id']
+                id=bad_dict['group_id'],
+                id2=bad_dict['permission_id']
             )
 
             # 404 response

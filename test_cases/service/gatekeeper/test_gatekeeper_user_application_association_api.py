@@ -484,4 +484,3 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
-

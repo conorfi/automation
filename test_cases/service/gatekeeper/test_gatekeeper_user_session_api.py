@@ -15,6 +15,7 @@ import requests
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
+
 class TestGateKeeperUserSessionAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
@@ -50,18 +51,62 @@ class TestGateKeeperUserSessionAPI(ApiTestCase):
         """
         GATEKEEPER_USER_SESSION_API_002 test_user_session_with_app_filter
         creates a session through a POST to the login API and then validates
-        the session_id(cookie value)  and application filter
+        the session_id(cookie value) and application filter
         """
+
+        # admin - login and create session
+        a_session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        create_response = self.gk_service.gk_crud(
+            a_session, method='POST', resource='application'
+        )
+        # ensure correct status code is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+        app_name = create_response.json()['name']
+
+        # credentials
+        credentials_payload = {
+            'username': self.util.random_str(8),
+            'password': self.util.random_str(8)
+        }
+        user_data = self.gk_service.create_user_data(
+            user_dict=credentials_payload
+        )
+        # create a new user
+        create_response = self.gk_service.gk_crud(
+            a_session, method='POST', resource="user", data=user_data
+        )
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        # get user_id
+        user_id = self.gk_dao.get_user_by_username(
+            self.db,
+            credentials_payload['username']
+        )['user_id']
+
+        # get app id
+        app_id = self.gk_dao.get_app_by_app_name(
+            self.db,
+            app_name
+        )['application_id']
+
+        # associate user with app
+        self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
 
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False,
+            credentials=credentials_payload
         )
 
+        # Verify the user session API
         response = self.gk_service.user_session(
             cookie_id=cookie_id,
             session=session,
-            application=self.gk_service.DEFAULT_TEST_APP
+            application=app_name
         )
 
         self.assertEquals(response.status_code, requests.codes.ok)
@@ -73,6 +118,17 @@ class TestGateKeeperUserSessionAPI(ApiTestCase):
         self.assertEquals(
             response.json()['session_id'], db_response['session_id']
         )
+
+        # clean up
+        del_response = self.gk_service.gk_crud(
+            a_session,
+            method='DELETE',
+            resource="user_app",
+            id=user_id,
+            id2=app_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_user_session_invalid_cookie_value(self):
@@ -91,7 +147,6 @@ class TestGateKeeperUserSessionAPI(ApiTestCase):
         # set cookie to invalid value
         cookie_value = "fake"
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
         response = self.gk_service.user_session(
             cookie_id=cookie_value,
             session=session
@@ -206,7 +261,6 @@ class TestGateKeeperUserSessionAPI(ApiTestCase):
         # set application to none
         application = 'fake'
 
-        my_cookie = dict(name='sso_cookie', value=cookie_id)
         response = self.gk_service.user_session(
             cookie_id=cookie_id,
             session=session,
@@ -216,5 +270,5 @@ class TestGateKeeperUserSessionAPI(ApiTestCase):
         # ensure that the request is forbidden (403)
         self.assertEquals(response.status_code, requests.codes.forbidden)
         # ensure the correct message is returned
-        error_message = self.gk_service.SESSION_FORBIDDEN % (cookie_id)
+        error_message = self.gk_service.SESSION_FORBIDDEN % cookie_id
         self.assertTrue(error_message in response.json()['error'])

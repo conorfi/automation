@@ -16,6 +16,7 @@ import requests
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
+
 class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
@@ -30,7 +31,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         )
 
         # return list of all users
-        response = self.gk_service.gk_assocation_listing(
+        response = self.gk_service.gk_association_listing(
             session, resource="user_perm"
         )
 
@@ -77,7 +78,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
 
         for params in dict_matrix:
             # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
+            response = self.gk_service.gk_association_listing(
                 session,
                 resource="user_perm",
                 params=params
@@ -143,7 +144,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
 
         for params in dict_matrix:
             # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
+            response = self.gk_service.gk_association_listing(
                 session,
                 resource="user_perm",
                 params=params
@@ -205,7 +206,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
 
         for params in dict_matrix:
             # return just the newly created user fron the list of users
-            response = self.gk_service.gk_assocation_listing(
+            response = self.gk_service.gk_association_listing(
                 session,
                 resource="user_perm",
                 params=params

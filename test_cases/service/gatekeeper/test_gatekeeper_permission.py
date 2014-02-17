@@ -250,15 +250,15 @@ class TestGatePermissionAPI(ApiTestCase):
             allow_redirects=False
         )
 
-        # get an application id
-        app_id_one = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.ANOTHER_TEST_APP
-        )['application_id']
+        # create app and get an application id
+        app_id_one = self.gk_service.gk_crud(
+            session, method='POST', resource="application"
+        ).json()['application_id']
 
-        # get an application id
-        app_id_two = self.gk_dao.get_app_by_app_name(
-            self.db, self.gk_service.DEFAULT_TEST_APP
-        )['application_id']
+        # create app and get an application id
+        app_id_two = self.gk_service.gk_crud(
+            session, method='POST', resource="application"
+        ).json()['application_id']
 
         name = self.util.random_str()
         # create data - app id one and non unique name
@@ -296,6 +296,22 @@ class TestGatePermissionAPI(ApiTestCase):
             session, method='DELETE', resource="permission", id=perm_id_two
         )
         # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # delete app one
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="application", id=app_id_one
+        )
+
+        #ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # delete app one
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="application", id=app_id_two
+        )
+
+        #ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
@@ -399,6 +415,8 @@ class TestGatePermissionAPI(ApiTestCase):
             ).json()['application_id']},
             {'name': self.util.random_str()}
         ]
+
+        update_response = None
 
         for update_dict in update_data:
             # set permission_id

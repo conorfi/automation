@@ -17,6 +17,7 @@ import requests
 from nose.plugins.attrib import attr
 from . import ApiTestCase
 
+
 class TestGatePermissionsAPI(ApiTestCase):
 
     @attr(env=['test'], priority=1)
@@ -70,7 +71,7 @@ class TestGatePermissionsAPI(ApiTestCase):
         # get app data from the db
         app_db_data = self.gk_dao.get_app_by_app_name(
             self.db, create_response.json()['application']['name']
-            )
+        )
 
         #set app id
         app_id = app_db_data['application_id']
@@ -101,10 +102,8 @@ class TestGatePermissionsAPI(ApiTestCase):
         api_count = read_response.json().__len__()
         self.assertEquals(api_count, 1, "count mismatch")
         # verify the creation of the permission POST action
-        print read_response.json()[0]
-        print perm_db_data
-        self.assertPermData(read_response.json()[0],perm_db_data)
-        self.assertAppData(read_response.json()[0]['application'],app_db_data)
+        self.assertPermData(read_response.json()[0], perm_db_data)
+        self.assertAppData(read_response.json()[0]['application'], app_db_data)
         # clean up - delete the application(and related permission)
         del_response = self.gk_service.gk_crud(
             session, method='DELETE', resource="application", id=app_id
