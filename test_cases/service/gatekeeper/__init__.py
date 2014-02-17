@@ -5,7 +5,7 @@ from framework.db.base_dao import BaseDAO
 from framework.db.gate_keeper_dao import GateKeeperDAO
 from framework.utility.utility import Utility
 import testy as unittest
-
+import requests
 
 class ApiTestCase(unittest.TestCase):
     @classmethod
@@ -227,3 +227,23 @@ class ApiTestCase(unittest.TestCase):
             for item in expected_grp_data:
                 self.assertTrue(item in actual_data['groups'])
 
+    def data_clean_up(self, application_protected=False, **kwargs):
+        """
+        Cleans data from the service and asserts the clean up was successful.
+        :param application_protected: if application shouldn't be deleted even
+         if in the kwargs
+        :param kwargs: data to be deleted from the service
+        """
+
+        if application_protected:
+            del kwargs['application_id']
+
+        # cleans data from the service
+        del_responses = self.gk_service.data_clean_up(**kwargs)
+
+        # ensure a 204 is returned from every response
+        for del_response in del_responses:
+            self.assertEquals(
+                del_response.status_code,
+                requests.codes.no_content
+            )

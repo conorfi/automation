@@ -35,8 +35,8 @@ def get_environments():
     environments[TEST_ENVIRONMENT] = {}
     environments[TEST_ENVIRONMENT]['file'] = 'test_env.py'
 
-    environments[TEST_ENVIRONMENT] = {}
-    environments[TEST_ENVIRONMENT]['file'] = 'uat_env.py'
+    environments[UAT_ENVIRONMENT] = {}
+    environments[UAT_ENVIRONMENT]['file'] = 'uat_env.py'
 
     return environments
 
