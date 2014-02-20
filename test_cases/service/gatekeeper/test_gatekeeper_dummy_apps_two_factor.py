@@ -87,7 +87,8 @@ class TestGateKeeperDummy2FaAPI(ApiTestCase):
             payload,
             allow_redirects=False
         )
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])

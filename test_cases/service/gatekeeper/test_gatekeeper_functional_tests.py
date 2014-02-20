@@ -95,7 +95,8 @@ class TestGateKeeperFunctional(ApiTestCase):
             response = self.gk_service.create_session_urlencoded(
                 allow_redirects=False, credentials=payload
             )
-            self.assertEquals(response.status_code, requests.codes.found)
+            self.assertTrue(response.status_code in [requests.codes.found,
+                                                     requests.codes.see_other])
             # extract cookie from response headers
             cookie = Cookie.SimpleCookie()
             cookie.load(response.headers['Set-Cookie'])
@@ -154,7 +155,8 @@ class TestGateKeeperFunctional(ApiTestCase):
             allow_redirects=False
         )
         # 303 response
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         # convert Set_Cookie response header to simple cookie object
         cookie_id = self.gk_service.extract_sso_cookie_value(
@@ -547,7 +549,8 @@ class TestGateKeeperFunctional(ApiTestCase):
             allow_redirects=False
         )
         # 303 response
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         headers = response.headers['Set-Cookie']
         # assert that the header httponly is present

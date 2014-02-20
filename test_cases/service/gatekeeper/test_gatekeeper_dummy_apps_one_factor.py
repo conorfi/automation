@@ -579,7 +579,8 @@ class TestDummyApps(ApiTestCase):
         response = self.gk_service.validate_end_point(
             session, allow_redirects=False, parameters=parameters
         )
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         response = self.gk_service.validate_end_point(
             session, parameters=parameters
         )
