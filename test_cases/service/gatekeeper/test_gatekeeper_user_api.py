@@ -566,7 +566,8 @@ class TestGateUserAPI(ApiTestCase):
             allow_redirects=False, credentials=credentials
         )
         # 302 response
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         # set user_id
         user_id = create_response.json()['user_id']
@@ -591,7 +592,8 @@ class TestGateUserAPI(ApiTestCase):
             allow_redirects=False, credentials=credentials
         )
         # 303 response
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
@@ -604,7 +606,8 @@ class TestGateUserAPI(ApiTestCase):
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=False, credentials=credentials
         )
-        assert response.status_code, requests.codes.found
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
     @attr(env=['test'], priority=1)
     def test_user_data_validation_individual(self):
