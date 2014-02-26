@@ -7,34 +7,89 @@ from framework.common_env import SERVICE_NAME_SCREEN_WRITER as SERVICE_NAME
 class Messages(object):
     saved_msg = "Saved"
     deleted_msg = "Deleted"
+    missing_msg = "missing"
+    not_exist_msg = "not exist"
+    updated_msg =  "updated"
 
 class PackService(object):
 
-    def save_pack_json(self,url=None,pack=None):
-        if(url==None):
-            url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'],config[SERVICE_NAME]['port']
-                                           ,config['api'][SERVICE_NAME]['pack']['save'])
-        
-        #create dict with credentials  
-        payload = config[SERVICE_NAME]['credentials']
-        if pack is None:
-            pack = self.create_dict_pack()
-        #update paylaod with pack info
-        payload.update(pack)
-        headers = {'content-type': 'application/json','Cache-Control':'no-cache'}
+
+    def create_url(self,
+                    path,
+                    host=config[SERVICE_NAME]['ip'],
+                    port=config[SERVICE_NAME]['port']):
+        return '{0}://{1}:{2}/{3}'.format(
+            config[SERVICE_NAME]['scheme'], host, port, path)
+
+
+    def test_pack_api(self, resource, url=None, p_data=None):
+
+        headers = {
+            'content-type': 'application/json',
+            'Cache-Control': 'no-cache'
+        }
+        #payload = config[SERVICE_NAME]['credentials']
+        payload =  {
+        'username': 'admin',
+        'password': 'admin'
+        }
+        temp_dict ={}
+
+        if resource is "save_pack_json":
+            url = self.create_url(
+                config['api'][SERVICE_NAME]['pack']['save']
+            )
+            if p_data is None:
+                p_data = self.create_dict_pack()
+        elif resource is "pack_name_exists":
+            url = self.create_url(
+                config['api'][SERVICE_NAME]['pack']['pack_name_exists']
+            )
+            temp_dict['pack_name'] = p_data
+            p_data = temp_dict
+        elif resource is "find_pack":
+            url = self.create_url(
+                config['api'][SERVICE_NAME]['pack']['find_pack']
+            )
+            #temp_dict['cpl_uuid'] = p_data
+            #p_data = temp_dict
+        elif resource is "delete_pack":
+            url = self.create_url(
+                config['api'][SERVICE_NAME]['pack']['delete']
+            )
+            temp_dict['pack_uuids'] = p_data
+            p_data = temp_dict
+        elif resource is "packs":
+            url = self.create_url(
+                config['api'][SERVICE_NAME]['pack']['packs']
+            )
+            #temp_dict['pack_uuids'] = p_data
+            #p_data = temp_dict
+
+        elif resource is "edit":
+            url = self.create_url(
+                config['api'][SERVICE_NAME]['pack']['edit']
+            )
+
+        payload.update(p_data)
+        #print "payload"
+        #print payload
         response = requests.post(url, data=json.dumps(payload), headers=headers)
         return response
+
+    def pack_clean_up(self, response):
+        pack_uuid= str(response.json () ['messages'][0]['uuid'])
+        response = self.test_pack_api(
+            "delete_pack",
+            p_data=[pack_uuid]
+        )
+
 
     @staticmethod
     def create_dict_pack(
             clips=1,
             packs=1,
-            cpl_id="abb5f47f-014d-4a11-8d1e-a820470f01a7",
-            text="16554TPG1799UN_ADV_F_EN-XX_AU_51_2K_20130111_DAU_OV",
-            duration_in_frames=1080,
-            edit_rate="24 1",
-            placeholder_name="place holder name",
-            name="pack name",
+            required_fields=True,
             **kwargs
     ):
         """
@@ -52,45 +107,52 @@ class PackService(object):
         """
 
         clip_list = []
-        for clip in range(clips):
-            clip_dict = {"cpl_id": cpl_id,
-                         "text": text,
-                         "edit_rate": edit_rate
-            }
-            #if duration_in_seconds, use instead of duration_in_frames
-            if "duration_in_seconds" in kwargs:
-                clip_dict["duration_in_seconds"] = kwargs["duration_in_seconds"]
-            else:
-                clip_dict["duration_in_frames"]= duration_in_frames
+        clip_dict = {}
+        pack_dict = {}
 
+        if required_fields is True:
+
+            pack_dict['name'] = kwargs.get('name', 'pack_name')
+            pack_dict['placeholder_name'] = kwargs.get(
+                    'placeholder_name',
+                    'placeholder_name'
+                )
+
+        if clips > 0:
+            for clip in range(clips):
+                if len(kwargs) > 0:
+                    for key, value in kwargs.iteritems():
+                        if(
+                            'cpl_id' is key
+                            or 'text' is key
+                            or 'duration_in_frames' is key
+                            or 'edit_rate' is key
+                            or 'duration_in_seconds' is key
+                            or 'duration_in_frames' is key
+                            ):
+                            clip_dict.update({key:value})
             clip_list.append(clip_dict)
+            pack_dict['clips'] = clip_list
 
-        pack_dict={}
-        pack_dict["clips"] = clip_list
 
-        pack_dict["name"]= name
 
-        #if placeholder_uuid, use instead of placeholder_name
-        if "placeholder_uuid" in kwargs:
-            pack_dict["placeholder_uuid"] = kwargs["placeholder_uuid"]
-        else:
-            pack_dict["placeholder_name"] = placeholder_name
-
-        # if key word arguments are provided then merge with the exisiting dict
-        if len(kwargs)>0:
-            pack_dict.update(kwargs)
-
-        packs_list=[]
+        # if key word arguments are provided then set as appropiate
+        if len(kwargs) > 0:
+            for key, value in kwargs.iteritems():
+                if not (
+                    'cpl_id' is key
+                    or 'text' is key
+                    or 'duration_in_frames' is key
+                    or 'edit_rate' is key
+                    or 'duration_in_seconds' is key
+                    or 'duration_in_frames' is key
+                ):
+                    pack_dict.update({key:value})
+        packs_list = []
         for pack in range(packs):
             packs_list.append(pack_dict)
-
         packs_dict = {'packs': packs_list}
-        print "pack"
-        print packs_dict
-        print "pack"
-
         return packs_dict
-
 
     def save_pack_xml(self,url=None):
         
@@ -140,6 +202,8 @@ class PackService(object):
         r = requests.post(url, data=json.dumps(payload), headers=headers)
         return r
 
+
+
         '''
         #save an xml pack    
         url = 'http://{0}:{1}/{2}'.format(config[SERVICE_NAME]['ip'],config[SERVICE_NAME]['port']
@@ -153,3 +217,6 @@ class PackService(object):
         headers = {'content-type': 'application/json','Cache-Control':'no-cache'}
         response = requests.post(url, data=json.dumps(payload), headers=headers)
        '''
+
+
+
