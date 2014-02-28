@@ -59,12 +59,6 @@ class TestGateKeeperUserApplicationAPI(ApiTestCase):
         self.assertUserAppDisplay(response.json(), user_info)
 
         self.data_clean_up(**user_app_dict)
-        #'user_id', 'application_id', 'group_id')
-
-        #    user_id=user_app_dict['user_id'],
-        #    application_id=user_app_dict['application_id'],
-        #    group_id=user_app_dict['group_id']
-
 
     @attr(env=['test'], priority=1)
     def test_user_app_and_auth_user_perms(self):
