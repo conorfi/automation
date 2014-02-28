@@ -246,4 +246,4 @@ class ApiTestCase(unittest.TestCase):
             self.assertEquals(
                 del_response.status_code,
                 requests.codes.no_content
-            )
+        )

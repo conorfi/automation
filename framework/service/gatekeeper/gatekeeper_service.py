@@ -784,8 +784,8 @@ class GateKeeperService(object):
             self,
             session,
             resource,
-            name=None,
-            verify=None
+            verify=None,
+            **kwargs
     ):
         """
         Test function for listing results from gk APIs
@@ -795,16 +795,11 @@ class GateKeeperService(object):
         @return: a request session object containing the user info
 
         """
-
         request_url = self._set_listing_url(resource)
-
-        if name is not None:
-            request_url += '/?name=%s'
-            request_url = request_url % name
-
+        if len(kwargs)>0:
+            request_url += self.dict_to_query(kwargs)
         if verify is None:
             verify = False
-
         response = session.get(url=request_url, verify=verify)
 
         return response
@@ -1146,6 +1141,7 @@ class GateKeeperService(object):
 
         # get user_id
         user_id = create_response.json()['user_id']
+        name_of_user = create_response.json()['name']
 
         if app_id is not None:
             #delete created app and related permission
@@ -1177,6 +1173,7 @@ class GateKeeperService(object):
             'application_name': application_name,
             'user_id': user_id,
             'credentials_payload': credentials_payload,
+            'name': name_of_user,
             'permission_name': permission_name,
             'permission_id': permission_id,
             'group_id': group_id,
@@ -1291,3 +1288,14 @@ class GateKeeperService(object):
                 del_responses.append(del_response)
 
         return del_responses
+
+    def dict_to_query(self, query_dict):
+        """
+        Creates a query string fr optional strings
+        :param query_dict: query_dict
+        Note: Decided to write this simple function rather than importing urlib
+        """
+        query = '?'
+        for key in query_dict.keys():
+            query += str(key) + '=' + str(query_dict[key]) + "&"
+        return query[:-1]
