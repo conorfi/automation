@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><testsuite name="nosetests" tests="6" errors="4" failures="2" skip="0"><testcase classname="automation.test_cases.service.gatekeeper.test_gatekeeper_two_factor_tests.TestGateKeeper2FaAPI" name="test_can_login_two_factor" time="0.652"><error type="exceptions.TypeError" message="'NoneType' object is unsubscriptable&#10;-------------------- &gt;&gt; begin captured logging &lt;&lt; --------------------&#10;requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01&#10;requests.packages.urllib3.connectionpool: DEBUG: &quot;POST /login/ HTTP/1.1&quot; 302 93&#10;--------------------- &gt;&gt; end captured logging &lt;&lt; ---------------------"><![CDATA[  File "/usr/lib64/python2.6/unittest.py", line 278, in run
+    testMethod()
+  File "/home/vagrant/git/automation/test_cases/service/gatekeeper/test_gatekeeper_two_factor_tests.py", line 41, in test_can_login_two_factor
+    )['verification_code']
+'NoneType' object is unsubscriptable
+-------------------- >> begin captured logging << --------------------
+requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01
+requests.packages.urllib3.connectionpool: DEBUG: "POST /login/ HTTP/1.1" 302 93
+--------------------- >> end captured logging << ---------------------]]></error></testcase><testcase classname="automation.test_cases.service.gatekeeper.test_gatekeeper_two_factor_tests.TestGateKeeper2FaAPI" name="test_expired_verification_code" time="0.526"><error type="exceptions.TypeError" message="'NoneType' object is unsubscriptable&#10;-------------------- &gt;&gt; begin captured logging &lt;&lt; --------------------&#10;requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01&#10;requests.packages.urllib3.connectionpool: DEBUG: &quot;POST /login/ HTTP/1.1&quot; 302 93&#10;--------------------- &gt;&gt; end captured logging &lt;&lt; ---------------------"><![CDATA[  File "/usr/lib64/python2.6/unittest.py", line 278, in run
+    testMethod()
+  File "/home/vagrant/git/automation/test_cases/service/gatekeeper/test_gatekeeper_two_factor_tests.py", line 164, in test_expired_verification_code
+    )['verification_code']
+'NoneType' object is unsubscriptable
+-------------------- >> begin captured logging << --------------------
+requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01
+requests.packages.urllib3.connectionpool: DEBUG: "POST /login/ HTTP/1.1" 302 93
+--------------------- >> end captured logging << ---------------------]]></error></testcase><testcase classname="automation.test_cases.service.gatekeeper.test_gatekeeper_two_factor_tests.TestGateKeeper2FaAPI" name="test_invalid_credientials_cookie_value_in_session" time="0.967"><error type="exceptions.TypeError" message="'NoneType' object is unsubscriptable&#10;-------------------- &gt;&gt; begin captured logging &lt;&lt; --------------------&#10;requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01&#10;requests.packages.urllib3.connectionpool: DEBUG: &quot;POST /login/ HTTP/1.1&quot; 302 93&#10;requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01&#10;requests.packages.urllib3.connectionpool: DEBUG: &quot;POST /login/ HTTP/1.1&quot; 302 93&#10;--------------------- &gt;&gt; end captured logging &lt;&lt; ---------------------"><![CDATA[  File "/usr/lib64/python2.6/unittest.py", line 278, in run
+    testMethod()
+  File "/home/vagrant/git/automation/test_cases/service/gatekeeper/test_gatekeeper_two_factor_tests.py", line 287, in test_invalid_credientials_cookie_value_in_session
+    )['verification_code']
+'NoneType' object is unsubscriptable
+-------------------- >> begin captured logging << --------------------
+requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01
+requests.packages.urllib3.connectionpool: DEBUG: "POST /login/ HTTP/1.1" 302 93
+requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01
+requests.packages.urllib3.connectionpool: DEBUG: "POST /login/ HTTP/1.1" 302 93
+--------------------- >> end captured logging << ---------------------]]></error></testcase><testcase classname="automation.test_cases.service.gatekeeper.test_gatekeeper_two_factor_tests.TestGateKeeper2FaAPI" name="test_invalid_verification_code" time="0.725"><failure type="exceptions.AssertionError" message='500 != 302&#10;-------------------- &gt;&gt; begin captured logging &lt;&lt; --------------------&#10;requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01&#10;requests.packages.urllib3.connectionpool: DEBUG: "POST /login/ HTTP/1.1" 302 93&#10;requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01&#10;requests.packages.urllib3.connectionpool: DEBUG: "POST /login/?step=verification_code HTTP/1.1" 500 972&#10;--------------------- &gt;&gt; end captured logging &lt;&lt; ---------------------'><![CDATA[  File "/usr/lib64/python2.6/unittest.py", line 278, in run
+    testMethod()
+  File "/home/vagrant/git/automation/test_cases/service/gatekeeper/test_gatekeeper_two_factor_tests.py", line 104, in test_invalid_verification_code
+    self.assertEquals(response.status_code, requests.codes.found)
+  File "/usr/lib64/python2.6/unittest.py", line 349, in failUnlessEqual
+    (msg or '%r != %r' % (first, second))
+500 != 302
+-------------------- >> begin captured logging << --------------------
+requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01
+requests.packages.urllib3.connectionpool: DEBUG: "POST /login/ HTTP/1.1" 302 93
+requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01
+requests.packages.urllib3.connectionpool: DEBUG: "POST /login/?step=verification_code HTTP/1.1" 500 972
+--------------------- >> end captured logging << ---------------------]]></failure></testcase><testcase classname="automation.test_cases.service.gatekeeper.test_gatekeeper_two_factor_tests.TestGateKeeper2FaAPI" name="test_no_verifcation_code" time="0.706"><failure type="exceptions.AssertionError" message='500 != 302&#10;-------------------- &gt;&gt; begin captured logging &lt;&lt; --------------------&#10;requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01&#10;requests.packages.urllib3.connectionpool: DEBUG: "POST /login/ HTTP/1.1" 302 93&#10;requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01&#10;requests.packages.urllib3.connectionpool: DEBUG: "POST /login/?step=verification_code HTTP/1.1" 500 972&#10;--------------------- &gt;&gt; end captured logging &lt;&lt; ---------------------'><![CDATA[  File "/usr/lib64/python2.6/unittest.py", line 278, in run
+    testMethod()
+  File "/home/vagrant/git/automation/test_cases/service/gatekeeper/test_gatekeeper_two_factor_tests.py", line 334, in test_no_verifcation_code
+    self.assertEquals(response.status_code, requests.codes.found)
+  File "/usr/lib64/python2.6/unittest.py", line 349, in failUnlessEqual
+    (msg or '%r != %r' % (first, second))
+500 != 302
+-------------------- >> begin captured logging << --------------------
+requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01
+requests.packages.urllib3.connectionpool: DEBUG: "POST /login/ HTTP/1.1" 302 93
+requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01
+requests.packages.urllib3.connectionpool: DEBUG: "POST /login/?step=verification_code HTTP/1.1" 500 972
+--------------------- >> end captured logging << ---------------------]]></failure></testcase><testcase classname="automation.test_cases.service.gatekeeper.test_gatekeeper_two_factor_tests.TestGateKeeper2FaAPI" name="test_only_latest_verification_code_is_valid" time="0.348"><error type="exceptions.TypeError" message="'NoneType' object is unsubscriptable&#10;-------------------- &gt;&gt; begin captured logging &lt;&lt; --------------------&#10;requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01&#10;requests.packages.urllib3.connectionpool: DEBUG: &quot;POST /login/ HTTP/1.1&quot; 302 93&#10;--------------------- &gt;&gt; end captured logging &lt;&lt; ---------------------"><![CDATA[  File "/usr/lib64/python2.6/unittest.py", line 278, in run
+    testMethod()
+  File "/home/vagrant/git/automation/test_cases/service/gatekeeper/test_gatekeeper_two_factor_tests.py", line 203, in test_only_latest_verification_code_is_valid
+    )['verification_code']
+'NoneType' object is unsubscriptable
+-------------------- >> begin captured logging << --------------------
+requests.packages.urllib3.connectionpool: INFO: Starting new HTTPS connection (1): app-t01
+requests.packages.urllib3.connectionpool: DEBUG: "POST /login/ HTTP/1.1" 302 93
+--------------------- >> end captured logging << ---------------------]]></error></testcase></testsuite>
