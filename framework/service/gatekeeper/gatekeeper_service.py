@@ -111,8 +111,12 @@ class GateKeeperService(object):
                     path,
                     host=config[SERVICE_NAME]['host'],
                     port=config[SERVICE_NAME]['port']):
-        return '{0}://{1}:{2}/{3}'.format(
-            config[SERVICE_NAME]['scheme'], host, port, path)
+        if config[SERVICE_NAME]['port'] is None:
+            return '{0}://{1}/{2}'.format(
+                config[SERVICE_NAME]['scheme'], host, path)
+        else:
+            return '{0}://{1}:{2}/{3}'.format(
+                config[SERVICE_NAME]['scheme'], host, port, path)
 
     def create_session_urlencoded(
         self,

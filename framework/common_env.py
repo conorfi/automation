@@ -73,6 +73,7 @@ def get_default_service_config():
         'db_host': 'localhost',
         'db_port': '5432',
         'db_name': 'test',
+        'env':      'local'
     }
 
 
