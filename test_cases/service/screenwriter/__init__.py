@@ -205,7 +205,7 @@ class ApiTestCase(unittest.TestCase):
                                  kwargs['placeholder_uuid'],
                                  msg_on_fail('Incorrect placeholder_uuid'))
 
-    def assert_test_packs_data(self, response, **kwargs):
+    def assert_packs_data(self, response, **kwargs):
 
         msg_on_fail = lambda msg: '%s\nFull Response:\n %s\n' % \
                                   (msg, response.content)

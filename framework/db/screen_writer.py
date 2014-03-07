@@ -159,23 +159,34 @@ class Packs(object):
         @param uuid: pack identifier
         @return: dict of pack info
         """
-        query = """select *
+
+        query = """select p.*, ph.name as placeholder_name
             from pack p
+            join placeholder ph
+            on p.placeholder_uuid = ph.uuid
 	        where p.uuid='%s'
             """ % uuid
         result = db.query(query)
         if not result:
             return None
         else:
-            return result[0]
-        """
-        join  pack_rating_map pmr
-	    on p.uuid = pmr.pack_uuid
-        join pack_attribute_map pam
-	    on p.uuid = pam.pack_uuid
-        external_show_attribute_map esam
-	    pam.pack_uuid = esam
-        """
+            result_dict = result[0]
+        # """
+        # result_dict = {}
+        # query = """select p.*
+        #     from pack_rating_map pmr
+        #     join pack p
+        #     on p.uuid = pmr.pack_uuid
+        #     """
+        #
+        # join pack_attribute_map pam
+        # on p.uuid = pam.pack_uuid
+        # """
+        # print query
+        # result = db.query(query)
+        # if result:
+        #     result_dict.update(result[0]
+        return result_dict
 
     @staticmethod
     def del_screen_by_uuid(db, uuid):
