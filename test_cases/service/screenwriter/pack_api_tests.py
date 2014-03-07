@@ -125,7 +125,8 @@ class ScreenWriterPacksAPI(ApiTestCase):
             "packs",
             p_data=pack_dict
         )
-        self.assert_test_packs_data(response, **pack_dict)
+        print ""
+        self.assert_packs_data(response, **pack_dict)
 
         self.packs_service.pack_clean_up(create_response)
 
@@ -287,7 +288,7 @@ class ScreenWriterPacksAPI(ApiTestCase):
             "packs",
             p_data=pack_dict
         )
-        self.assert_test_packs_data(response, **pack_dict)
+        self.assert_packs_data(response, **pack_dict)
         self.packs_service.pack_clean_up(create_response)
 
     @attr(env=['test'], priority=1)
@@ -331,16 +332,15 @@ class ScreenWriterPacksAPI(ApiTestCase):
                 p_data=edit_dict
             )
             self.assertResponse(response, message=self.msgs.updated_msg)
-
             #assert using the packs API
             pack_dict = {'pack_uuids': [pack_uuids]}
             response = self.packs_service.test_pack_api(
                 "packs",
                 p_data=pack_dict
             )
-            self.assert_test_packs_data(response, **pack_dict)
+            self.assert_packs_data(response, **pack_dict)
 
-        self.packs_service.pack_clean_up(create_response)
+        #self.packs_service.pack_clean_up(create_response)
 
     @attr(env=['test'], priority=1)
     def test_edit_invalid(self):
