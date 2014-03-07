@@ -16,7 +16,7 @@ class PackService(object):
 
     def create_url(self,
                     path,
-                    host=config[SERVICE_NAME]['ip'],
+                    host=config[SERVICE_NAME]['host'],
                     port=config[SERVICE_NAME]['port']):
         return '{0}://{1}:{2}/{3}'.format(
             config[SERVICE_NAME]['scheme'], host, port, path)

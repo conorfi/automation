@@ -38,10 +38,9 @@ set_courier_config(config, **courier_config)
 screenwriter_config = get_default_service_config()
 screenwriter_config.update({
     'scheme': 'http',
-    'host': '10.0.2.15',
-    'ip': '10.0.2.15',
+    'host': 'app-t01',
+    'ip': '10.20.254.142',
     'port': '8080',
-    'db_host': '10.0.2.15',
     'db_name' : '/aam-lms/db/cinema_services.db',
     'db_type' : 'sqlite'
 })
