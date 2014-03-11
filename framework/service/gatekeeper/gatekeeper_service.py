@@ -424,12 +424,11 @@ class GateKeeperService(object):
 
         """
         # create user data
-        # strings set to minimum length
-        # except name which is set to 4 rather than 1-for quality of test data
+        # strings set to 8 rather than minimum length to prevent conflicts
         # phone and email set to correct format
         user_data = {
-            'username': self.util.random_str(4),
-            'name': self.util.random_str(4),
+            'username': self.util.random_str(8),
+            'name': self.util.random_str(8),
             'phone': self.util.phone_number(),
             'email': self.util.random_email(),
             'password': self.util.random_str(8)
