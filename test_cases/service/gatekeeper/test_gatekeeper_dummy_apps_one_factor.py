@@ -630,6 +630,8 @@ class TestDummyApps(ApiTestCase):
             allow_redirects=False,
             redirect_url=config[SERVICE_NAME]['redirect']
         )
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         #set redirect_url from the response
         redirect_url = response.url
 
@@ -662,6 +664,8 @@ class TestDummyApps(ApiTestCase):
             redirect_url=config[SERVICE_NAME]['redirect']
         )
 
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         #set redirect_url from the response
         redirect_url = response.url
 
@@ -687,6 +691,8 @@ class TestDummyApps(ApiTestCase):
             redirect_url=config[SERVICE_NAME]['redirect']
         )
 
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         #set redirect_url from the response
         redirect_url = response.url
 
