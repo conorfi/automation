@@ -101,7 +101,6 @@ class TestGateUsersAPI(ApiTestCase):
                 resource="user",
                 **filters
             )
-
             # 200
             self.assertEquals(response.status_code, requests.codes.ok)
 
@@ -219,7 +218,6 @@ class TestGateUsersAPI(ApiTestCase):
             resource="user",
             **app_dict
         )
-
         # 200
         self.assertEquals(response.status_code, requests.codes.ok)
         #list contains 2 users
@@ -266,7 +264,6 @@ class TestGateUsersAPI(ApiTestCase):
                 resource="user",
                 **filters
             )
-
             # 200
             self.assertEquals(response.status_code, requests.codes.ok)
             # length 2 i.e empty array

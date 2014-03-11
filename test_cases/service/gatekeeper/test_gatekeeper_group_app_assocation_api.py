@@ -248,6 +248,8 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
             id2=grp_app_data['application_id'],
             id=grp_app_data['group_id']
         )
+        # ensure a 200 is returned
+        self.assertEquals(read_response.status_code, requests.codes.ok)
 
         # field count check form read
         # 2 fields should be returned
@@ -425,6 +427,9 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
             id2=grp_app_data['application_id'],
             id=grp_app_data['group_id']
         )
+        # ensure a 404 is returned
+        self.assertEquals(read_response.status_code, requests.codes.not_found)
+
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )

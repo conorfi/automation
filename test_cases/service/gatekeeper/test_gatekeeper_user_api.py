@@ -178,6 +178,9 @@ class TestGateUserAPI(ApiTestCase):
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="user"
         )
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
         # set user_id
         user_id = create_response.json()['user_id']
 
@@ -237,6 +240,8 @@ class TestGateUserAPI(ApiTestCase):
         update_response = self.gk_service.gk_crud(
             session, method='PUT', resource="user", id=user_id
         )
+        # ensure a 202 is returned
+        self.assertEquals(update_response.status_code, requests.codes.accepted)
 
         # set username
         username = update_response.json()['username']
@@ -360,6 +365,11 @@ class TestGateUserAPI(ApiTestCase):
                 data=user_data,
                 id=user_id
             )
+            # ensure a 202 is returned
+            self.assertEquals(
+                update_response.status_code,
+                requests.codes.accepted
+            )
 
         # set username
         username = update_response.json()['username']
@@ -433,6 +443,8 @@ class TestGateUserAPI(ApiTestCase):
         read_response = self.gk_service.gk_crud(
             session, method='GET', resource="user", id=user_id
         )
+        # ensure a 200 is returned
+        self.assertEquals(read_response.status_code, requests.codes.ok)
 
         # field count check form read
         # 11 fields should be returned

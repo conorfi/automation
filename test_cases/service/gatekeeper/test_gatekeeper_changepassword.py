@@ -49,12 +49,12 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
             session, method='POST', resource="user", data=user_data
         )
 
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
         # set email and user_id
         email = create_response.json()['email']
         user_id = create_response.json()['user_id']
-
-        # ensure a 201 is returned
-        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # ensure user can login in
         # login in as new user
@@ -244,12 +244,12 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
             session, method='POST', resource="user", data=user_data
         )
 
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
         # set email and user_id
         email = create_response.json()['email']
         user_id = create_response.json()['user_id']
-
-        # ensure a 201 is returned
-        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # ensure user can login in
         # login in as new user
@@ -322,12 +322,12 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
             session, method='POST', resource="user", data=user_data
         )
 
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
         # set email and user_id
         email = create_response.json()['email']
         user_id = create_response.json()['user_id']
-
-        # ensure a 201 is returned
-        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # ensure user can login in
         # login in as new user

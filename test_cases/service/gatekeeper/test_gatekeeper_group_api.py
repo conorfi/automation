@@ -351,6 +351,9 @@ class TestGateGroupAPI(ApiTestCase):
             session, method='GET', resource="group", id=group_id
         )
 
+        # ensure a 200 is returned
+        self.assertEquals(read_response.status_code, requests.codes.ok)
+
         # field count check form read
         # 2 fields should be returned
         self.assertEquals(len(read_response.json()), 2)
