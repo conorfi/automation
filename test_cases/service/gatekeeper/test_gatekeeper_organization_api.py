@@ -352,6 +352,9 @@ class TestGatekeeperOrgAPI(ApiTestCase):
             session, method='GET', resource="organization", id=org_id
         )
 
+        # ensure a 200 is returned
+        self.assertEquals(read_response.status_code, requests.codes.ok)
+
         # field count check form read
         # 4 fields should be returned
         self.assertEquals(len(read_response.json()), 2)
@@ -370,6 +373,9 @@ class TestGatekeeperOrgAPI(ApiTestCase):
         read_response = self.gk_service.gk_crud(
             session, method='GET', resource="organization", id=org_id
         )
+        # ensure a 404 is returned
+        self.assertEquals(read_response.status_code, requests.codes.not_found)
+
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
@@ -434,6 +440,9 @@ class TestGatekeeperOrgAPI(ApiTestCase):
         read_response = self.gk_service.gk_crud(
             session, method='GET', resource="organization", id=org_id
         )
+        # ensure a 404 is returned
+        self.assertEquals(read_response.status_code, requests.codes.not_found)
+
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )

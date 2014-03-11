@@ -251,14 +251,20 @@ class TestGatePermissionAPI(ApiTestCase):
         )
 
         # create app and get an application id
-        app_id_one = self.gk_service.gk_crud(
+        app_one_resp = self.gk_service.gk_crud(
             session, method='POST', resource="application"
-        ).json()['application_id']
+        )
+        # ensure a 201 is returned
+        self.assertEquals(app_one_resp.status_code, requests.codes.created)
+        app_id_one = app_one_resp.json()['application_id']
 
         # create app and get an application id
-        app_id_two = self.gk_service.gk_crud(
+        app_two_resp = self.gk_service.gk_crud(
             session, method='POST', resource="application"
-        ).json()['application_id']
+        )
+        # ensure a 201 is returned
+        self.assertEquals(app_two_resp.status_code, requests.codes.created)
+        app_id_two = app_two_resp.json()['application_id']
 
         name = self.util.random_str()
         # create data - app id one and non unique name
@@ -409,10 +415,16 @@ class TestGatePermissionAPI(ApiTestCase):
         orig_app_id = create_response.json()['application_id']
 
         # list of dicts with missing data
+        app_response = self.gk_service.gk_crud(
+            session, method='POST',
+            resource='application'
+        )
+        # ensure a 201 is returned
+        self.assertEquals(app_response.status_code, requests.codes.created)
+
+        app_id = app_response.json()['application_id']
         update_data = [
-            {'application_id': self.gk_service.gk_crud(
-                session, method='POST', resource='application'
-            ).json()['application_id']},
+            {'application_id': app_id},
             {'name': self.util.random_str()}
         ]
 
@@ -492,15 +504,14 @@ class TestGatePermissionAPI(ApiTestCase):
             session, method='POST', resource="permission", data=perms_one_data
         )
 
-        perms_id_one = perms_one_response.json()['permission_id']
-
-        # set app id
-        app_id_one = perms_one_response.json()['application_id']
-
         # ensure correct status code is returned
         self.assertEquals(
             perms_one_response.status_code, requests.codes.created
         )
+
+        perms_id_one = perms_one_response.json()['permission_id']
+        app_id_one = perms_one_response.json()['application_id']
+
 
         # create permission two
         perms_two_response = self.gk_service.gk_crud(
@@ -579,10 +590,9 @@ class TestGatePermissionAPI(ApiTestCase):
             session, method='POST', resource="permission"
         )
 
-        app_id = create_response.json()['application_id']
-
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
+        app_id = create_response.json()['application_id']
 
         # set permission_id
         permission_id = create_response.json()['permission_id']
@@ -660,6 +670,9 @@ class TestGatePermissionAPI(ApiTestCase):
             session, method='GET', resource="permission", id=permission_id
         )
 
+        # ensure a 200 is returned
+        self.assertEquals(read_response.status_code, requests.codes.ok)
+
         # field count check form read
         # 4 fields should be returned
         self.assertEquals(len(read_response.json()), 4)
@@ -736,6 +749,8 @@ class TestGatePermissionAPI(ApiTestCase):
         read_response = self.gk_service.gk_crud(
             session, method='GET', resource="permission", id=permission_id
         )
+        # ensure a 404 is returned
+        self.assertEquals(read_response.status_code, requests.codes.not_found)
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )

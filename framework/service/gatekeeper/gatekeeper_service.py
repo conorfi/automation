@@ -111,8 +111,16 @@ class GateKeeperService(object):
                     path,
                     host=config[SERVICE_NAME]['host'],
                     port=config[SERVICE_NAME]['port']):
-        return '{0}://{1}:{2}/{3}'.format(
-            config[SERVICE_NAME]['scheme'], host, port, path)
+        if config[SERVICE_NAME]['port'] is None:
+            return '{0}://{1}/{2}'.format(
+                config[SERVICE_NAME]['scheme'], host, path)
+            print '{0}://{1}/{2}'.format(
+                config[SERVICE_NAME]['scheme'], host, path)
+        else:
+            return '{0}://{1}:{2}/{3}'.format(
+                config[SERVICE_NAME]['scheme'], host, port, path)
+            print '{0}://{1}:{2}/{3}'.format(
+                config[SERVICE_NAME]['scheme'], host, port, path)
 
     def create_session_urlencoded(
         self,
@@ -486,6 +494,7 @@ class GateKeeperService(object):
         session.cookies['sso_cookie'] = cookie
         for index in range(iterations):
             response = session.get(url, verify=False)
+            #basic assert i.e. not unittest assert
             assert response.status_code == requests.codes.ok
             time.sleep(wait_time)
 
@@ -510,6 +519,7 @@ class GateKeeperService(object):
         # login user
         response = self.create_session_urlencoded(**kwargs)
         # 303
+        #basic assert i.e. not unittest assert
         assert response.status_code in [requests.codes.found,
                                         requests.codes.see_other]
 
@@ -838,12 +848,19 @@ class GateKeeperService(object):
         @return: a user app data dict
 
         """
-        app_id = self.gk_crud(
+        app_response = self.gk_crud(
             session, method='POST', resource='application'
-        ).json()['application_id']
-        user_id = self.gk_crud(
+        )
+        #basic assert i.e. not unittest assert
+        assert app_response.status_code == requests.codes.created
+        app_id = app_response.json()['application_id']
+
+        user_response = self.gk_crud(
             session, method='POST', resource='user'
-        ).json()['user_id']
+        )
+        #basic assert i.e. not unittest assert
+        assert user_response.status_code == requests.codes.created
+        user_id = user_response.json()['user_id']
 
         data = {'user_id': user_id, 'application_id': app_id}
 
@@ -860,12 +877,19 @@ class GateKeeperService(object):
         @return: a user group data dict
 
         """
-        group_id = self.gk_crud(
+        grp_response = self.gk_crud(
             session, method='POST', resource='group'
-        ).json()['group_id']
-        user_id = self.gk_crud(
+        )
+        #basic assert i.e. not unittest assert
+        assert grp_response.status_code == requests.codes.created
+        group_id = grp_response.json()['group_id']
+
+        user_response = self.gk_crud(
             session, method='POST', resource='user'
-        ).json()['user_id']
+        )
+        #basic assert i.e. not unittest assert
+        assert user_response.status_code == requests.codes.created
+        user_id = user_response.json()['user_id']
 
         data = {'user_id': user_id, 'group_id': group_id}
 
@@ -881,12 +905,19 @@ class GateKeeperService(object):
         @return: a user org data dict
 
         """
-        org_id = self.gk_crud(
+        org_response = self.gk_crud(
             session, method='POST', resource='organization'
-        ).json()['organization_id']
-        user_id = self.gk_crud(
+        )
+        #basic assert i.e. not unittest assert
+        assert org_response.status_code == requests.codes.created
+        org_id = org_response .json()['organization_id']
+
+        user_response = self.gk_crud(
             session, method='POST', resource='user'
-        ).json()['user_id']
+        )
+        #basic assert i.e. not unittest assert
+        assert user_response.status_code == requests.codes.created
+        user_id = user_response.json()['user_id']
 
         data = {'user_id': user_id, 'organization_id': org_id}
 
@@ -902,12 +933,19 @@ class GateKeeperService(object):
         @return: a user org data dict
 
         """
-        group_id = self.gk_crud(
+        grp_response = self.gk_crud(
             session, method='POST', resource='group'
-        ).json()['group_id']
-        perm_id = self.gk_crud(
+        )
+        #basic assert i.e. not unittest assert
+        assert grp_response.status_code == requests.codes.created
+        group_id = grp_response.json()['group_id']
+
+        perm_response = self.gk_crud(
             session, method='POST', resource='permission'
-        ).json()['permission_id']
+        )
+        #basic assert i.e. not unittest assert
+        assert perm_response.status_code == requests.codes.created
+        perm_id = perm_response.json()['permission_id']
 
         data = {'group_id': group_id, 'permission_id': perm_id}
 
@@ -923,12 +961,20 @@ class GateKeeperService(object):
         @return: a user org data dict
 
         """
-        user_id = self.gk_crud(
+        user_response = self.gk_crud(
             session, method='POST', resource='user'
-        ).json()['user_id']
-        perm_id = self.gk_crud(
+        )
+
+        #basic assert i.e. not unittest assert
+        assert user_response.status_code == requests.codes.created
+        user_id = user_response.json()['user_id']
+
+        perm_response = self.gk_crud(
             session, method='POST', resource='permission'
-        ).json()['permission_id']
+        )
+        #basic assert i.e. not unittest assert
+        assert perm_response.status_code == requests.codes.created
+        perm_id = perm_response.json()['permission_id']
 
         data = {'user_id': user_id, 'permission_id': perm_id}
 
@@ -944,12 +990,19 @@ class GateKeeperService(object):
         @return: a grp app data dict
 
         """
-        group_id = self.gk_crud(
+        grp_response = self.gk_crud(
             session, method='POST', resource='group'
-        ).json()['group_id']
-        app_id = self.gk_crud(
+        )
+        #basic assert i.e. not unittest assert
+        assert grp_response.status_code == requests.codes.created
+        group_id = grp_response.json()['group_id']
+
+        app_response = self.gk_crud(
             session, method='POST', resource='application'
-        ).json()['application_id']
+        )
+        #basic assert i.e. not unittest assert
+        assert app_response.status_code == requests.codes.created
+        app_id = app_response.json()['application_id']
 
         data = {'group_id': group_id, 'application_id': app_id}
 
@@ -965,9 +1018,13 @@ class GateKeeperService(object):
         @return: an org data dict
 
         """
-        app_id = self.gk_crud(
+        app_response = self.gk_crud(
             session, method='POST', resource='application'
-        ).json()['application_id']
+        )
+        #basic assert i.e. not unittest assert
+        assert app_response.status_code == requests.codes.created
+        app_id = app_response.json()['application_id']
+
         rand_str = self.util.random_str(5)
 
         data = {
@@ -1122,6 +1179,9 @@ class GateKeeperService(object):
             method='POST',
             resource="permission"
         )
+        #basic assert i.e. not unittest assert
+        assert response.status_code == requests.codes.created
+
         permission_id = response.json()['permission_id']
         permission_name = response.json()['name']
         application_id = response.json()['application_id']
@@ -1135,13 +1195,15 @@ class GateKeeperService(object):
         user_data = self.create_user_data(user_dict=credentials_payload)
 
         # create a new user
-        create_response = self.gk_crud(
+        response = self.gk_crud(
             a_session, method='POST', resource="user", data=user_data
         )
+        #basic assert i.e. not unittest assert
+        assert response.status_code == requests.codes.created
 
         # get user_id
-        user_id = create_response.json()['user_id']
-        name_of_user = create_response.json()['name']
+        user_id = response.json()['user_id']
+        name_of_user = response.json()['name']
 
         if app_id is not None:
             #delete created app and related permission

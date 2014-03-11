@@ -114,10 +114,10 @@ class TestGateApplicationAPI(ApiTestCase):
         response = self.gk_service.gk_crud(
             session, method='POST', resource="application", data=app_data
         )
-        # capture the application id
-        app_id = response.json()['application_id']
         # ensure correct status code is returned
         self.assertEquals(response.status_code, requests.codes.created)
+        # capture the application id
+        app_id = response.json()['application_id']
 
         # attempt to use the same data with the same app name again
         response = self.gk_service.gk_crud(
@@ -410,13 +410,12 @@ class TestGateApplicationAPI(ApiTestCase):
             session, method='GET', resource="application", id=app_id
         )
 
-        # field count check form read
-        # 3 fields should be returned
-        self.assertEquals(len(read_response.json()), 3)
-
         # ensure a 200 is returned
         self.assertEquals(read_response.status_code, requests.codes.ok)
 
+        # field count check form read
+        # 3 fields should be returned
+        self.assertEquals(len(read_response.json()), 3)
         app_id = read_response.json()['application_id']
         appname = read_response.json()['name']
         # get app data from db

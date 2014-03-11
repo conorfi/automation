@@ -243,6 +243,8 @@ class TestGateGrpPermAssocationAPI(ApiTestCase):
             id=user_perm_data['user_id'],
             id2=user_perm_data['permission_id']
         )
+        # ensure a 200 is returned
+        self.assertEquals(read_response.status_code, requests.codes.ok)
 
         # field count
         # 2 fields should be returned
