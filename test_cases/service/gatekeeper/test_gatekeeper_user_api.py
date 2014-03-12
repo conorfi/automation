@@ -794,7 +794,8 @@ class TestGateUserAPI(ApiTestCase):
     def test_user_api_delete_admin_delete_itself(self):
         """
         GATEKEEPER_USER_API_017 test_user_api_delete_admin_delete_itself
-        Ensure users cannot delete themseves
+        Ensure seed data such as admin user cannot be deleted
+        Ensure users cannot delete themselves
         """
 
         # login and create session
@@ -816,5 +817,87 @@ class TestGateUserAPI(ApiTestCase):
         # correct error message
         self.assertTrue(
             self.gk_service.DELETE_THEMSELVES
+            in del_response.json()['error']
+        )
+
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_delete_admin_delete_admin(self):
+        """
+        GATEKEEPER_USER_API_018 test_user_api_delete_admin_delete_itself
+        Ensure seed data such as admin user cannot be delete
+        An admin user cannot delete an Admin user
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        #create a new admin user
+        # create username and password
+        credentials = {
+            'username': self.util.random_str(8),
+            'password': self.util.random_str(8)
+        }
+        print credentials
+
+        user_data = self.gk_service.create_user_data(user_dict=credentials)
+
+        # create a new user
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user", data=user_data
+        )
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        #get gk app id
+        gk_app_id = self.gk_dao.get_app_by_app_name(
+            self.db, self.gk_service.GK_APP
+        )['application_id']
+
+        gk_user_id = create_response.json()['user_id']
+
+        #get permission
+        gk_perm_id = self.gk_dao.get_permission_by_name(
+            self.db,
+            per_name=self.gk_service.GK_ALL_PERMISSION,
+            app_id=gk_app_id
+        )['permission_id']
+
+        #associate user with permission
+
+        # associate user with app
+        self.assertTrue(
+            self.gk_dao.set_user_app_id(self.db, gk_app_id, gk_user_id)
+        )
+        self.assertTrue(
+            self.gk_dao.set_user_permissions_id(
+                self.db, gk_user_id, gk_perm_id
+            )
+        )
+
+
+        # login and create session
+        # ensure user can no longer login using the correct credentials
+        # login and create session
+        session2, cookie_id2, response2 = self.gk_service.login_create_session(
+            allow_redirects=False,
+            credentials=credentials
+        )
+
+        # Attempt for the admin user to delete themselves
+        # self.default_test_user is the admin user id
+        del_response = self.gk_service.gk_crud(
+            session2,
+            method='DELETE',
+            resource="user",
+            id=self.default_test_user
+        )
+        #403 response
+        self.assertEquals(del_response.status_code, requests.codes.forbidden)
+
+        self.assertTrue(
+            self.gk_service.DELETE_DATA
             in del_response.json()['error']
         )

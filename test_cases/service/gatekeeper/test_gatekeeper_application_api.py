@@ -662,6 +662,7 @@ class TestGateApplicationAPI(ApiTestCase):
         GATEKEEPER_APP_API_015 test_application_api_delete_gk_app
         Ensure seed data such as gatekeeper application cannot be deleted
         """
+        #create user
 
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
