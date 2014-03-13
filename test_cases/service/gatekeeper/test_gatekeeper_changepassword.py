@@ -262,7 +262,7 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         )
 
         # create email dictionary
-        email_dict = {'email': email}
+        email_dict = {'email': self.util.random_email()}
 
         # recover call
         response = self.gk_service.recover_account(
