@@ -58,6 +58,7 @@ def get_test_sets():
     test_sets = {}
     set_gatekeeper_test_sets(test_sets)
     set_courier_test_sets(test_sets)
+    set_screenwriter_test_sets(test_sets)
     return test_sets
 
 
@@ -114,7 +115,8 @@ def set_base_service_config(config, name, **kwargs):
         config[name]['db']['connection'] = "postgresql://%s@%s:%s/%s" % \
         (kwargs['db_credentials'], kwargs['db_host'], kwargs['db_port'],
          kwargs['db_name'])
-
+    if(kwargs['db_type'] is 'sqlite'):
+        config[name]['db']['connection'] = "sqlite:///%s" % kwargs['db_name']
 
 def set_screenwriter_config(config, **kwargs):
     """
@@ -147,7 +149,6 @@ def set_gatekeeper_config(config, **kwargs):
     """
     name = SERVICE_NAME_GATEKEEPER
     set_base_service_config(config, name, **kwargs)
-
     config[name]['redirect'] = '?redirect=http%3A%2F%2Fwww.example.com'
     config[name]['admin_endpoint'] = 'admin'
     config[name]['dummy'] = {}
@@ -283,3 +284,13 @@ def set_courier_test_sets(test_sets):
     :param test_sets:
     """
     test_sets['courier'] = {}
+
+
+def set_screenwriter_test_sets(test_sets):
+    """
+    Sets Gatekeeper test sets
+    :param test_sets:
+    """
+    # screenwriter tests
+    test_sets['screenwriter'] = {}
+    test_sets['screenwriter']['folder'] = 'screenwriter'

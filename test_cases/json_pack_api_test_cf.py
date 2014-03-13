@@ -60,7 +60,7 @@ def test_pack():
     assert 'Saved' in response['messages'][0]['message']
 
     # db - find the UUID
-    db = create_engine(config[SERVICE_NAME]['db']['db_type'] + config[SERVICE_NAME]['db']['db_name'])
+    db = create_engine('sqlite:///aam-lms/db/cinema_services.db')
     connection = db.connect()
     result = connection.execute("select uuid from pack")
     row = result.fetchone()

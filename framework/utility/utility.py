@@ -18,7 +18,8 @@ class Utility(object):
         )
 
     def random_uuid(self):
-        return str(uuid.uuid1())
+        uuid = self.random_str(8)+'-'+ self.random_str(4)+'-'+self.random_str(4)+'-'+ self.random_str(4)+'-'+ self.random_str(12)
+        return uuid
 
     def random_email(self, len=None):
         if(len is None):
@@ -40,3 +41,7 @@ class Utility(object):
     def phone_number(self):
         phone = "+44 123 456 789123"
         return phone
+
+    def random_screen_uuid (self):
+        uuid = self.random_str(8)+'-'+ self.random_str(4)+'-'+self.random_str(4)+'-'+ self.random_str(4)+'-'+ self.random_str(12)
+        return uuid

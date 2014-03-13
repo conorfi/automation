@@ -13,7 +13,6 @@ from sqlalchemy import create_engine
 class BaseDAO(object):
 
     def __init__(self, db_config):
-
         self.db_conn = create_engine(db_config)
         self.connection = self.db_conn.connect()
 
