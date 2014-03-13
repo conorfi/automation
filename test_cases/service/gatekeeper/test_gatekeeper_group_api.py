@@ -168,15 +168,15 @@ class TestGateGroupAPI(ApiTestCase):
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
         )
-
         group_data = self.gk_service.create_group_data()
+
         # create a new group
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="group", data=group_data
         )
-
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
+        group_id = create_response.json()['group_id']
 
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="group", data=group_data
@@ -188,6 +188,13 @@ class TestGateGroupAPI(ApiTestCase):
         self.assertTrue(
             self.gk_service.DUPLICATE_KEY in create_response.json()['error']
         )
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="group", id=group_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_group_api_update(self):

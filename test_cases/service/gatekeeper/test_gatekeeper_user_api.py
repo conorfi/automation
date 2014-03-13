@@ -292,6 +292,7 @@ class TestGateUserAPI(ApiTestCase):
         self.assertEquals(
             user_two_response.status_code, requests.codes.created
         )
+        user_id_two = user_two_response.json()['user_id']
 
         user_dict = [
             {'username': user_two_response.json()['username']},
@@ -324,6 +325,13 @@ class TestGateUserAPI(ApiTestCase):
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id_two
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_user_api_update_individually(self):
         """
@@ -348,11 +356,11 @@ class TestGateUserAPI(ApiTestCase):
 
         # create individual dicts for updating each paramater
         user_dict = [
-            {'username': self.util.random_str(4)},
+            {'username': self.util.random_str()},
             {'name': self.util.random_str(1)},
             {'phone': self.util.phone_number()},
             {'email': self.util.random_email()},
-            {'password': self.util.random_str(8)}
+            {'password': self.util.random_str()}
         ]
 
         update_response = None
@@ -561,8 +569,8 @@ class TestGateUserAPI(ApiTestCase):
 
         # create username and password
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
@@ -586,8 +594,8 @@ class TestGateUserAPI(ApiTestCase):
 
         # update username and password
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
@@ -837,10 +845,9 @@ class TestGateUserAPI(ApiTestCase):
         #create a new admin user
         # create username and password
         credentials = {
-            'username': self.util.random_str(8),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
-        print credentials
 
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 

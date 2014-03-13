@@ -377,12 +377,33 @@ class GateKeeperDAO(object):
                     from user_group ug
                     join gatekeeper_group gk on ug.group_id=gk.group_id
                     where ug.user_Id=%d""" % user_id
-        print query
         result = db.execute(query)
         if not result:
             return None
         else:
             return result[0]
+
+    @staticmethod
+    def get_app_id_by_perm_id(db, perm_id):
+        """
+        Returns user grp info
+        @param db: the database connection that will be utilized
+        @param perm_id: perm_id
+        by a post
+        @return: dict of session info
+
+        """
+        query = """
+                select application_id from permission where permission_id =%d
+                """ % perm_id
+
+        result = db.execute(query)
+        if not result:
+            return None
+        else:
+            return result[0]
+
+    35;
 
     @staticmethod
     def set_session_to_expire_by_session_id(db, cookie_id):
@@ -670,3 +691,43 @@ class GateKeeperDAO(object):
             where organization_id=%d""" % org_id
         result = db.trans(query)
         return result
+
+    @staticmethod
+    def del_tokens(db):
+        """
+        deletes all tokens
+        @param db: the database connection that will be utilized
+        @return: boolean
+        """
+        query = """
+            delete
+            from token """
+        result = db.trans(query)
+        return result
+
+    @staticmethod
+    def del_sessions(db):
+        """
+        deletes all sessions
+        @param db: the database connection that will be utilized
+        @return: boolean
+        """
+        query = """
+            delete
+            from session """
+        result = db.trans(query)
+        return result
+
+    @staticmethod
+    def del_cookies(db):
+        """
+        deletes all sessions
+        @param db: the database connection that will be utilized
+        @return: boolean
+        """
+        query = """
+            delete
+            from cookie """
+        result = db.trans(query)
+        return result
+

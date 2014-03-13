@@ -393,9 +393,9 @@ class TestDummyApps(ApiTestCase):
 
         # create a user and associate user with relevant
         # pre confiured application for dummy app
-        username = 'automation_' + self.util.random_str(5)
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
+        username = 'automation_' + self.util.random_str()
+        fullname = 'automation ' + self.util.random_str()
+        email = self.util.random_email()
 
         # create basic user - no permisssions
         self.assertTrue(
@@ -445,10 +445,10 @@ class TestDummyApps(ApiTestCase):
 
         # create a user and associate user with relevant
         # pre confiured application for dummy app
-        username = 'automation_' + self.util.random_str(5)
+        username = 'automation_' + self.util.random_str()
         appname = self.gk_service.ANOTHER_TEST_APP
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
+        fullname = 'automation ' + self.util.random_str()
+        email = self.util.random_email()
 
         # create basic user - no permisssions
         self.assertTrue(

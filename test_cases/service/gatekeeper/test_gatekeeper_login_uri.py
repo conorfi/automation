@@ -194,8 +194,8 @@ class TestGateKeeperLoginURI(ApiTestCase):
 
         # create username and apssword
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
 
         user_data = self.gk_service.create_user_data(user_dict=credentials)
@@ -222,7 +222,7 @@ class TestGateKeeperLoginURI(ApiTestCase):
         # set password to a different password to cause failed logins
         bad_credentials = {
             'username': credentials['username'],
-            'password': self.util.random_str(8)
+            'password': self.util.random_str()
         }
 
         # decrementing for loop

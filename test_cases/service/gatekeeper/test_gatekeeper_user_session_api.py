@@ -68,8 +68,8 @@ class TestGateKeeperUserSessionAPI(ApiTestCase):
 
         # credentials
         credentials_payload = {
-            'username': self.util.random_str(8),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
         user_data = self.gk_service.create_user_data(
             user_dict=credentials_payload
@@ -126,6 +126,26 @@ class TestGateKeeperUserSessionAPI(ApiTestCase):
             resource="user_app",
             id=user_id,
             id2=app_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            a_session,
+            method='DELETE',
+            resource="user",
+            id=user_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            a_session,
+            method='DELETE',
+            resource="application",
+            id=app_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
