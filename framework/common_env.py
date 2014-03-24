@@ -72,7 +72,7 @@ def get_default_service_config():
         'port': '8070',
         'db_host': 'localhost',
         'db_port': '5432',
-        'db_name': 'test',
+        'db_name': 'test'
     }
 
 
@@ -229,6 +229,7 @@ def set_gatekeeper_test_sets(test_sets):
 
     # 1 fa tests
     test_sets['gatekeeper'] = {}
+    test_sets['gatekeeper']['folder'] = 'gatekeeper'
     test_sets['gatekeeper']['ignore_filename'] = [
         'test_gatekeeper_two_factor_tests.py',
         'test_gatekeeper_dummy_apps_two_factor.py'
@@ -243,6 +244,7 @@ def set_gatekeeper_test_sets(test_sets):
 
     # UAT 1 fa tests
     test_sets['gatekeeper_UAT'] = {}
+    test_sets['gatekeeper_UAT']['folder'] = 'gatekeeper'
     test_sets['gatekeeper_UAT']['ignore_filename'] = \
         ['test_gatekeeper_two_factor_tests.py',
         'test_gatekeeper_dummy_apps_two_factor.py',
