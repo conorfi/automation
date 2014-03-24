@@ -12,7 +12,7 @@ import string
 
 class Utility(object):
 
-    def random_str(self, n=5):
+    def random_str(self, n=8):
         return "".join(random.choice(
             string.ascii_lowercase) for x in xrange(n)
         )
@@ -27,7 +27,7 @@ class Utility(object):
         email = self.random_str(len) + '@' + self.random_str(len) + '.com'
         return email
 
-    def random_url(self, len=5):
+    def random_url(self, len=8):
         url = 'http://www.' + self.random_str(len) + '.com'
         return url
 

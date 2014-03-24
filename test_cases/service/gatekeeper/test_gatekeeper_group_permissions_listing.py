@@ -109,6 +109,35 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            permission_id,
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=group_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+
+
+
     @attr(env=['test'], priority=1)
     def test_users_apps_api_filter_no_data(self):
         """
@@ -168,6 +197,32 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            permission_id,
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=group_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_users_apps_api_filter_invalid_data(self):
         """
@@ -215,13 +270,39 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
             # length 2 i.e empty array
             self.assertEquals(len(response.content), 2)
 
-        # clean up - delete the user
+        # clean up
         del_response = self.gk_service.gk_crud(
             session,
             method='DELETE',
             resource="grp_perm",
             id=group_id,
             id2=permission_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            permission_id,
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=group_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)

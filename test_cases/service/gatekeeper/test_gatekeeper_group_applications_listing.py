@@ -103,8 +103,28 @@ class TestGatekeeperUsersListingAPI(ApiTestCase):
             session,
             method='DELETE',
             resource="grp_app",
-            id=group_id,
-            id2=app_id
+            id=grp_app_data['group_id'],
+            id2=grp_app_data['application_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=grp_app_data['application_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_app_data['group_id']
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -168,6 +188,26 @@ class TestGatekeeperUsersListingAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=group_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_users_apps_api_filter_invalid_data(self):
         """
@@ -222,6 +262,26 @@ class TestGatekeeperUsersListingAPI(ApiTestCase):
             resource="grp_app",
             id=group_id,
             id2=app_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=grp_app_data['application_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_app_data['group_id']
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)

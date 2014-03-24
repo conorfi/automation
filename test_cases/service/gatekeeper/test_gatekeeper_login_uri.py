@@ -107,7 +107,8 @@ class TestGateKeeperLoginURI(ApiTestCase):
                 self.gk_service.INVALID_USERNAME_PASSWORD in response.text
             )
             # 302
-            self.assertEquals(response.status_code, requests.codes.found)
+            self.assertTrue(response.status_code in [requests.codes.found,
+                                                     requests.codes.see_other])
 
              # create a session - allow_redirects=True
             response = self.gk_service.create_session_urlencoded(
@@ -144,7 +145,8 @@ class TestGateKeeperLoginURI(ApiTestCase):
         self.assertEquals(db_response['user_id'], self.default_test_user)
 
         # 302 response
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
     @attr(env=['test'], priority=1)
     def test_login_with_no_data(self):
@@ -175,7 +177,8 @@ class TestGateKeeperLoginURI(ApiTestCase):
                 self.gk_service.INVALID_USERNAME_PASSWORD in response.text
             )
             # 302
-            self.assertEquals(response.status_code, requests.codes.found)
+            self.assertTrue(response.status_code in [requests.codes.found,
+                                                     requests.codes.see_other])
 
     @attr(env=['test'], priority=1)
     def test_can_login_default_redirect_json(self):
@@ -191,8 +194,8 @@ class TestGateKeeperLoginURI(ApiTestCase):
 
         # create username and apssword
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
 
         user_data = self.gk_service.create_user_data(user_dict=credentials)
@@ -212,13 +215,14 @@ class TestGateKeeperLoginURI(ApiTestCase):
             allow_redirects=False, credentials=credentials
         )
         # 302 response
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         # attempt to login in 5 times with a wrong password
         # set password to a different password to cause failed logins
         bad_credentials = {
             'username': credentials['username'],
-            'password': self.util.random_str(8)
+            'password': self.util.random_str()
         }
 
         # decrementing for loop

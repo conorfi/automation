@@ -90,6 +90,8 @@ class TestGatePermissionsAPI(ApiTestCase):
             resource="permission",
             name=permission_name
         )
+        # ensure a 200 is returned
+        self.assertEquals(read_response.status_code, requests.codes.ok)
 
         # field count check form read
         # 4 fields should be returned

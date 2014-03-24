@@ -25,10 +25,10 @@ class TestGateKeeperDummy2FaAPI(ApiTestCase):
         # create a user and associate user with relevant
         # pre-configured application for dummy app
 
-        username = 'automation_' + self.util.random_str(5)
+        username = 'automation_' + self.util.random_str()
         appname = self.gk_service.ANOTHER_TEST_APP
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
+        fullname = 'automation ' + self.util.random_str()
+        email = self.util.random_email()
 
         # create basic user - no permissions
         self.assertTrue(
@@ -87,7 +87,8 @@ class TestGateKeeperDummy2FaAPI(ApiTestCase):
             payload,
             allow_redirects=False
         )
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])

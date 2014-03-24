@@ -38,8 +38,8 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         )
         # create username and password
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
 
         user_data = self.gk_service.create_user_data(user_dict=credentials)
@@ -49,12 +49,12 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
             session, method='POST', resource="user", data=user_data
         )
 
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
         # set email and user_id
         email = create_response.json()['email']
         user_id = create_response.json()['user_id']
-
-        # ensure a 201 is returned
-        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # ensure user can login in
         # login in as new user
@@ -70,7 +70,7 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         # set password to a different password to cause failed logins
         bad_credentials = {
             'username': credentials['username'],
-            'password': self.util.random_str(8)
+            'password': self.util.random_str()
         }
 
         # decrementing for loop
@@ -121,7 +121,7 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
             self.db, user_id
         )['token_id']
 
-        password = {'password': self.util.random_str(8)}
+        password = {'password': self.util.random_str()}
         response = self.gk_service.change_password(token, password)
 
         # 200
@@ -155,8 +155,8 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         )
         # create username and password
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
 
         user_data = self.gk_service.create_user_data(user_dict=credentials)
@@ -205,7 +205,7 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
             self.db, user_id
         )['token_id']
 
-        password = {'password': self.util.random_str(8)}
+        password = {'password': self.util.random_str()}
         response = self.gk_service.change_password(token, password)
 
         # 200
@@ -233,8 +233,8 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         )
         # create username and password
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
 
         user_data = self.gk_service.create_user_data(user_dict=credentials)
@@ -244,12 +244,12 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
             session, method='POST', resource="user", data=user_data
         )
 
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
         # set email and user_id
         email = create_response.json()['email']
         user_id = create_response.json()['user_id']
-
-        # ensure a 201 is returned
-        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # ensure user can login in
         # login in as new user
@@ -262,7 +262,7 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         )
 
         # create email dictionary
-        email_dict = {'email': email}
+        email_dict = {'email': self.util.random_email()}
 
         # recover call
         response = self.gk_service.recover_account(
@@ -311,8 +311,8 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         )
         # create username and password
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
 
         user_data = self.gk_service.create_user_data(user_dict=credentials)
@@ -322,12 +322,12 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
             session, method='POST', resource="user", data=user_data
         )
 
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
         # set email and user_id
         email = create_response.json()['email']
         user_id = create_response.json()['user_id']
-
-        # ensure a 201 is returned
-        self.assertEquals(create_response.status_code, requests.codes.created)
 
         # ensure user can login in
         # login in as new user

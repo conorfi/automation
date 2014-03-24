@@ -54,6 +54,26 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_org_data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=user_org_data['organization_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_user_org_assoc_api_miss_params(self):
         """
@@ -66,16 +86,16 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
             allow_redirects=False
         )
 
+        data = self.gk_service.create_user_org_data(session)
         # list of dicts with missing data
         no_data = [
-            {'organization_id': None},
-            {'user_id': None}
+            {'organization_id': data['organization_id'], 'user_id': None},
+            {'organization_id': None, 'user_id': data['user_id']}
         ]
 
         for n_dict in no_data:
-            data = self.gk_service.create_user_org_data(session, n_dict)
             create_response = self.gk_service.gk_crud(
-                session, method='POST', resource="user_org", data=data
+                session, method='POST', resource="user_org", data=n_dict
             )
             # verify the status code and error message
             self.assertEquals(
@@ -85,6 +105,26 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
                 self.gk_service.MISSING_PARAM
                 in create_response.json()['error']
             )
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=data['organization_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_user_org_assoc_api_no_data(self):
@@ -162,6 +202,26 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_org_data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=user_org_data['organization_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_user_org_assoc_api_no_update(self):
         """
@@ -213,6 +273,26 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_org_data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=user_org_data['organization_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_user_org_assoc_api_read(self):
         """
@@ -243,6 +323,8 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
             id2=user_org_data['organization_id']
         )
 
+        # ensure a 200 is returned
+        self.assertEquals(read_response.status_code, requests.codes.ok)
         # field count
         # 2 fields should be returned
         self.assertEquals(len(read_response.json()), 2)
@@ -256,6 +338,26 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
             resource="user_org",
             id=user_org_data['user_id'],
             id2=user_org_data['organization_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_org_data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=user_org_data['organization_id']
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -316,6 +418,26 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
             resource="user_org",
             id=user_org_data['user_id'],
             id2=user_org_data['organization_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_org_data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=user_org_data['organization_id']
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -395,6 +517,26 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_org_data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=user_org_data['organization_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_user_org_assoc_api_del_no_data(self):
@@ -481,6 +623,26 @@ class TestGateUserAppAssocationAPI(ApiTestCase):
             resource="user_org",
             id=user_org_data['user_id'],
             id2=user_org_data['organization_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_org_data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=user_org_data['organization_id']
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)

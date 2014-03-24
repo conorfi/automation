@@ -62,7 +62,8 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         )
 
         # ensure a 302 is returned
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         self.assertTrue(
             config['api'][SERVICE_NAME]['recover_account_v1']['post'] in
@@ -106,7 +107,8 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
         )
 
         # ensure a 302 is returned
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         self.assertTrue(
             config['api'][SERVICE_NAME]['recover_account_v1']['param'] in
@@ -191,7 +193,8 @@ class TestGateKeeperRecoverAccount(ApiTestCase):
                 allow_redirects=False
             )
             # ensure a 302 is returned
-            self.assertEquals(response.status_code, requests.codes.found)
+            self.assertTrue(response.status_code in [requests.codes.found,
+                                                     requests.codes.see_other])
 
             self.assertTrue(
                 'error' in

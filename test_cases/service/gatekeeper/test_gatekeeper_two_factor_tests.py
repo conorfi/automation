@@ -47,7 +47,8 @@ class TestGateKeeper2FaAPI(ApiTestCase):
             payload,
             allow_redirects=False
         )
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -101,7 +102,8 @@ class TestGateKeeper2FaAPI(ApiTestCase):
         )
         # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         self.assertTrue(
             self.gk_service.INVALID_VERIFCATION_CODE in response.text
         )
@@ -119,7 +121,8 @@ class TestGateKeeper2FaAPI(ApiTestCase):
             payload,
             allow_redirects=False
         )
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -179,7 +182,8 @@ class TestGateKeeper2FaAPI(ApiTestCase):
         )
         # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         self.assertTrue(
             self.gk_service.INVALID_VERIFCATION_CODE in response.text
         )
@@ -221,7 +225,8 @@ class TestGateKeeper2FaAPI(ApiTestCase):
         )
         # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         self.assertTrue(
             self.gk_service.INVALID_VERIFCATION_CODE in response.text
         )
@@ -232,7 +237,8 @@ class TestGateKeeper2FaAPI(ApiTestCase):
             payload,
             allow_redirects=False
         )
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         cookie = Cookie.SimpleCookie()
         cookie.load(response.headers['Set-Cookie'])
@@ -295,7 +301,8 @@ class TestGateKeeper2FaAPI(ApiTestCase):
 
         # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         no_cookie_found = \
             "No+session+with+cookie+%s+found" % fake_cookie_value
         self.assertTrue(no_cookie_found in response.text)
@@ -331,7 +338,8 @@ class TestGateKeeper2FaAPI(ApiTestCase):
         )
         # 302 response(as allow_redirects=False)
         # ensure the url encoded error message is correct
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         self.assertTrue(
             self.gk_service.INVALID_VERIFCATION_CODE in response.text
         )

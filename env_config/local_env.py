@@ -9,7 +9,7 @@ config = get_common_config()
 gatekeeper_config = get_default_service_config()
 gatekeeper_config.update({
     'scheme': 'https',
-    'port': '8070',
+    'port': 443,
     'db_name': 'gatekeeper',
     'db_type' : 'postgresql',
     'db_credentials' : 'postgres:postgres'

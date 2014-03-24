@@ -67,15 +67,15 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        # set app_id
-        app_id = create_response.json()['group_id']
+        # set group_id
+        group_id = create_response.json()['group_id']
         # set user_id
         user_id = create_response.json()['user_id']
 
         dict_matrix = [
             {'user_id': user_id},
-            {'group_id': app_id},
-            {'user_id': user_id, 'group_id': app_id}
+            {'group_id': group_id},
+            {'user_id': user_id, 'group_id': group_id}
         ]
 
         for params in dict_matrix:
@@ -106,7 +106,27 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
             method='DELETE',
             resource="user_grp",
             id=user_id,
-            id2=app_id
+            id2=group_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+        
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=group_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -133,8 +153,8 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        # set app_id
-        app_id = create_response.json()['group_id']
+        # set group_id
+        group_id = create_response.json()['group_id']
         # set user_id
         user_id = create_response.json()['user_id']
 
@@ -166,7 +186,7 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
             method='DELETE',
             resource="user_grp",
             id=user_id,
-            id2=app_id
+            id2=group_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -193,8 +213,8 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
-        # set app_id
-        app_id = create_response.json()['group_id']
+        # set group_id
+        group_id = create_response.json()['group_id']
         # set user_id
         user_id = create_response.json()['user_id']
 
@@ -218,13 +238,34 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
             # length 2 i.e empty array
             self.assertEquals(len(response.content), 2)
 
-        # clean up - delete the user
+        # clean up
         del_response = self.gk_service.gk_crud(
             session,
             method='DELETE',
             resource="user_grp",
             id=user_id,
-            id2=app_id
+            id2=group_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=group_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+

@@ -178,6 +178,9 @@ class TestGateUserAPI(ApiTestCase):
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="user"
         )
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
         # set user_id
         user_id = create_response.json()['user_id']
 
@@ -237,6 +240,8 @@ class TestGateUserAPI(ApiTestCase):
         update_response = self.gk_service.gk_crud(
             session, method='PUT', resource="user", id=user_id
         )
+        # ensure a 202 is returned
+        self.assertEquals(update_response.status_code, requests.codes.accepted)
 
         # set username
         username = update_response.json()['username']
@@ -287,6 +292,7 @@ class TestGateUserAPI(ApiTestCase):
         self.assertEquals(
             user_two_response.status_code, requests.codes.created
         )
+        user_id_two = user_two_response.json()['user_id']
 
         user_dict = [
             {'username': user_two_response.json()['username']},
@@ -319,6 +325,13 @@ class TestGateUserAPI(ApiTestCase):
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="user", id=user_id_two
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_user_api_update_individually(self):
         """
@@ -343,11 +356,11 @@ class TestGateUserAPI(ApiTestCase):
 
         # create individual dicts for updating each paramater
         user_dict = [
-            {'username': self.util.random_str(4)},
+            {'username': self.util.random_str()},
             {'name': self.util.random_str(1)},
             {'phone': self.util.phone_number()},
             {'email': self.util.random_email()},
-            {'password': self.util.random_str(8)}
+            {'password': self.util.random_str()}
         ]
 
         update_response = None
@@ -359,6 +372,11 @@ class TestGateUserAPI(ApiTestCase):
                 resource="user",
                 data=user_data,
                 id=user_id
+            )
+            # ensure a 202 is returned
+            self.assertEquals(
+                update_response.status_code,
+                requests.codes.accepted
             )
 
         # set username
@@ -433,6 +451,8 @@ class TestGateUserAPI(ApiTestCase):
         read_response = self.gk_service.gk_crud(
             session, method='GET', resource="user", id=user_id
         )
+        # ensure a 200 is returned
+        self.assertEquals(read_response.status_code, requests.codes.ok)
 
         # field count check form read
         # 11 fields should be returned
@@ -549,8 +569,8 @@ class TestGateUserAPI(ApiTestCase):
 
         # create username and password
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
@@ -566,15 +586,16 @@ class TestGateUserAPI(ApiTestCase):
             allow_redirects=False, credentials=credentials
         )
         # 302 response
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         # set user_id
         user_id = create_response.json()['user_id']
 
         # update username and password
         credentials = {
-            'username': self.util.random_str(4),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
         user_data = self.gk_service.create_user_data(user_dict=credentials)
 
@@ -591,7 +612,8 @@ class TestGateUserAPI(ApiTestCase):
             allow_redirects=False, credentials=credentials
         )
         # 303 response
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
         # clean up - delete the user
         del_response = self.gk_service.gk_crud(
@@ -604,7 +626,8 @@ class TestGateUserAPI(ApiTestCase):
         response = self.gk_service.create_session_urlencoded(
             allow_redirects=False, credentials=credentials
         )
-        assert response.status_code, requests.codes.found
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
 
     @attr(env=['test'], priority=1)
     def test_user_data_validation_individual(self):
@@ -779,7 +802,8 @@ class TestGateUserAPI(ApiTestCase):
     def test_user_api_delete_admin_delete_itself(self):
         """
         GATEKEEPER_USER_API_017 test_user_api_delete_admin_delete_itself
-        Ensure users cannot delete themseves
+        Ensure seed data such as admin user cannot be deleted
+        Ensure users cannot delete themselves
         """
 
         # login and create session
@@ -801,5 +825,86 @@ class TestGateUserAPI(ApiTestCase):
         # correct error message
         self.assertTrue(
             self.gk_service.DELETE_THEMSELVES
+            in del_response.json()['error']
+        )
+
+
+    @attr(env=['test'], priority=1)
+    def test_user_api_delete_admin_delete_admin(self):
+        """
+        GATEKEEPER_USER_API_018 test_user_api_delete_admin_delete_itself
+        Ensure seed data such as admin user cannot be delete
+        An admin user cannot delete an Admin user
+        """
+
+        # login and create session
+        session, cookie_id, response = self.gk_service.login_create_session(
+            allow_redirects=False
+        )
+
+        #create a new admin user
+        # create username and password
+        credentials = {
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
+        }
+
+        user_data = self.gk_service.create_user_data(user_dict=credentials)
+
+        # create a new user
+        create_response = self.gk_service.gk_crud(
+            session, method='POST', resource="user", data=user_data
+        )
+        # ensure a 201 is returned
+        self.assertEquals(create_response.status_code, requests.codes.created)
+
+        #get gk app id
+        gk_app_id = self.gk_dao.get_app_by_app_name(
+            self.db, self.gk_service.GK_APP
+        )['application_id']
+
+        gk_user_id = create_response.json()['user_id']
+
+        #get permission
+        gk_perm_id = self.gk_dao.get_permission_by_name(
+            self.db,
+            per_name=self.gk_service.GK_ALL_PERMISSION,
+            app_id=gk_app_id
+        )['permission_id']
+
+        #associate user with permission
+
+        # associate user with app
+        self.assertTrue(
+            self.gk_dao.set_user_app_id(self.db, gk_app_id, gk_user_id)
+        )
+        self.assertTrue(
+            self.gk_dao.set_user_permissions_id(
+                self.db, gk_user_id, gk_perm_id
+            )
+        )
+
+
+        # login and create session
+        # ensure user can no longer login using the correct credentials
+        # login and create session
+        session2, cookie_id2, response2 = self.gk_service.login_create_session(
+            allow_redirects=False,
+            credentials=credentials
+        )
+
+        # Attempt for the admin user to delete themselves
+        # self.default_test_user is the admin user id
+        del_response = self.gk_service.gk_crud(
+            session2,
+            method='DELETE',
+            resource="user",
+            id=self.default_test_user
+        )
+        #403 response
+        self.assertEquals(del_response.status_code, requests.codes.forbidden)
+
+        self.assertTrue(
+            self.gk_service.DELETE_DATA
             in del_response.json()['error']
         )

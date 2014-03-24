@@ -393,9 +393,9 @@ class TestDummyApps(ApiTestCase):
 
         # create a user and associate user with relevant
         # pre confiured application for dummy app
-        username = 'automation_' + self.util.random_str(5)
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
+        username = 'automation_' + self.util.random_str()
+        fullname = 'automation ' + self.util.random_str()
+        email = self.util.random_email()
 
         # create basic user - no permisssions
         self.assertTrue(
@@ -445,10 +445,10 @@ class TestDummyApps(ApiTestCase):
 
         # create a user and associate user with relevant
         # pre confiured application for dummy app
-        username = 'automation_' + self.util.random_str(5)
+        username = 'automation_' + self.util.random_str()
         appname = self.gk_service.ANOTHER_TEST_APP
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
+        fullname = 'automation ' + self.util.random_str()
+        email = self.util.random_email()
 
         # create basic user - no permisssions
         self.assertTrue(
@@ -579,7 +579,8 @@ class TestDummyApps(ApiTestCase):
         response = self.gk_service.validate_end_point(
             session, allow_redirects=False, parameters=parameters
         )
-        self.assertEquals(response.status_code, requests.codes.found)
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         response = self.gk_service.validate_end_point(
             session, parameters=parameters
         )
@@ -629,6 +630,8 @@ class TestDummyApps(ApiTestCase):
             allow_redirects=False,
             redirect_url=config[SERVICE_NAME]['redirect']
         )
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         #set redirect_url from the response
         redirect_url = response.url
 
@@ -661,6 +664,8 @@ class TestDummyApps(ApiTestCase):
             redirect_url=config[SERVICE_NAME]['redirect']
         )
 
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         #set redirect_url from the response
         redirect_url = response.url
 
@@ -686,6 +691,8 @@ class TestDummyApps(ApiTestCase):
             redirect_url=config[SERVICE_NAME]['redirect']
         )
 
+        self.assertTrue(response.status_code in [requests.codes.found,
+                                                 requests.codes.see_other])
         #set redirect_url from the response
         redirect_url = response.url
 
