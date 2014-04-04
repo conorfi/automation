@@ -1,5 +1,5 @@
 """
-Runners to help with testing lifecycle
+Runners to help with testing lifecycle and deployment
 """
 
 from fabric.api import local, shell_env, abort, lcd

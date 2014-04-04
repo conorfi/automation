@@ -84,7 +84,7 @@ def set_google_config(config):
     :param config:
     """
     config['google-server'] = {}
-    config['google-server']['host'] = "https://google.ca"
+    config['google-server']['host'] = "http://www.google.com"
 
 
 def set_base_service_config(config, name, **kwargs):
