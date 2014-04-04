@@ -2,6 +2,7 @@ import requests
 from testconfig import config
 from nose.plugins.attrib import attr
 
+
 class TestSample:
     '''A class for API testing the OAuth web service'''
 
