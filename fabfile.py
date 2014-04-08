@@ -165,10 +165,14 @@ def get_nose_command(test_config, test_set, test_set_map, folder, report=False):
         for ignore in ignore_file:
             ignore_config += '--ignore-files=%s ' % ignore
 
+    # nose only finds tests in files with 644 permissions.
+    # this --exe arg gets around that annoying behaviour
+    file_mode_fix_command = '--exe'
+
     # nose command
-    nose_command = 'nosetests %s %s %s %s %s' % (
+    nose_command = 'nosetests %s %s %s %s %s %s' % (
         service_location, test_locations,
-        base_config, report_config, ignore_config
+        base_config, report_config, ignore_config, file_mode_fix_command
     )
 
     return nose_command
