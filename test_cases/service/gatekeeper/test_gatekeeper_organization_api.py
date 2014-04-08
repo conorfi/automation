@@ -174,6 +174,9 @@ class TestGatekeeperOrgAPI(ApiTestCase):
             session, method='POST', resource="organization", data=org_data
         )
 
+        # set org_id
+        org_id = create_response.json()['organization_id']
+
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
@@ -187,6 +190,13 @@ class TestGatekeeperOrgAPI(ApiTestCase):
         self.assertTrue(
             self.gk_service.DUPLICATE_KEY in create_response.json()['error']
         )
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="organization", id=org_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_org_api_update(self):

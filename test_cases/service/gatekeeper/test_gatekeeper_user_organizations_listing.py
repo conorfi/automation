@@ -48,7 +48,7 @@ class TestGateKeeperUsersOrgsListingAPI(ApiTestCase):
     @attr(env=['test'], priority=1)
     def test_user_orgs_filter(self):
         """
-        ATEKEEPER_USER_ORGS_API_002 test_user_orgs_filter
+        GATEKEEPER_USER_ORGS_API_002 test_user_orgs_filter
         Ensure the name filer works correctly
         """
 
@@ -98,7 +98,7 @@ class TestGateKeeperUsersOrgsListingAPI(ApiTestCase):
             #verify API
             self.assertUserOrgData(response.json()[0], user_org_data)
 
-        # clean up - delete the user
+        # clean up
         del_response = self.gk_service.gk_crud(
             session,
             method='DELETE',
@@ -108,6 +108,27 @@ class TestGateKeeperUsersOrgsListingAPI(ApiTestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        #clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=org_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
 
     @attr(env=['test'], priority=1)
     def test_user_orgs_api_filter_no_data(self):
@@ -169,6 +190,26 @@ class TestGateKeeperUsersOrgsListingAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        #clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=org_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_user_orgs_api_filter_invalid_data(self):
         """
@@ -223,6 +264,26 @@ class TestGateKeeperUsersOrgsListingAPI(ApiTestCase):
             resource="user_org",
             id=user_id,
             id2=org_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        #clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the org
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="organization",
+            id=org_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)

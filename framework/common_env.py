@@ -58,6 +58,7 @@ def get_test_sets():
     test_sets = {}
     set_gatekeeper_test_sets(test_sets)
     set_courier_test_sets(test_sets)
+    set_screenwriter_test_sets(test_sets)
     return test_sets
 
 
@@ -72,7 +73,7 @@ def get_default_service_config():
         'port': '8070',
         'db_host': 'localhost',
         'db_port': '5432',
-        'db_name': 'test',
+        'db_name': 'test'
     }
 
 
@@ -83,7 +84,7 @@ def set_google_config(config):
     :param config:
     """
     config['google-server'] = {}
-    config['google-server']['host'] = "https://google.ca"
+    config['google-server']['host'] = "http://www.google.com"
 
 
 def set_base_service_config(config, name, **kwargs):
@@ -114,7 +115,8 @@ def set_base_service_config(config, name, **kwargs):
         config[name]['db']['connection'] = "postgresql://%s@%s:%s/%s" % \
         (kwargs['db_credentials'], kwargs['db_host'], kwargs['db_port'],
          kwargs['db_name'])
-
+    if(kwargs['db_type'] is 'sqlite'):
+        config[name]['db']['connection'] = "sqlite:///%s" % kwargs['db_name']
 
 def set_screenwriter_config(config, **kwargs):
     """
@@ -147,7 +149,6 @@ def set_gatekeeper_config(config, **kwargs):
     """
     name = SERVICE_NAME_GATEKEEPER
     set_base_service_config(config, name, **kwargs)
-
     config[name]['redirect'] = '?redirect=http%3A%2F%2Fwww.example.com'
     config[name]['admin_endpoint'] = 'admin'
     config[name]['dummy'] = {}
@@ -229,6 +230,7 @@ def set_gatekeeper_test_sets(test_sets):
 
     # 1 fa tests
     test_sets['gatekeeper'] = {}
+    test_sets['gatekeeper']['folder'] = 'gatekeeper'
     test_sets['gatekeeper']['ignore_filename'] = [
         'test_gatekeeper_two_factor_tests.py',
         'test_gatekeeper_dummy_apps_two_factor.py'
@@ -243,6 +245,7 @@ def set_gatekeeper_test_sets(test_sets):
 
     # UAT 1 fa tests
     test_sets['gatekeeper_UAT'] = {}
+    test_sets['gatekeeper_UAT']['folder'] = 'gatekeeper'
     test_sets['gatekeeper_UAT']['ignore_filename'] = \
         ['test_gatekeeper_two_factor_tests.py',
         'test_gatekeeper_dummy_apps_two_factor.py',
@@ -281,3 +284,13 @@ def set_courier_test_sets(test_sets):
     :param test_sets:
     """
     test_sets['courier'] = {}
+
+
+def set_screenwriter_test_sets(test_sets):
+    """
+    Sets Gatekeeper test sets
+    :param test_sets:
+    """
+    # screenwriter tests
+    test_sets['screenwriter'] = {}
+    test_sets['screenwriter']['folder'] = 'screenwriter'

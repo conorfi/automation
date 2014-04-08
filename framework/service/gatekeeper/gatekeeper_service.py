@@ -114,12 +114,8 @@ class GateKeeperService(object):
         if config[SERVICE_NAME]['port'] is None:
             return '{0}://{1}/{2}'.format(
                 config[SERVICE_NAME]['scheme'], host, path)
-            print '{0}://{1}/{2}'.format(
-                config[SERVICE_NAME]['scheme'], host, path)
         else:
             return '{0}://{1}:{2}/{3}'.format(
-                config[SERVICE_NAME]['scheme'], host, port, path)
-            print '{0}://{1}:{2}/{3}'.format(
                 config[SERVICE_NAME]['scheme'], host, port, path)
 
     def create_session_urlencoded(
@@ -446,8 +442,8 @@ class GateKeeperService(object):
         @return: a user data dict
 
         """
-        new_app = self.util.random_str(5)
-        new_url = self.util.random_url(5)
+        new_app = self.util.random_str(8)
+        new_url = self.util.random_url(8)
         app_data = {'name': new_app, 'default_url': new_url}
 
         if app_dict is not None:
@@ -549,7 +545,7 @@ class GateKeeperService(object):
         @return: an org data dict
 
         """
-        rand_str = self.util.random_str(5)
+        rand_str = self.util.random_str(8)
         org_data = {
             'name': rand_str
         }
@@ -563,7 +559,7 @@ class GateKeeperService(object):
         @return: an org data dict
 
         """
-        rand_str = self.util.random_str(5)
+        rand_str = self.util.random_str(8)
         group_data = {
             'name': rand_str
         }
@@ -946,8 +942,11 @@ class GateKeeperService(object):
         assert perm_response.status_code == requests.codes.created
         perm_id = perm_response.json()['permission_id']
 
-        data = {'group_id': group_id, 'permission_id': perm_id}
 
+        data = {
+            'group_id': group_id,
+            'permission_id': perm_id,
+        }
         if dict is not None:
             data.update(dict)
 
@@ -1024,7 +1023,7 @@ class GateKeeperService(object):
         assert app_response.status_code == requests.codes.created
         app_id = app_response.json()['application_id']
 
-        rand_str = self.util.random_str(5)
+        rand_str = self.util.random_str(8)
 
         data = {
             'name': rand_str,
@@ -1188,8 +1187,8 @@ class GateKeeperService(object):
 
         # credentials
         credentials_payload = {
-            'username': self.util.random_str(8),
-            'password': self.util.random_str(8)
+            'username': self.util.random_str(),
+            'password': self.util.random_str()
         }
         user_data = self.create_user_data(user_dict=credentials_payload)
 

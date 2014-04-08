@@ -97,13 +97,33 @@ class TestGateKeeperUsersAppsListingAPI(ApiTestCase):
             # verify the contents of the users API
             self.assertUserAppData(response.json()[0], user_app_data)
 
-        # clean up - delete the user
+        # clean up - delete
         del_response = self.gk_service.gk_crud(
             session,
             method='DELETE',
             resource="user_app",
             id=user_id,
             id2=app_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
@@ -222,6 +242,26 @@ class TestGateKeeperUsersAppsListingAPI(ApiTestCase):
             resource="user_app",
             id=user_id,
             id2=app_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)

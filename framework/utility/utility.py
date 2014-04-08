@@ -12,13 +12,14 @@ import string
 
 class Utility(object):
 
-    def random_str(self, n=5):
+    def random_str(self, n=8):
         return "".join(random.choice(
             string.ascii_lowercase) for x in xrange(n)
         )
 
     def random_uuid(self):
-        return str(uuid.uuid1())
+        uuid = self.random_str(8)+'-'+ self.random_str(4)+'-'+self.random_str(4)+'-'+ self.random_str(4)+'-'+ self.random_str(12)
+        return uuid
 
     def random_email(self, len=None):
         if(len is None):
@@ -26,7 +27,7 @@ class Utility(object):
         email = self.random_str(len) + '@' + self.random_str(len) + '.com'
         return email
 
-    def random_url(self, len=5):
+    def random_url(self, len=8):
         url = 'http://www.' + self.random_str(len) + '.com'
         return url
 
@@ -40,3 +41,7 @@ class Utility(object):
     def phone_number(self):
         phone = "+44 123 456 789123"
         return phone
+
+    def random_screen_uuid (self):
+        uuid = self.random_str(8)+'-'+ self.random_str(4)+'-'+self.random_str(4)+'-'+ self.random_str(4)+'-'+ self.random_str(12)
+        return uuid

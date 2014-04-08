@@ -16,11 +16,11 @@ class ApiTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         # Things that need to be done once.
+        #close db connection
         cls.db.close()
 
     def setUp(self):
         # Things to run before each test.
-
         self.gk_service = GateKeeperService()
         self.gk_dao = GateKeeperDAO()
         self.default_test_user = self.gk_dao.get_user_by_username(
@@ -28,6 +28,12 @@ class ApiTestCase(unittest.TestCase):
             self.gk_service.ADMIN_USER
         )['user_id']
         self.util = Utility()
+
+    def tearDown(self):
+        #crude method of clearing sessions,cookies,tokens
+        self.assertTrue(self.gk_dao.del_sessions(self.db))
+        self.assertTrue(self.gk_dao.del_cookies(self.db))
+        self.assertTrue(self.gk_dao.del_tokens(self.db))
 
     def assertAppData(self, actual_data, expected_data):
         self.assertDictContains(actual_data, 'application_id')

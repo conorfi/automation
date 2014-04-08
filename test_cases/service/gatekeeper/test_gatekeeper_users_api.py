@@ -58,7 +58,6 @@ class TestGateUsersAPI(ApiTestCase):
         user_app_dict = self.gk_service.create_user_app_api_display_data(
             user_permission=True
         )
-
         # login and create session
         session, cookie_id, response = self.gk_service.login_create_session(
             allow_redirects=False
@@ -204,6 +203,7 @@ class TestGateUsersAPI(ApiTestCase):
         user_app_dict = self.gk_service.create_user_app_api_display_data(
             user_permission=True
         )
+
         #set second user to use the same app as user 1
         user_app_dict2 = self.gk_service.create_user_app_api_display_data(
             app_id=user_app_dict['application_id'],
@@ -224,9 +224,13 @@ class TestGateUsersAPI(ApiTestCase):
         self.assertEquals(len(response.json()), 2, "should contain 2 users")
 
         self.data_clean_up(**user_app_dict)
-        # only delete the user
-        user_data = {'user_id': user_app_dict2['user_id']}
-        self.data_clean_up(application_protected=False,  **user_data)
+        # only delete the required data
+        user_data = {
+            'user_id': user_app_dict2['user_id'],
+            'group_id': user_app_dict2['group_id'],
+
+        }
+        self.data_clean_up(**user_data)
 
     @attr(env=['test'], priority=1)
     def test_users_api_name_invalid_filter_data(self):

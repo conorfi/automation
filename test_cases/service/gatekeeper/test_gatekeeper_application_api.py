@@ -106,7 +106,7 @@ class TestGateApplicationAPI(ApiTestCase):
             allow_redirects=False
         )
 
-        new_app = self.util.random_str(5)
+        new_app = self.util.random_str()
         name_dict = {'name': new_app}
         app_data = self.gk_service.create_app_data(name_dict)
 
@@ -277,8 +277,8 @@ class TestGateApplicationAPI(ApiTestCase):
         app_id = create_response.json()['application_id']
 
         # update the application
-        rand_str = self.util.random_str(5)
-        rand_url = self.util.random_url(5)
+        rand_str = self.util.random_str()
+        rand_url = self.util.random_url()
         update_data = [
             {'name': rand_str},
             {'default_url': rand_url},
@@ -332,10 +332,10 @@ class TestGateApplicationAPI(ApiTestCase):
             allow_redirects=False
         )
 
-        app_one = self.util.random_str(5)
-        app_two = self.util.random_str(5)
-        url_one = self.util.random_url(5)
-        url_two = self.util.random_url(5)
+        app_one = self.util.random_str()
+        app_two = self.util.random_str()
+        url_one = self.util.random_url()
+        url_two = self.util.random_url()
         app_one_data = {'name': app_one, 'default_url': url_one}
         app_two_data = {'name': app_two, 'default_url': url_two}
 
@@ -354,6 +354,7 @@ class TestGateApplicationAPI(ApiTestCase):
         )
         # ensure correct status code is returned
         self.assertEquals(app_two_response.status_code, requests.codes.created)
+        app_id_two = app_two_response.json()['application_id']
 
         # update the application one with application two data
         update_response = self.gk_service.gk_crud(
@@ -376,13 +377,12 @@ class TestGateApplicationAPI(ApiTestCase):
         # ensure correct status code is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
-        # read the new application data
-        read_response = self.gk_service.gk_crud(
-            session, method='GET', resource="application", id=app_id_one
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session, method='DELETE', resource="application", id=app_id_two
         )
-        self.assertTrue(
-            self.gk_service.NO_DATA_ERROR in read_response.json()['error']
-        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_application_api_read(self):
@@ -445,8 +445,8 @@ class TestGateApplicationAPI(ApiTestCase):
             allow_redirects=False
         )
 
-        update_app = self.util.random_str(5)
-        update_url = self.util.random_url(5)
+        update_app = self.util.random_str()
+        update_url = self.util.random_url()
         app_data = {'name': update_app, 'default_url': update_url}
 
         # create random integer for the application id
@@ -509,8 +509,8 @@ class TestGateApplicationAPI(ApiTestCase):
             allow_redirects=False
         )
 
-        new_app = self.util.random_str(5)
-        new_url = self.util.random_url(5)
+        new_app = self.util.random_str()
+        new_url = self.util.random_url()
         app_data = {'name': new_app, 'default_url': new_url}
 
         # create a new application
@@ -589,7 +589,7 @@ class TestGateApplicationAPI(ApiTestCase):
             {'name': ''},
             {'name': self.util.random_str(101)},
             {'name': '^!\$%&/()=?{[]}+~#-_.:,;<>|\\'},
-            {'default_url': self.util.random_str()},
+            {'default_url': self.util.random_str(1)},
             {'default_url': self.util.random_str(513)},
             {'fake': self.util.random_str()}
         ]

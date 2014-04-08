@@ -109,6 +109,31 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_perm_data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the app
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            user_perm_data['permission_id'],
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+
     @attr(env=['test'], priority=1)
     def test_users_apps_api_filter_invalid_no_data(self):
         """
@@ -226,3 +251,28 @@ class TestGateKeeperUsersGroupsListingAPI(ApiTestCase):
         )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the user
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="user",
+            id=user_perm_data['user_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the app
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            user_perm_data['permission_id'],
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )

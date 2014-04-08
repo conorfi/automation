@@ -56,6 +56,26 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=grp_app_data['application_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_app_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_miss_params(self):
         """
@@ -76,6 +96,11 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
 
         for bad_dict in no_data:
             data = self.gk_service.create_grp_app_data(session, bad_dict)
+            if data['application_id']:
+                app_id = data['application_id']
+            if data['group_id']:
+                group_id = data['group_id']
+
             create_response = self.gk_service.gk_crud(
                 session, method='POST', resource="grp_app", data=data
             )
@@ -87,6 +112,26 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
                 self.gk_service.MISSING_PARAM
                 in create_response.json()['error']
             )
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=group_id
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_no_data(self):
@@ -164,6 +209,26 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=grp_app_data['application_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_app_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_no_update(self):
         """
@@ -219,6 +284,26 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=grp_app_data['application_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_app_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_read(self):
         """
@@ -264,6 +349,26 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
             method='DELETE',
             resource="grp_app",
             id2=grp_app_data['application_id'],
+            id=grp_app_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=grp_app_data['application_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
             id=grp_app_data['group_id']
         )
         # ensure a 204 is returned
@@ -355,6 +460,26 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=grp_app_data['application_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_app_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_read_no_data(self):
         """
@@ -433,6 +558,26 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=grp_app_data['application_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_app_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_grp_app_assoc_api_del_no_data(self):
@@ -518,6 +663,26 @@ class TestGateGrpAppAssocationAPI(ApiTestCase):
             method='DELETE',
             resource="grp_app",
             id2=grp_app_data['application_id'],
+            id=grp_app_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=grp_app_data['application_id']
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
             id=grp_app_data['group_id']
         )
         # ensure a 204 is returned

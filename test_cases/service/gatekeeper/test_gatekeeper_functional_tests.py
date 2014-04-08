@@ -45,14 +45,18 @@ class TestGateKeeperFunctional(ApiTestCase):
         # initial setup - create arbitrary number of users via REST API
         # TO DO: replace this code with the user API when the user API on
         # the develop branch is merged to master
+        #delete user_ids list
+        delete_users = []
+        #delete app_ids list
+        delete_apps = []
 
         created_user_data = []
         for index in range(USER_TOTAL):
             user_data = {
-                'username': 'automation_' + self.util.random_str(5),
-                'name': 'automation ' + self.util.random_str(5),
-                'phone': self.util.random_email(5),
-                'email': self.util.random_email(5),
+                'username': 'automation_' + self.util.random_str(),
+                'name': 'automation ' + self.util.random_str(),
+                'phone': self.util.random_email(),
+                'email': self.util.random_email(),
                 'password': self.gk_service.HASH_PASSWORD_TEST
             }
             # create basic user - no permissions
@@ -71,6 +75,7 @@ class TestGateKeeperFunctional(ApiTestCase):
                 self.db,
                 user_data['username']
             )['user_id']
+            delete_users.append(user_id)
 
             #create app
             create_response = self.gk_service.gk_crud(
@@ -81,12 +86,12 @@ class TestGateKeeperFunctional(ApiTestCase):
                 create_response.status_code, requests.codes.created
             )
             app_id = create_response.json()['application_id']
+            delete_apps.append(app_id)
 
             # associate user with app
             self.assertTrue(
                 self.gk_dao.set_user_app_id(self.db, app_id, user_id)
             )
-
             created_user_data.append(user_data)
 
         # login each user and retain cookie info for use later
@@ -116,6 +121,28 @@ class TestGateKeeperFunctional(ApiTestCase):
         # wait for the child processes to finish
         for process in processes:
             process.join()
+
+        #delete users
+        for del_user_id in delete_users:
+            # clean up - delete the user
+            del_response = self.gk_service.gk_crud(
+                a_session, method='DELETE', resource="user", id=del_user_id
+            )
+            # ensure a 204 is returned
+            self.assertEquals(
+                del_response.status_code,
+                requests.codes.no_content
+            )
+        #delete apps:
+        for d_app_id in delete_apps:
+            # clean up - delete the application
+            del_response = self.gk_service.gk_crud(
+                a_session, method='DELETE', resource="application", id=d_app_id
+            )
+            # ensure correct status code is returned
+            self.assertEquals(
+                del_response.status_code, requests.codes.no_content
+            )
 
     @attr(env=['test'], priority=1)
     def test_invalid_gk_endpoint(self):
@@ -224,10 +251,11 @@ class TestGateKeeperFunctional(ApiTestCase):
         # create a user and associate user with relevant
         # pre confiured application for dummy app
 
-        username = 'automation_' + self.util.random_str(5)
+        username = 'automation_' + self.util.random_str()
         appname = self.gk_service.GK_APP
-        fullname = 'automation_' + self.util.random_str(5)
-        email = self.util.random_email(5)
+        fullname = 'automation_' + self.util.random_str()
+        email = self.util.random_email()
+        perm_name = self.gk_service.GK_ALL_PERMISSION
 
         # create basic user - no permisssions
         self.assertTrue(
@@ -254,7 +282,8 @@ class TestGateKeeperFunctional(ApiTestCase):
         # get permissions
         permissions = self.gk_dao.get_permission_by_name(
             self.db,
-            self.gk_service.GK_ALL_PERMISSION, app_id
+            perm_name,
+            app_id
         )['permission_id']
 
         # associate user with app
@@ -318,6 +347,7 @@ class TestGateKeeperFunctional(ApiTestCase):
         # delete user - cascade delete by default
         self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
+
     @attr(env=['test'], priority=1)
     def test_validate_group_access_gk_route(self):
         """
@@ -331,11 +361,12 @@ class TestGateKeeperFunctional(ApiTestCase):
         # create a user and associate user with relevant
         # pre confiured application for dummy app
 
-        username = 'automation_' + self.util.random_str(5)
+        username = 'automation_' + self.util.random_str()
         appname = self.gk_service.GK_APP
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
-        grp_name = 'automation_' + self.util.random_str(5)
+        fullname = 'automation ' + self.util.random_str()
+        email = self.util.random_email()
+        grp_name = 'automation_' + self.util.random_str()
+        perm_name = self.gk_service.GK_ALL_PERMISSION
 
         # create basic user - no permisssions
         self.assertTrue(
@@ -364,14 +395,14 @@ class TestGateKeeperFunctional(ApiTestCase):
         # get permissions
         permissions = self.gk_dao.get_permission_by_name(
             self.db,
-            self.gk_service.GK_ALL_PERMISSION,
+            perm_name,
             app_id
         )['permission_id']
 
         # associate user with app
         self.assertTrue(self.gk_dao.set_user_app_id(self.db, app_id, user_id))
 
-        # creat gatekeeper group
+        # create gatekeeper group
         self.assertTrue(self.gk_dao.set_gk_group(self.db, grp_name))
         # get group id
         group_id = self.gk_dao.get_group_by_name(
@@ -458,9 +489,9 @@ class TestGateKeeperFunctional(ApiTestCase):
 
         # create a user and associate user with relevant
         # pre confiured application for dummy app
-        username = 'automation_' + self.util.random_str(5)
-        fullname = 'automation ' + self.util.random_str(5)
-        email = self.util.random_email(5)
+        username = 'automation_' + self.util.random_str()
+        fullname = 'automation ' + self.util.random_str()
+        email = self.util.random_email()
 
         # create basic user - no permisssions
         self.assertTrue(
@@ -473,6 +504,12 @@ class TestGateKeeperFunctional(ApiTestCase):
                 '123-456-789123456'
             )
         )
+
+        # get user_id
+        user_id = self.gk_dao.get_user_by_username(
+            self.db,
+            username
+        )['user_id']
 
         # create a session for the user
         credentials_payload = {'username': username, 'password': 'test'}
@@ -493,6 +530,9 @@ class TestGateKeeperFunctional(ApiTestCase):
         )
         # 404
         self.assertEquals(response.status_code, requests.codes.not_found)
+
+        # delete user - cascade delete by default
+        self.assertTrue(self.gk_dao.del_gk_user(self.db, user_id))
 
     @attr(env=['test'], priority=1)
     def test_access_url_default_redirect(self):

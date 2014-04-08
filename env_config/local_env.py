@@ -31,6 +31,6 @@ screenwriter_config.update({
     'scheme': 'http',
     'port': '8080',
     'db_name' : '/aam-lms/db/cinema_services.db',
-    'db_type' : 'sqlite:///'
+    'db_type' : 'sqlite'
 })
 set_screenwriter_config(config, **screenwriter_config)

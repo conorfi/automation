@@ -44,12 +44,39 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
         self.assertEquals(create_response.status_code, requests.codes.created)
         #verify
         self.assertGroupPermData(create_response.json(), grp_perm_data)
+
         # clean up
         del_response = self.gk_service.gk_crud(
             session,
             method='DELETE',
             resource="grp_perm",
             id2=grp_perm_data['permission_id'],
+            id=grp_perm_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            grp_perm_data['permission_id']
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
             id=grp_perm_data['group_id']
         )
         # ensure a 204 is returned
@@ -67,16 +94,18 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
             allow_redirects=False
         )
 
+        data = self.gk_service.create_grp_perm_data(session)
+
         # list of dicts with missing data
         no_data = [
-            {'group_id': None},
-            {'permission_id': None}
+            {'group_id': data['group_id'], 'permission_id': None},
+            {'group_id': None, 'permission_id': data['permission_id']}
         ]
 
         for bad_dict in no_data:
-            data = self.gk_service.create_grp_perm_data(session, bad_dict)
+
             create_response = self.gk_service.gk_crud(
-                session, method='POST', resource="grp_perm", data=data
+                session, method='POST', resource="grp_perm", data=bad_dict
             )
             # verify the status code and error message
             self.assertEquals(
@@ -86,6 +115,32 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
                 self.gk_service.MISSING_PARAM
                 in create_response.json()['error']
             )
+
+        # get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            data['permission_id'],
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_grp_perm_assoc_api_no_data(self):
@@ -163,6 +218,32 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
+        # get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            grp_perm_data['permission_id'],
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_perm_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
     @attr(env=['test'], priority=1)
     def test_grp_perm_assoc_api_no_update(self):
         """
@@ -193,6 +274,7 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
             id=grp_perm_data['group_id'],
             id2=grp_perm_data['permission_id'],
         )
+
         # ensure a 405 is returned
         self.assertEquals(
             create_response.status_code, requests.codes.method_not_allowed
@@ -209,6 +291,32 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
             method='DELETE',
             resource="grp_perm",
             id2=grp_perm_data['permission_id'],
+            id=grp_perm_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            grp_perm_data['permission_id'],
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
             id=grp_perm_data['group_id']
         )
         # ensure a 204 is returned
@@ -243,6 +351,7 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
             id2=grp_perm_data['permission_id'],
             id=grp_perm_data['group_id']
         )
+
         # ensure a 200 is returned
         self.assertEquals(read_response.status_code, requests.codes.ok)
 
@@ -258,6 +367,32 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
             method='DELETE',
             resource="grp_perm",
             id2=grp_perm_data['permission_id'],
+            id=grp_perm_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            grp_perm_data['permission_id'],
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
             id=grp_perm_data['group_id']
         )
         # ensure a 204 is returned
@@ -320,6 +455,33 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
             id2=grp_perm_data['permission_id'],
             id=grp_perm_data['group_id']
         )
+
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            grp_perm_data['permission_id'],
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_perm_data['group_id']
+        )
         # ensure a 204 is returned
         self.assertEquals(del_response.status_code, requests.codes.no_content)
 
@@ -370,6 +532,7 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="grp_perm", data=grp_perm_data
         )
+
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
@@ -398,6 +561,32 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
         self.assertTrue(
             self.gk_service.NO_DATA_ERROR in read_response.json()['error']
         )
+
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            grp_perm_data['permission_id'],
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
+            id=grp_perm_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
 
     @attr(env=['test'], priority=1)
     def test_grp_perm_assoc_api_del_no_data(self):
@@ -448,6 +637,7 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
         create_response = self.gk_service.gk_crud(
             session, method='POST', resource="grp_perm", data=grp_perm_data
         )
+
         # ensure a 201 is returned
         self.assertEquals(create_response.status_code, requests.codes.created)
 
@@ -485,6 +675,32 @@ class TestGateGrpPermAssociationAPI(ApiTestCase):
             method='DELETE',
             resource="grp_perm",
             id2=grp_perm_data['permission_id'],
+            id=grp_perm_data['group_id']
+        )
+        # ensure a 204 is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        #get app_id associated with perm id
+        app_id = self.gk_dao.get_app_id_by_perm_id(
+            self.db,
+            grp_perm_data['permission_id'],
+        )['application_id']
+
+        # clean up - delete the application
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="application",
+            id=app_id
+        )
+        # ensure correct status code is returned
+        self.assertEquals(del_response.status_code, requests.codes.no_content)
+
+        # clean up - delete the group
+        del_response = self.gk_service.gk_crud(
+            session,
+            method='DELETE',
+            resource="group",
             id=grp_perm_data['group_id']
         )
         # ensure a 204 is returned
