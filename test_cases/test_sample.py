@@ -1,3 +1,9 @@
+"""
+@summary: Sample Test File
+@since: Created on 8th April 2014
+@author: Conor Fitzgerald
+"""
+
 import requests
 from testconfig import config
 from nose.plugins.attrib import attr
