@@ -4,6 +4,7 @@ Base configuration for all automation tests
 SERVICE_NAME_GATEKEEPER = 'gatekeeper'
 SERVICE_NAME_COURIER = 'courier'
 SERVICE_NAME_SCREEN_WRITER = 'screen_writer'
+SERVICE_NAME_PRODUCER = 'producer'
 
 TEST_ENVIRONMENT = 'test'
 DEV_ENVIRONMENT = 'dev'
@@ -59,6 +60,7 @@ def get_test_sets():
     set_gatekeeper_test_sets(test_sets)
     set_courier_test_sets(test_sets)
     set_screenwriter_test_sets(test_sets)
+    set_producer_test_sets(test_sets)
     return test_sets
 
 
@@ -117,6 +119,34 @@ def set_base_service_config(config, name, **kwargs):
          kwargs['db_name'])
     if(kwargs['db_type'] is 'sqlite'):
         config[name]['db']['connection'] = "sqlite:///%s" % kwargs['db_name']
+
+
+def set_producer_config(config, **kwargs):
+    """
+    Sets the configuration for ETMS
+
+    :param config:
+    """
+    name = SERVICE_NAME_PRODUCER
+    set_base_service_config(config, name, **kwargs)
+
+    config['api'][name] = {}
+    config['api'][name]['pack'] = {}
+    config['api'][name]['pack']['datatables'] = 'circuit_core/packs/datatables'
+    config['api'][name]['pack']['get'] = 'circuit_core/packs/'
+    config['api'][name]['pack']['multi_delete'] = 'circuit_core/packs/multi_delete'
+    config['api'][name]['pack']['pack_valid_complex'] =\
+        'circuit_core/packs/pack_valid_complex'
+    config['api'][name]['pack']['multi_publish'] = 'circuit_core/packs/multi_publish'
+    config['api'][name]['pack']['create_packs'] = 'circuit_core/packs/create_packs'
+    config['api'][name]['pack']['last_modified'] = 'circuit_core/packs/last_modified'
+    config['api'][name]['pack']['put'] = 'circuit_core/packs/'
+    config['api'][name]['pack']['post'] = 'circuit_core/packs/'
+    config['api'][name]['pack']['issuers'] = 'circuit_core/packs/issuers'
+    config['api'][name]['pack']['content_validation'] =\
+        'circuit_core/packs/content_validation'
+    config['api'][name]['pack']['delete'] = 'circuit_core/packs/'
+
 
 def set_screenwriter_config(config, **kwargs):
     """
@@ -288,9 +318,17 @@ def set_courier_test_sets(test_sets):
 
 def set_screenwriter_test_sets(test_sets):
     """
-    Sets Gatekeeper test sets
+    Sets Screenwriter test sets
     :param test_sets:
     """
     # screenwriter tests
     test_sets['screenwriter'] = {}
     test_sets['screenwriter']['folder'] = 'screenwriter'
+
+
+def set_producer_test_sets(test_sets):
+    """
+    Sets Producer test sets
+    :param test_sets
+    """
+    test_sets['producer'] = {}

@@ -45,3 +45,13 @@ screenwriter_config.update({
     'db_type' : 'sqlite'
 })
 set_screenwriter_config(config, **screenwriter_config)
+
+producer_config = get_default_service_config()
+screenwriter_config.update({
+    'scheme': 'http',
+    'port': '8080',
+    'db_name': 'yes',
+    'db_type': 'postgresql',
+    'db_credentials': 'postgres:postgres'
+})
+set_producer_config(config, **producer_config)
