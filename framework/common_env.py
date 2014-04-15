@@ -133,20 +133,16 @@ def set_producer_config(config, **kwargs):
     config['api'][name] = {}
     config['api'][name]['pack'] = {}
     config['api'][name]['pack']['datatables'] = 'circuit_core/packs/datatables'
-    config['api'][name]['pack']['get'] = 'circuit_core/packs/'
+    config['api'][name]['pack']['packs'] = 'circuit_core/packs/'
     config['api'][name]['pack']['multi_delete'] = 'circuit_core/packs/multi_delete'
     config['api'][name]['pack']['pack_valid_complex'] =\
         'circuit_core/packs/pack_valid_complex'
     config['api'][name]['pack']['multi_publish'] = 'circuit_core/packs/multi_publish'
     config['api'][name]['pack']['create_packs'] = 'circuit_core/packs/create_packs'
     config['api'][name]['pack']['last_modified'] = 'circuit_core/packs/last_modified'
-    config['api'][name]['pack']['put'] = 'circuit_core/packs/'
-    config['api'][name]['pack']['post'] = 'circuit_core/packs/'
     config['api'][name]['pack']['issuers'] = 'circuit_core/packs/issuers'
     config['api'][name]['pack']['content_validation'] =\
         'circuit_core/packs/content_validation'
-    config['api'][name]['pack']['delete'] = 'circuit_core/packs/'
-
 
 def set_screenwriter_config(config, **kwargs):
     """

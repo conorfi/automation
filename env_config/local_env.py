@@ -36,7 +36,7 @@ screenwriter_config.update({
 set_screenwriter_config(config, **screenwriter_config)
 
 producer_config = get_default_service_config()
-screenwriter_config.update({
+producer_config.update({
     'scheme': 'http',
     'port': '8080',
     'db_name': 'yes',

@@ -47,8 +47,10 @@ screenwriter_config.update({
 set_screenwriter_config(config, **screenwriter_config)
 
 producer_config = get_default_service_config()
-screenwriter_config.update({
+producer_config.update({
     'scheme': 'http',
+    'host': 'aam-test-producer-1.aam.local',
+    'ip'  : '10.20.254.112',
     'port': '8080',
     'db_name': 'yes',
     'db_type': 'postgresql',

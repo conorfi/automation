@@ -4,20 +4,17 @@
 @author: Will Ellis
 """
 from nose.plugins.attrib import attr
-<<<<<<< HEAD
 from . import ApiTestCase
-=======
-from test_cases.service import ApiTestCase
->>>>>>> 4d7d3578ff84dd31e22232360eacdb4a2a8165f8
 import requests
 
-
 class FirstTestRun(ApiTestCase):
+
     @attr(env=['test'], priority=1)
-    def test_get_datatables_required_params(self):
+    def test_get_packs(self):
         """
-        Test that the API can call a pack datatable successfully
+        PRODUCER_PACK_API_001 test_get_packs
+        Test that the API can call the packs API successfully
         """
-        response = self.packs_service.test_pack_api("datatables")
-        self.assertResponse(response, message=self.msgs.saved_msg)
-        self.packs_service.pack_clean_up(response)
+        response = self.packs_service.test_pack_api("packs")
+        self.assertEqual(response.status_code,requests.codes.ok)
+
