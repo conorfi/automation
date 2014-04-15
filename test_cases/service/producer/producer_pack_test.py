@@ -4,7 +4,11 @@
 @author: Will Ellis
 """
 from nose.plugins.attrib import attr
+<<<<<<< HEAD
 from . import ApiTestCase
+=======
+from test_cases.service import ApiTestCase
+>>>>>>> 4d7d3578ff84dd31e22232360eacdb4a2a8165f8
 import requests
 
 

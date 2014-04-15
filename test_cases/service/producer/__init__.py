@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from testconfig import config
 import testy as unittest
 import requests
@@ -45,4 +46,6 @@ class ApiTestCase(unittest.TestCase):
        # self.packs_db.del_title_by_uuid(self.db, self.placeholder_uuid)
 
 
+=======
+>>>>>>> 4d7d3578ff84dd31e22232360eacdb4a2a8165f8
 
